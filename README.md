@@ -105,13 +105,13 @@ $$\color{transparent}\fbox{\Huge \color{pink}{Nail art Design Platform Project}}
 
 <div align=center> 
   <p>BE</p>
+  <img src="https://img.shields.io/badge/java-9999FF?style=for-the-badge&logo=java&logoColor=white">
   <img src="https://img.shields.io/badge/python-9999FF?style=for-the-badge&logo=python&logoColor=white">
   <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white"> 
   <img src="https://img.shields.io/badge/redis-D0271D?style=for-the-badge&logo=redis&logoColor=white">
   <br>
 
   <img src="https://img.shields.io/badge/spring Boot-6DB33F?style=for-the-badge&logo=springBoot&logoColor=white">
-  <img src="https://img.shields.io/badge/fly way-ED1C24?style=for-the-badge&logo=flyway&logoColor=white">
   <img src="https://img.shields.io/badge/linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"> 
   <img src="https://img.shields.io/badge/amazonaws-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white">
   <br>
@@ -143,33 +143,7 @@ Project Architecture 작성 요망.
 
 
 ## 5. Execution Method
- - **yarn 설치 방법**
 
-   1. Homebrew를 사용하는 설치
-      
-       `$ brew install yarn`
-
-       -> Homebrew가 없다면?
-      
-        `$ /usr/bin/ruby -e "$(crul -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-
-    2. NPM을 사용하는 설치
-       
-        `$ npm install -g yarn`
-
-- **yarn 버전 확인**
-  
-   `$ yarn --version`
-
-- **프로젝트 실행**
-  
-   `$ yarn install`
-  
-  이후
-  
-   `$ yarn run dev`
-
-<br>
 
 
 
@@ -307,7 +281,7 @@ Project Architecture 작성 요망.
 >
 > [📜 백엔드 구현사항](https://docs.google.com/spreadsheets/d/1tBnF7gfM-x35g0noJxJTrOPqctfrV0TFVJ2aojSMsFE/edit#gid=584454510)
 > 
-> [📜 테이블 명세서]('기재 바람')
+> [📜 테이블 명세서](https://docs.google.com/spreadsheets/d/1tBnF7gfM-x35g0noJxJTrOPqctfrV0TFVJ2aojSMsFE/edit#gid=535184662)
 >
 > [📜 화면 정의서](https://docs.google.com/spreadsheets/d/1tBnF7gfM-x35g0noJxJTrOPqctfrV0TFVJ2aojSMsFE/edit#gid=809821527)
 
