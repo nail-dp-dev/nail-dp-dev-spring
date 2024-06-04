@@ -105,7 +105,7 @@ $$\color{transparent}\fbox{\Huge \color{pink}{Nail art Design Platform Project}}
 
 <div align=center> 
   <p>BE</p>
-  <img src="https://img.shields.io/badge/java-9999FF?style=for-the-badge&logo=java&logoColor=white">
+  <img src="https://img.shields.io/badge/java-F89820?style=for-the-badge&logo=java&logoColor=white">
   <img src="https://img.shields.io/badge/python-9999FF?style=for-the-badge&logo=python&logoColor=white">
   <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white"> 
   <img src="https://img.shields.io/badge/redis-D0271D?style=for-the-badge&logo=redis&logoColor=white">
