@@ -144,7 +144,70 @@ Project Architecture 작성 요망.
 
 ## 5. Execution Method
 
+### Homebrew 설치
+Homebrew가 설치되어 있지 않다면, 터미널을 열고 다음 명령어를 실행하여 Homebrew를 설치
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+### JAVA 17 설치
+```sh
+brew install openjdk@17
+```
+### JAVA 환경 변수 설정
 
+1. Java 경로 확인
+  ```sh
+  /usr/libexec/java_home -V
+  ```
+  - Intel mac: Homebrew는 /opt/homebrew에 설치
+  - Silicon mac: Homebrew는 /usr/local에 설치
+    ex) `/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home`
+       
+2. 쉘 프로파일 열기
+  - bash를 사용하는 경우: `nano ~/.bash_profile`
+  - zsh를 사용하는 경우 (macOS 기본 쉘): `nano ~/.zshrc`
+
+3. 쉘 프로파일 내용 추가
+   jdk 경로와 일치하도록 설정
+  - bash를 사용하는 경우
+    ```sh
+    export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+    export PATH=$JAVA_HOME/bin:$PATH
+    ```
+  - zsh를 사용하는 경우
+    ```sh
+    export JAVA_HOME=/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+    export PATH=$JAVA_HOME/bin:$PATH
+    ```
+4. 변경 사항 적용
+    ```sh
+    source ~/.bash_profile
+    ```
+     또는
+    
+    ```sh
+    source ~/.zshrc
+    ```
+### JAVA 버전 확인
+  ```sh
+  java --version
+  ```
+### 프로젝트 실행
+  1. Gradle 설치
+     ```sh
+    brew install gradle
+     ```
+  2. Gradle 빌드
+    ```
+    ./gradlew build  
+    ```
+  2. 서버실행
+    ```sh
+    ./gradlew bootRun
+    ```
+서버가 성공적으로 시작되면, ‘http://localhost:8080'에서 접근 가능
+  
+  <br>  
 
 
 
