@@ -193,11 +193,11 @@ brew install openjdk@17
   java --version
   ```
 ### 프로젝트 실행
-  1. Gradle 설치
+  1. Gradle 설치: 
      `brew install gradle`
-  2. Gradle 빌드
+  2. Gradle 빌드: 
     `./gradlew build  `
-  2. 서버실행
+  2. 서버실행: 
     `./gradlew bootRun` <br>
 서버가 성공적으로 시작되면, ‘http://localhost:8080'에서 접근 가능
   
