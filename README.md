@@ -160,7 +160,7 @@ brew install openjdk@17
   /usr/libexec/java_home -V
   ```
   - Intel mac: Homebrew는 /opt/homebrew에 설치
-  - Silicon mac: Homebrew는 /usr/local에 설치
+  - Silicon mac: Homebrew는 /usr/local에 설치 <br>
     ex) `/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home`
        
 2. 쉘 프로파일 열기
@@ -194,17 +194,11 @@ brew install openjdk@17
   ```
 ### 프로젝트 실행
   1. Gradle 설치
-     ```sh
-    brew install gradle
-     ```
+     `brew install gradle`
   2. Gradle 빌드
-    ```
-    ./gradlew build  
-    ```
+    `./gradlew build  `
   2. 서버실행
-    ```sh
-    ./gradlew bootRun
-    ```
+    `./gradlew bootRun` <br>
 서버가 성공적으로 시작되면, ‘http://localhost:8080'에서 접근 가능
   
   <br>  
