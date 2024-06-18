@@ -1,5 +1,6 @@
 package com.backend.naildp.entity;
 
+import com.backend.naildp.common.Boundary;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,16 +34,16 @@ public class Post {
     private Long sharing;
 
     @Column(nullable = false)
-    private Boolean closer; // FOLLOW, ALL, NONE
+    private Boundary boundary; // FOLLOW, ALL, NONE
 
     @Column(nullable = false)
     private Boolean tempSave;
 
-    public Post(User user, String postContent, Long sharing, Boolean closer, Boolean tempSave) {
+    public Post(User user, String postContent, Long sharing, Boundary boundary, Boolean tempSave) {
         this.user = user;
         this.postContent = postContent;
         this.sharing = sharing;
-        this.closer = closer;
+        this.boundary = boundary;
         this.tempSave = tempSave;
     }
 }

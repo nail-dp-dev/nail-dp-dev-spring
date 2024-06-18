@@ -1,5 +1,6 @@
 package com.backend.naildp;
 
+import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Post;
@@ -47,9 +48,9 @@ public class IntializeTest {
         User mj = users.get(0);
         User jw = users.get(1);
 
-        Post mjPost1 = new Post(mj, "1 mj다", 0L, false, false);
-        Post mjPost2 = new Post(mj, "2 mj다", 0L, false, false);
-        Post mjPost3 = new Post(mj, "3 mj다", 0L, false, false);
+        Post mjPost1 = new Post(mj, "1 mj다", 0L, Boundary.ALL, false);
+        Post mjPost2 = new Post(mj, "2 mj다", 0L, Boundary.ALL, false);
+        Post mjPost3 = new Post(mj, "3 mj다", 0L, Boundary.ALL, false);
 
         em.persist(mjPost1);
         em.persist(mjPost2);

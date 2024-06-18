@@ -2,6 +2,7 @@ package com.backend.naildp.entity;
 
 import static jakarta.persistence.FetchType.*;
 
+import com.backend.naildp.common.Boundary;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,6 +33,6 @@ public class Archive {
     private String name;
 
     @Column(nullable = false)
-    private Boolean closer;
+    private Boundary boundary;
 
 }
