@@ -25,7 +25,7 @@ public class IntializeTest {
     void setUp() {
 
         SocialLogin naverLogin = new SocialLogin("NAVER", "x@naver.com");
-        User mj = new User(naverLogin, "민지", "01022295877", "프로필url", 1000L, UserRole.USER);
+        User mj = new User(naverLogin, "민지", "0100000", "프로필url", 1000L, UserRole.USER);
         SocialLogin naverLogin2 = new SocialLogin("NAVER", "y@naver.com");
         User jjw = new User(naverLogin2, "정완", "0101234", "프로필url", 1000L, UserRole.USER);
 
@@ -38,6 +38,7 @@ public class IntializeTest {
     void test() {
 
     }
+
     @Test
     void saveEntity() {
         List<User> users = em.createQuery("select u from Users u", User.class)
