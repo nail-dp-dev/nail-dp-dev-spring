@@ -16,17 +16,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostLike {
 
-    @Id
-    @GeneratedValue
-    @Column(name = "post_like_id")
-    private Long id;
+	@Id
+	@GeneratedValue
+	@Column(name = "post_like_id")
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private Post post;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "post_id")
+	private Post post;
 
 }

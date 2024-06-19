@@ -17,18 +17,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Photo {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "photo_id")
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "photo_id")
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private Post post;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "post_id")
+	private Post post;
 
-    @Column(nullable = false)
-    private String photoUrl;
+	@Column(nullable = false)
+	private String photoUrl;
 
-    @Column(nullable = false)
-    private String name;
+	@Column(nullable = false)
+	private String name;
 }

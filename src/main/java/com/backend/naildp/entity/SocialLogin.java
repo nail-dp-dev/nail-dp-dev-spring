@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SocialLogin {
 
-    private String platform;
-    private String email;
+	private String platform;
+	private String email;
 }
