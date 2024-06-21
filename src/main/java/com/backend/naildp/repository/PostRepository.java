@@ -12,7 +12,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 	Page<Post> findByBoundaryAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
 
-	@Query(value = "select p from Post p left join fetch p.photos ph", countQuery = "select count(p) from Post p")
-	Page<Post> findDistinctByBoundaryAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
+	@Query(value = "select p from Post p left join fetch p.photos ph where p.tempSave = false", countQuery = "select count(p) from Post p where p.tempSave = false")
+	Page<Post> findPostsAndPhotoByBoundary(Boundary boundary, PageRequest pageRequest);
 
 }
