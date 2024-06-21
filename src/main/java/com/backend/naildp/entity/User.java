@@ -1,19 +1,15 @@
 package com.backend.naildp.entity;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.RequestLoginDto;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,9 +24,8 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private UUID id;
 
-	@ElementCollection
-	@CollectionTable(name = "SOCIAL_LOGIN", joinColumns = @JoinColumn(name = "user_id"))
-	private List<SocialLogin> socialLoginList = new ArrayList<>();
+	// @OneToMany(mappedBy = "users", fetch = FetchType.LAZY)
+	// private List<SocialLogin> socialLoginList;
 
 	@Column(nullable = false)
 	private String nickname;
@@ -41,13 +36,19 @@ public class User extends BaseEntity {
 	private Long point;
 	private UserRole role;
 
-	public User(SocialLogin socialLogin, String nickname, String phoneNumber, String profileUrl,
+	public User(String nickname, String phoneNumber, String profileUrl,
 		Long point, UserRole role) {
-		this.socialLoginList.add(socialLogin);
 		this.nickname = nickname;
 		this.phoneNumber = phoneNumber;
 		this.profileUrl = profileUrl;
 		this.point = point;
+		this.role = role;
+	}
+
+	public User(RequestLoginDto requestLoginDto, UserRole role) {
+		this.nickname = requestLoginDto.getNickname();
+		this.phoneNumber = requestLoginDto.getPhone_number();
+		this.profileUrl = requestLoginDto.getProfile_url();
 		this.role = role;
 	}
 }
