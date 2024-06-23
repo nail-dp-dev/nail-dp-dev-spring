@@ -3,7 +3,7 @@ package com.backend.naildp.entity;
 import java.util.UUID;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.RequestLoginDto;
+import com.backend.naildp.dto.LoginRequestDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,10 +45,10 @@ public class User extends BaseEntity {
 		this.role = role;
 	}
 
-	public User(RequestLoginDto requestLoginDto, UserRole role) {
-		this.nickname = requestLoginDto.getNickname();
-		this.phoneNumber = requestLoginDto.getPhone_number();
-		this.profileUrl = requestLoginDto.getProfile_url();
+	public User(LoginRequestDto loginRequestDto, UserRole role) {
+		this.nickname = loginRequestDto.getNickname();
+		this.phoneNumber = loginRequestDto.getPhone_number();
+		this.profileUrl = loginRequestDto.getProfile_url();
 		this.role = role;
 	}
 }

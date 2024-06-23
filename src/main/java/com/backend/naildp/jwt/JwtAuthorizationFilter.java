@@ -36,6 +36,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		IOException {
 
 		String tokenValue = jwtUtil.getTokenFromRequest(req);
+		log.info("Token from request: {}", tokenValue);
 
 		if (StringUtils.hasText(tokenValue)) {
 			// JWT 토큰 substring
