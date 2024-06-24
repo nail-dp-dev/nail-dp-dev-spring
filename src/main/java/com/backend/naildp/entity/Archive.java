@@ -42,4 +42,9 @@ public class Archive extends BaseEntity {
 	@Column(nullable = false)
 	private Boundary boundary;
 
+	public Archive(User user, String name, Boundary boundary) {
+		this.user = user;
+		this.name = name;
+		this.boundary = boundary;
+	}
 }
