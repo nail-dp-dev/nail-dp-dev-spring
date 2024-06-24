@@ -17,11 +17,11 @@ public class HomePostResponse {
 	private Boolean like;
 	private Boolean saved;
 
-	public HomePostResponse(Post post, List<Post> savedPosts) {
+	public HomePostResponse(Post post, List<Post> savedPosts, List<Post> likedPosts) {
 		postId = post.getId();
 		photoId = post.getPhotos().get(0).getId();
 		photoUrl = post.getPhotos().get(0).getPhotoUrl();
-		like = false;
+		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
 	}
 }

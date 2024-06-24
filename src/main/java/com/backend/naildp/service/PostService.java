@@ -12,7 +12,9 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -23,23 +25,22 @@ public class PostService {
 
 	private final PostRepository postRepository;
 	private final ArchivePostRepository archivePostRepository;
+	private final PostLikeRepository postLikeRepository;
 
 	public List<HomePostResponse> homePosts(String nickname) {
 		PageRequest pageRequest = PageRequest.of(0, 12, Sort.by(Sort.Direction.DESC, "createdDate"));
 		Page<Post> recentPosts = postRepository.findByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
 
-		// 페이징된 게시물마다 해당 사용자가 저장 을 가져와야함
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
 			.map(ArchivePost::getPost)
 			.collect(Collectors.toList());
 
-		List<HomePostResponse> responses = recentPosts.stream()
-			.map(post -> new HomePostResponse(post, savedPosts))
+		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
+		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
+
+		return recentPosts.stream()
+			.map(post -> new HomePostResponse(post, savedPosts, likedPosts))
 			.collect(Collectors.toList());
-
-		// 페이징된 게시물마다 해당 사용자가 좋아요 를 가져와야함
-
-		return null;
 	}
 }
