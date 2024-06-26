@@ -32,15 +32,13 @@ public class User extends BaseEntity {
 
 	@Column(nullable = false)
 	private String phoneNumber;
-	private String profileUrl;
 	private Long point;
 	private UserRole role;
 
-	public User(String nickname, String phoneNumber, String profileUrl,
+	public User(String nickname, String phoneNumber,
 		Long point, UserRole role) {
 		this.nickname = nickname;
 		this.phoneNumber = phoneNumber;
-		this.profileUrl = profileUrl;
 		this.point = point;
 		this.role = role;
 	}
@@ -48,7 +46,12 @@ public class User extends BaseEntity {
 	public User(LoginRequestDto loginRequestDto, UserRole role) {
 		this.nickname = loginRequestDto.getNickname();
 		this.phoneNumber = loginRequestDto.getPhone_number();
-		this.profileUrl = loginRequestDto.getProfile_url();
 		this.role = role;
+	}
+
+	public User(String defaultSetting, String defaultSetting1, UserRole userRole) {
+		this.nickname = defaultSetting;
+		this.phoneNumber = defaultSetting1;
+		this.role = userRole;
 	}
 }
