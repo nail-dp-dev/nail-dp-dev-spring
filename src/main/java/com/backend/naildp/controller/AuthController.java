@@ -28,7 +28,6 @@ public class AuthController {
 	private final AuthService authService;
 	private final KakaoService kakaoService;
 
-	//https://kauth.kakao.com/oauth/authorize?client_id=9b9bc77db969307e9d338f8752ff53e8&redirect_uri=http://localhost:8080/api/auth/kakao/callback&response_type=code
 	@ResponseBody
 	@PostMapping("/auth/signup")
 	public ResponseEntity<?> signupUser(@RequestBody LoginRequestDto loginRequestDto) {
