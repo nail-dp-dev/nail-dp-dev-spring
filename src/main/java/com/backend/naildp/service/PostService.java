@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.home.HomePostResponse;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PostService {
 
 	private final PostRepository postRepository;
@@ -28,8 +30,8 @@ public class PostService {
 	private final PostLikeRepository postLikeRepository;
 
 	public List<HomePostResponse> homePosts(String nickname) {
-		PageRequest pageRequest = PageRequest.of(0, 12, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> recentPosts = postRepository.findByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
+		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Page<Post> recentPosts = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest);
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
