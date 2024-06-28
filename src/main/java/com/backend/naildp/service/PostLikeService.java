@@ -29,7 +29,7 @@ public class PostLikeService {
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 포스트를 조회할 수 없습니다."));
 
-		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post););
+		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
 		return savedPostLike.getId();
 	}
 }
