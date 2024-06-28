@@ -12,4 +12,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
 	@Query("select pl from PostLike pl join fetch pl.post p where pl.user.nickname = :nickname")
 	List<PostLike> findAllByUserNickname(@Param("nickname") String nickname);
+
+	@Query("delete from PostLike pl where pl.post.id = :postId")
+	void deletePostLikeByPostId(@Param("postId") Long postId);
 }

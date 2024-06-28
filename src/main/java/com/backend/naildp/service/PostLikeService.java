@@ -32,4 +32,9 @@ public class PostLikeService {
 		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
 		return savedPostLike.getId();
 	}
+
+	@Transactional
+	public void unlikeByPostId(Long postId) {
+		postLikeRepository.deletePostLikeByPostId(postId);
+	}
 }
