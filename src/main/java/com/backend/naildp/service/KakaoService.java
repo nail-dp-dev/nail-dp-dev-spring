@@ -5,6 +5,7 @@ import static com.backend.naildp.common.UserRole.*;
 import java.net.URI;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,12 @@ public class KakaoService {
 	private final RestTemplate restTemplate;
 	private final JwtUtil jwtUtil;
 
+	@Value("${kakao.client.id}") // Base64 Encode 한 SecretKey
+	private String clientId;
+
+	@Value("${kakao.redirect.uri}") // Base64 Encode 한 SecretKe
+	private String redirectUri;
+
 	public KakaoUserInfoDto kakaoLogin(String code, HttpServletResponse httpServletResponse) throws
 		JsonProcessingException {
 		log.info("인가코드 : " + code);
@@ -72,8 +79,8 @@ public class KakaoService {
 		// HTTP Body 생성
 		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
 		body.add("grant_type", "authorization_code");
-		body.add("client_id", "9b9bc77db969307e9d338f8752ff53e8");
-		body.add("redirect_uri", "http://localhost:8080/api/auth/kakao/callback");
+		body.add("client_id", clientId);
+		body.add("redirect_uri", redirectUri);
 		body.add("code", code);
 
 		RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
