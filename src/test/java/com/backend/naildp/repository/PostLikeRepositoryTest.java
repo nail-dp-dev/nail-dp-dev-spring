@@ -145,6 +145,26 @@ class PostLikeRepositoryTest {
 		assertThat(likeUserNicknameList).containsOnly(nickname);
 	}
 
+	@DisplayName("사용자 mj 가 좋아요한 모든 게시물 좋아요 취소 테스트")
+	@Test
+	void deletePostLike() {
+		//given
+		String nickname = "mj";
+		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
+		List<Long> likedPostIds = postLikes.stream()
+			.map(PostLike::getPost)
+			.map(Post::getId)
+			.collect(Collectors.toList());
+
+		//when
+		likedPostIds.forEach(postId -> postLikeRepository.deletePostLikeByPostId(postId));
+
+		//then
+		List<PostLike> deletedPostLikes = postLikeRepository.findAllByUserNickname(nickname);
+		assertThat(deletedPostLikes.size()).isEqualTo(0);
+
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber) {
 		SocialLogin naverLogin = new SocialLogin("NAVER", email);
 		User user = new User(naverLogin, nickname, phoneNumber, "프로필url", 1000L, UserRole.USER);
