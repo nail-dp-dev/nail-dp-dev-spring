@@ -57,4 +57,17 @@ class PostLikeServiceUnitTest {
 		verify(postRepository, times(1)).findById(postId);
 		verify(postLikeRepository, times(1)).save(any(PostLike.class));
 	}
+
+	@DisplayName("게시물 좋아요 취소 테스트")
+	@Test
+	void cancelPostLikeByPostId() {
+		//given
+		Long postId = 1L;
+
+		//when
+		postLikeService.unlikeByPostId(postId);
+
+		//then
+		verify(postLikeRepository, times(1)).deletePostLikeByPostId(anyLong());
+	}
 }
