@@ -1,0 +1,60 @@
+package com.backend.naildp.common;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+
+import org.springframework.stereotype.Component;
+
+import com.backend.naildp.dto.KakaoUserInfoDto;
+import com.google.gson.Gson;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Component
+public class CookieUtil {
+
+	// 쿠키에 KakaoUserInfoDto 객체를 저장하는 메서드
+	public void setUserInfoCookie(HttpServletResponse response, KakaoUserInfoDto userInfo) {
+		Gson gson = new Gson();
+		String userInfoJson = gson.toJson(userInfo);
+
+		try {
+			// JSON 문자열을 URL 인코딩
+			String encodedUserInfoJson = URLEncoder.encode(userInfoJson, "UTF-8");
+
+			Cookie cookie = new Cookie("userInfo", encodedUserInfoJson);
+			cookie.setMaxAge(1800); // 30 minutes
+			cookie.setHttpOnly(true);
+			cookie.setPath("/");
+
+			response.addCookie(cookie);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			// 인코딩 예외 처리
+		}
+	}
+
+	// 쿠키에서 KakaoUserInfoDto 객체를 읽어오는 메서드
+	public KakaoUserInfoDto getUserInfoFromCookie(HttpServletRequest req) {
+		Cookie[] cookies = req.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if ("userInfo".equals(cookie.getName())) {
+					try {
+						// 쿠키 값을 URL 디코딩
+						String decodedUserInfoJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
+						Gson gson = new Gson();
+						return gson.fromJson(decodedUserInfoJson, KakaoUserInfoDto.class);
+					} catch (UnsupportedEncodingException e) {
+						e.printStackTrace();
+						// 디코딩 예외 처리
+					}
+				}
+			}
+		}
+		return null;
+	}
+}

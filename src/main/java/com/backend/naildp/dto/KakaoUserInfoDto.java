@@ -1,17 +1,15 @@
 package com.backend.naildp.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class KakaoUserInfoDto {
 	private Long id;
 	private String email;
+	private String profileUrl;
 	private final String platform = "kakao";
-
-	public KakaoUserInfoDto(Long id, String email) {
-		this.id = id;
-		this.email = email;
-	}
 }

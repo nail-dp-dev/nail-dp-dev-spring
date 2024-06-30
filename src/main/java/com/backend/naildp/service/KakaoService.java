@@ -1,12 +1,10 @@
 package com.backend.naildp.service;
 
-import static com.backend.naildp.common.UserRole.*;
-
 import java.net.URI;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,9 +13,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.backend.naildp.common.ApiResponse;
+import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.dto.KakaoUserInfoDto;
-import com.backend.naildp.entity.SocialLogin;
-import com.backend.naildp.entity.User;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserMapping;
@@ -39,6 +37,7 @@ public class KakaoService {
 	private final UserRepository userRepository;
 	private final RestTemplate restTemplate;
 	private final JwtUtil jwtUtil;
+	private final CookieUtil cookieUtil;
 
 	@Value("${kakao.client.id}") // Base64 Encode 한 SecretKey
 	private String clientId;
@@ -46,7 +45,7 @@ public class KakaoService {
 	@Value("${kakao.redirect.uri}") // Base64 Encode 한 SecretKe
 	private String redirectUri;
 
-	public KakaoUserInfoDto kakaoLogin(String code, HttpServletResponse httpServletResponse) throws
+	public ApiResponse<?> kakaoLogin(String code, HttpServletResponse res) throws
 		JsonProcessingException {
 		log.info("인가코드 : " + code);
 		// 인가 코드로 액세스 토큰 요청
@@ -54,13 +53,23 @@ public class KakaoService {
 
 		// 토큰으로 카카오 API 호출 : 액세스 토큰으로 카카오 사용자 정보 가져오기
 		KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(accessToken);
+		// DB 에 중복된 Kakao Id 가 있는지 확인
+		Long kakaoId = kakaoUserInfo.getId();
+		UserMapping kakaoUser = socialLoginRepository.findBySocialIdAndPlatform(kakaoId, "kakao").orElse(null);
 
-		// 필요시 회원가입
-		UserMapping kakaoUser = registerKakaoUserIfNeeded(kakaoUserInfo, httpServletResponse);
-		// SuccessResponseDto successResponseDto = new SuccessResponseDto();
-		// successResponseDto.setSuccess(true);
-		// successResponseDto.setMessage(kakaoUserInfo.getEmail());
-		return kakaoUserInfo;
+		if (kakaoUser == null) { // 카카오 유저가 없다면
+			// 홈페이지 신규 회원가입
+			log.info("userInfo 쿠키 생성");
+			cookieUtil.setUserInfoCookie(res, kakaoUserInfo);
+			return ApiResponse.successWithMessage(HttpStatus.OK, "회원가입 성공");
+
+		} else {
+
+			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
+			jwtUtil.addJwtToCookie(createToken, res);
+			return ApiResponse.successWithMessage(HttpStatus.OK, "로그인 성공");
+		}
+
 	}
 
 	private String getToken(String code) throws JsonProcessingException {
@@ -133,36 +142,9 @@ public class KakaoService {
 		// 	.get("nickname").asText();
 		String email = jsonNode.get("kakao_account")
 			.get("email").asText();
-
-		log.info("카카오 사용자 정보: " + id + ", " + ", " + email);
-		return new KakaoUserInfoDto(id, email);
+		String profileUrl = jsonNode.get("properties").get("profile_image").asText();
+		log.info("카카오 사용자 정보: " + id + ", " + profileUrl + ", " + email);
+		return new KakaoUserInfoDto(id, email, profileUrl);
 	}
 
-	private UserMapping registerKakaoUserIfNeeded(KakaoUserInfoDto kakaoUserInfo,
-		HttpServletResponse httpServletResponse) {
-		// DB 에 중복된 Kakao Id 가 있는지 확인
-		Long kakaoId = kakaoUserInfo.getId();
-		UserMapping kakaoUser = socialLoginRepository.findBySocialIdAndPlatform(kakaoId, "kakao").orElse(null);
-
-		if (kakaoUser == null) { // 카카오 유저가 없다면
-			// 홈페이지 신규 회원가입
-			String defaultSetting = UUID.randomUUID().toString();
-
-			User user = new User(defaultSetting, defaultSetting, USER);
-			SocialLogin socialLogin = new SocialLogin(kakaoUserInfo, user);
-
-			userRepository.save(user);
-			socialLoginRepository.save(socialLogin);
-		}
-		// else {
-		// 	// String token = createKakaoToken(kakaoUser, httpServletResponse);
-		//
-		// }
-		return kakaoUser;
-	}
-
-	// private String createKakaoToken(UserMapping kakaoUser, HttpServletResponse httpServletResponse) {
-	// 	String token = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
-	//
-	// }
 }
