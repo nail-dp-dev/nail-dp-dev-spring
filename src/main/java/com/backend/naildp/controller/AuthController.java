@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.common.ApiResponse;
@@ -42,12 +41,12 @@ public class AuthController {
 	}
 
 	@PostMapping("/auth/nickname")
-	public ApiResponse<?> duplicateNickname(@RequestPart("nickname") String nickname) {
+	public ApiResponse<?> duplicateNickname(@RequestBody String nickname) {
 		return authService.duplicateNickname(nickname);
 	}
 
 	@PostMapping("/auth/phone")
-	public ApiResponse<?> duplicatePhone(@RequestPart("phone_number") String phoneNumber) {
+	public ApiResponse<?> duplicatePhone(@RequestBody String phoneNumber) {
 		return authService.duplicatePhone(phoneNumber);
 	}
 }
