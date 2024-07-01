@@ -37,6 +37,8 @@ public class User extends BaseEntity {
 	private Long point;
 	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
+	@Column(nullable = false)
+	private boolean agreement;
 
 	public User(String nickname, String phoneNumber,
 		Long point, UserRole role) {
@@ -49,12 +51,8 @@ public class User extends BaseEntity {
 	public User(LoginRequestDto loginRequestDto, UserRole role) {
 		this.nickname = loginRequestDto.getNickname();
 		this.phoneNumber = loginRequestDto.getPhone_number();
+		this.agreement = loginRequestDto.isAgreement();
 		this.role = role;
 	}
 
-	public User(String defaultSetting, String defaultSetting1, UserRole userRole) {
-		this.nickname = defaultSetting;
-		this.phoneNumber = defaultSetting1;
-		this.role = userRole;
-	}
 }
