@@ -64,7 +64,6 @@ public class KakaoService {
 			return ApiResponse.successWithMessage(HttpStatus.OK, "회원가입 성공");
 
 		} else {
-
 			log.info("jwt 쿠키 생성");
 			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
 			jwtUtil.addJwtToCookie(createToken, res);

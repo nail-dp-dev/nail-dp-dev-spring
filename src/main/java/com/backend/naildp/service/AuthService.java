@@ -45,8 +45,8 @@ public class AuthService {
 		if (userInfo.getProfileUrl() != null) {
 			Profile profile = new Profile(user, userInfo.getProfileUrl(), userInfo.getProfileUrl());
 			profileRepository.save(profile);
-
 		}
+
 		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
 		jwtUtil.addJwtToCookie(createToken, res);
 		return ApiResponse.successWithMessage(HttpStatus.OK, "회원가입 완료");
