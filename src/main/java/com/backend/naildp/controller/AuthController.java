@@ -25,8 +25,9 @@ public class AuthController {
 	private final KakaoService kakaoService;
 
 	@PostMapping("/auth/signup")
-	public ApiResponse<?> signupUser(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest req) {
-		return authService.signupUser(loginRequestDto, req);
+	public ApiResponse<?> signupUser(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest req,
+		HttpServletResponse res) {
+		return authService.signupUser(loginRequestDto, req, res);
 	}
 
 	@GetMapping("/protected")

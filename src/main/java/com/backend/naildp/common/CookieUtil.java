@@ -12,11 +12,12 @@ import com.google.gson.Gson;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class CookieUtil {
 
-	// 쿠키에 KakaoUserInfoDto 객체를 저장하는 메서드
 	public void setUserInfoCookie(HttpServletResponse response, KakaoUserInfoDto userInfo) {
 		Gson gson = new Gson();
 		String userInfoJson = gson.toJson(userInfo);
@@ -37,7 +38,6 @@ public class CookieUtil {
 		}
 	}
 
-	// 쿠키에서 KakaoUserInfoDto 객체를 읽어오는 메서드
 	public KakaoUserInfoDto getUserInfoFromCookie(HttpServletRequest req) {
 		Cookie[] cookies = req.getCookies();
 		if (cookies != null) {
@@ -47,10 +47,10 @@ public class CookieUtil {
 						// 쿠키 값을 URL 디코딩
 						String decodedUserInfoJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
 						Gson gson = new Gson();
+						log.info(decodedUserInfoJson);
 						return gson.fromJson(decodedUserInfoJson, KakaoUserInfoDto.class);
 					} catch (UnsupportedEncodingException e) {
 						e.printStackTrace();
-						// 디코딩 예외 처리
 					}
 				}
 			}

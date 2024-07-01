@@ -1,6 +1,7 @@
 package com.backend.naildp.service;
 
 import java.net.URI;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -45,8 +46,7 @@ public class KakaoService {
 	@Value("${kakao.redirect.uri}") // Base64 Encode 한 SecretKe
 	private String redirectUri;
 
-	public ApiResponse<?> kakaoLogin(String code, HttpServletResponse res) throws
-		JsonProcessingException {
+	public ApiResponse<?> kakaoLogin(String code, HttpServletResponse res) throws JsonProcessingException {
 		log.info("인가코드 : " + code);
 		// 인가 코드로 액세스 토큰 요청
 		String accessToken = getToken(code);
@@ -65,6 +65,7 @@ public class KakaoService {
 
 		} else {
 
+			log.info("jwt 쿠키 생성");
 			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
 			jwtUtil.addJwtToCookie(createToken, res);
 			return ApiResponse.successWithMessage(HttpStatus.OK, "로그인 성공");
@@ -74,8 +75,7 @@ public class KakaoService {
 
 	private String getToken(String code) throws JsonProcessingException {
 		// 요청 URL 만들기
-		URI uri = UriComponentsBuilder
-			.fromUriString("https://kauth.kakao.com")
+		URI uri = UriComponentsBuilder.fromUriString("https://kauth.kakao.com")
 			.path("/oauth/token")
 			.encode()
 			.build()
@@ -92,16 +92,12 @@ public class KakaoService {
 		body.add("redirect_uri", redirectUri);
 		body.add("code", code);
 
-		RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
-			.post(uri)
+		RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity.post(uri)
 			.headers(headers)
 			.body(body);
 
 		// HTTP 요청 보내기
-		ResponseEntity<String> response = restTemplate.exchange(
-			requestEntity,
-			String.class
-		);
+		ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
 
 		// HTTP 응답 (JSON) -> 액세스 토큰 파싱
 		JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
@@ -113,8 +109,7 @@ public class KakaoService {
 		log.info("accessToken : " + accessToken);
 
 		// 요청 URL 만들기
-		URI uri = UriComponentsBuilder
-			.fromUriString("https://kapi.kakao.com")
+		URI uri = UriComponentsBuilder.fromUriString("https://kapi.kakao.com")
 			.path("/v2/user/me")
 			.encode()
 			.build()
@@ -125,24 +120,24 @@ public class KakaoService {
 		headers.add("Authorization", "Bearer " + accessToken);
 		headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
-		RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
-			.post(uri)
+		RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity.post(uri)
 			.headers(headers)
 			.body(new LinkedMultiValueMap<>());
 
 		// HTTP 요청 보내기
-		ResponseEntity<String> response = restTemplate.exchange(
-			requestEntity,
-			String.class
-		);
+		ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
 
 		JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
 		Long id = jsonNode.get("id").asLong();
 		// String nickname = jsonNode.get("properties")
 		// 	.get("nickname").asText();
-		String email = jsonNode.get("kakao_account")
-			.get("email").asText();
-		String profileUrl = jsonNode.get("properties").get("profile_image").asText();
+		String email = jsonNode.get("kakao_account").get("email").asText();
+
+		String profileUrl = Optional.ofNullable(jsonNode.get("properties"))
+			.map(properties -> properties.get("profile_image"))
+			.map(JsonNode::asText)
+			.orElse(null);
+
 		log.info("카카오 사용자 정보: " + id + ", " + profileUrl + ", " + email);
 		return new KakaoUserInfoDto(id, email, profileUrl);
 	}

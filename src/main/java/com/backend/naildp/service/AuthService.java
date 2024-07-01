@@ -14,11 +14,13 @@ import com.backend.naildp.dto.LoginRequestDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,9 +31,10 @@ public class AuthService {
 	private final CookieUtil cookieUtil;
 	private final SocialLoginRepository socialLoginRepository;
 	private final ProfileRepository profileRepository;
+	private final JwtUtil jwtUtil;
 
 	@Transactional
-	public ApiResponse<?> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req) {
+	public ApiResponse<?> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req, HttpServletResponse res) {
 		User user = new User(loginRequestDto, UserRole.USER);
 		userRepository.save(user);
 
@@ -44,6 +47,8 @@ public class AuthService {
 			profileRepository.save(profile);
 
 		}
+		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
+		jwtUtil.addJwtToCookie(createToken, res);
 		return ApiResponse.successWithMessage(HttpStatus.OK, "회원가입 완료");
 	}
 
