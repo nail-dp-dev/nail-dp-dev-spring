@@ -10,11 +10,9 @@ import lombok.Setter;
 public class LoginRequestDto {
 	private String nickname;
 	private String phone_number;
-	private String profile_url;
 
-	public LoginRequestDto(String nickname, String phone_number, String profile_url) {
+	public LoginRequestDto(String nickname, String phone_number) {
 		this.nickname = nickname;
 		this.phone_number = phone_number;
-		this.profile_url = profile_url;
 	}
 }

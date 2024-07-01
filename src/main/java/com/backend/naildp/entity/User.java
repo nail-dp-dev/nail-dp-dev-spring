@@ -7,6 +7,8 @@ import com.backend.naildp.dto.LoginRequestDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +35,7 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private String phoneNumber;
 	private Long point;
+	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
 
 	public User(String nickname, String phoneNumber,
