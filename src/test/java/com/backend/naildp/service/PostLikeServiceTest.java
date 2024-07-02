@@ -44,9 +44,12 @@ class PostLikeServiceTest {
 	@BeforeEach
 	void setup() {
 		User user = createTestMember("test@naver.com", "testUser", "0100000");
+		User userAlreadyLikePost = createTestMember("testUserLikePost@naver.com", "testUserLikePost", "0102222");
 		User writer = createTestMember("writer@naver.com", "writer", "0101111");
 
 		createTestPostAndPhoto(writer, 5);
+
+		createTestPostLike(userAlreadyLikePost, writer);
 	}
 
 	@DisplayName("writer 가 작성한 첫번째 게시물 좋아요 테스트")
@@ -91,6 +94,23 @@ class PostLikeServiceTest {
 		assertThat(postLikeUserNicknames).containsOnly(userNickname);
 	}
 
+	@DisplayName("좋아요한 게시물 좋아요 취소 테스트")
+	@Test
+	void cancelPostLike() {
+		//given
+		String nickname = "testUserLikePost";
+		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
+		List<Post> posts = postLikes.stream().map(PostLike::getPost).distinct().collect(Collectors.toList());
+
+		//when
+		posts.forEach(post -> postLikeService.unlikeByPostId(post.getId()));
+
+		//then
+		List<PostLike> deletedPostLike = postLikeRepository.findAllByUserNickname(nickname);
+
+		assertThat(deletedPostLike).hasSize(0);
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber) {
 		SocialLogin naverLogin = new SocialLogin("NAVER", email);
 		User user = new User(naverLogin, nickname, phoneNumber, "프로필url", 1000L, UserRole.USER);
@@ -124,4 +144,9 @@ class PostLikeServiceTest {
 			.getResultList();
 	}
 
+	private void createTestPostLike(User user, User writer) {
+		Post post = findPostByNickname(writer.getNickname());
+		PostLike postLike = new PostLike(user, post);
+		postLikeRepository.saveAndFlush(postLike);
+	}
 }
