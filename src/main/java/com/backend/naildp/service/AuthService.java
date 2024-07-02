@@ -6,14 +6,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.common.ApiResponse;
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.KakaoUserInfoDto;
 import com.backend.naildp.dto.LoginRequestDto;
+import com.backend.naildp.dto.NicknameRequsetDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
@@ -39,7 +42,7 @@ public class AuthService {
 	public ApiResponse<?> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req, HttpServletResponse res) {
 		Optional<User> findUser = userRepository.findByNickname(loginRequestDto.getNickname());
 		if (findUser.isPresent()) {
-			return ApiResponse.errorResponse("Already Exist User");
+			throw new IllegalArgumentException("Already Exist User");
 		}
 		User user = new User(loginRequestDto, UserRole.USER);
 
@@ -60,16 +63,16 @@ public class AuthService {
 		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
 		jwtUtil.addJwtToCookie(createToken, res);
 
-		return ApiResponse.successWithLoginType("signUp", "회원가입 완료");
+		return ApiResponse.successResponse(HttpStatus.OK, null, "회원가입 완료", null);
 	}
 
 	@Transactional(readOnly = true)
-	public ApiResponse<?> duplicateNickname(String nickname) {
-		Optional<User> user = userRepository.findByNickname(nickname);
+	public ApiResponse<?> duplicateNickname(NicknameRequsetDto requsetDto) {
+		Optional<User> user = userRepository.findByNickname(requsetDto.getNickname());
 		if (user.isPresent()) {
-			throw new IllegalArgumentException("Already Exist Nickname");
+			throw new CustomException(ErrorCode.NOT_FOUND_FEED);
 		}
-		return ApiResponse.successWithMessage(HttpStatus.OK, "닉네임 중복 확인 성공");
+		return ApiResponse.successResponse(HttpStatus.OK, null, "회원가입 완료", null);
 	}
 
 	@Transactional(readOnly = true)
@@ -78,6 +81,6 @@ public class AuthService {
 		if (user.isPresent()) {
 			throw new IllegalArgumentException("Already Exist PhoneNumber");
 		}
-		return ApiResponse.successWithMessage(HttpStatus.OK, "전화번호 중복 확인 성공");
+		return ApiResponse.successResponse(HttpStatus.OK, null, "회원가입 완료", null);
 	}
 }
