@@ -24,6 +24,7 @@ public class ApiResponse<T> {
 	private String status;
 	private T data;
 	private String message;
+	private String type;
 
 	public static <T> ApiResponse<T> successResponse(T data) {
 		return new ApiResponse<>(SUCCESS_STATUS, data, null);
@@ -35,6 +36,10 @@ public class ApiResponse<T> {
 
 	public static <T> ApiResponse<T> successWithMessage(HttpStatus status, String message) {
 		return new ApiResponse<>(SUCCESS_STATUS, null, message);
+	}
+
+	public static <T> ApiResponse<T> successWithLoginType(String type, String message) {
+		return new ApiResponse<>(SUCCESS_STATUS, type, null, message);
 	}
 
 	public static ApiResponse<?> successWithNoContent() {
@@ -63,5 +68,12 @@ public class ApiResponse<T> {
 		this.status = status;
 		this.data = data;
 		this.message = message;
+	}
+
+	private ApiResponse(String status, String type, T data, String message) {
+		this.status = status;
+		this.data = data;
+		this.message = message;
+		this.type = type;
 	}
 }

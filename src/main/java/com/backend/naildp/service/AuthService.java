@@ -22,7 +22,9 @@ import com.backend.naildp.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -35,7 +37,12 @@ public class AuthService {
 
 	@Transactional
 	public ApiResponse<?> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req, HttpServletResponse res) {
+		Optional<User> findUser = userRepository.findByNickname(loginRequestDto.getNickname());
+		if (findUser.isPresent()) {
+			return ApiResponse.errorResponse("Already Exist User");
+		}
 		User user = new User(loginRequestDto, UserRole.USER);
+
 		userRepository.save(user);
 
 		KakaoUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
@@ -47,9 +54,13 @@ public class AuthService {
 			profileRepository.save(profile);
 		}
 
+		cookieUtil.deleteUserInfoCookie(res);
+		log.info("쿠키 지우기");
+
 		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
 		jwtUtil.addJwtToCookie(createToken, res);
-		return ApiResponse.successWithMessage(HttpStatus.OK, "회원가입 완료");
+
+		return ApiResponse.successWithLoginType("signUp", "회원가입 완료");
 	}
 
 	public ApiResponse<?> duplicateNickname(String nickname) {
