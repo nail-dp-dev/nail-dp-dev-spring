@@ -63,6 +63,7 @@ public class AuthService {
 		return ApiResponse.successWithLoginType("signUp", "회원가입 완료");
 	}
 
+	@Transactional(readOnly = true)
 	public ApiResponse<?> duplicateNickname(String nickname) {
 		Optional<User> user = userRepository.findByNickname(nickname);
 		if (user.isPresent()) {
@@ -71,6 +72,7 @@ public class AuthService {
 		return ApiResponse.successWithMessage(HttpStatus.OK, "닉네임 중복 확인 성공");
 	}
 
+	@Transactional(readOnly = true)
 	public ApiResponse<?> duplicatePhone(String phoneNumber) {
 		Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
 		if (user.isPresent()) {
