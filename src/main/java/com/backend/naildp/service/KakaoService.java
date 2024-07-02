@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.backend.naildp.common.ApiResponse;
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.dto.KakaoUserInfoDto;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserMapping;
@@ -61,7 +62,7 @@ public class KakaoService {
 			log.info("userInfo 쿠키 생성");
 			cookieUtil.setUserInfoCookie(res, kakaoUserInfo);
 
-			return ApiResponse.successWithLoginType("signUp", "회원가입 완료");
+			return ApiResponse.successResponse(HttpStatus.CREATED, null, "회원가입 완료", null);
 
 		} else {
 			cookieUtil.deleteUserInfoCookie(res);
@@ -70,7 +71,7 @@ public class KakaoService {
 			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
 			jwtUtil.addJwtToCookie(createToken, res);
 
-			return ApiResponse.successWithLoginType("login", "로그인 성공");
+			return ApiResponse.successResponse(HttpStatus.OK, null, "로그인 완료", null);
 
 		}
 

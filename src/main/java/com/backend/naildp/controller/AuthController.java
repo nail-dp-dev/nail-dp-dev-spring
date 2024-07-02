@@ -6,8 +6,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.naildp.common.ApiResponse;
 import com.backend.naildp.dto.LoginRequestDto;
+import com.backend.naildp.dto.NicknameRequsetDto;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.AuthService;
 import com.backend.naildp.service.KakaoService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,8 +42,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/auth/nickname")
-	public ApiResponse<?> duplicateNickname(@RequestBody String nickname) {
-		return authService.duplicateNickname(nickname);
+	public ApiResponse<?> duplicateNickname(@RequestBody NicknameRequsetDto requsetDto) {
+		return authService.duplicateNickname(requsetDto);
 	}
 
 	@PostMapping("/auth/phone")
