@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -61,13 +60,18 @@ public class KakaoService {
 			// 홈페이지 신규 회원가입
 			log.info("userInfo 쿠키 생성");
 			cookieUtil.setUserInfoCookie(res, kakaoUserInfo);
-			return ApiResponse.successWithMessage(HttpStatus.OK, "회원가입 성공");
+
+			return ApiResponse.successWithLoginType("signUp", "회원가입 완료");
 
 		} else {
+			cookieUtil.deleteUserInfoCookie(res);
+
 			log.info("jwt 쿠키 생성");
 			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
 			jwtUtil.addJwtToCookie(createToken, res);
-			return ApiResponse.successWithMessage(HttpStatus.OK, "로그인 성공");
+
+			return ApiResponse.successWithLoginType("login", "로그인 성공");
+
 		}
 
 	}

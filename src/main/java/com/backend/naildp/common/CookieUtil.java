@@ -57,4 +57,13 @@ public class CookieUtil {
 		}
 		return null;
 	}
+
+	public void deleteUserInfoCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("userInfo", null);
+		cookie.setMaxAge(0);
+		cookie.setHttpOnly(true);
+		cookie.setPath("/");
+
+		response.addCookie(cookie);
+	}
 }
