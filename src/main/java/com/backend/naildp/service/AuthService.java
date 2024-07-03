@@ -70,9 +70,7 @@ public class AuthService {
 
 	@Transactional(readOnly = true)
 	public ResponseEntity<ApiResponse<?>> duplicateNickname(NicknameRequestDto requestDto) {
-		Optional<User> user = Optional.ofNullable(userRepository.findByNickname(requestDto.getNickname()).orElseThrow(()
-			-> new CustomException("잘못된 요청입니다.", ErrorCode.TEMPORARY_SERVER_ERROR)
-		));
+		Optional<User> user = userRepository.findByNickname(requestDto.getNickname());
 		if (user.isPresent()) {
 			throw new CustomException("이미 존재하는 닉네임입니다", ErrorCode.ALREADY_EXIST);
 		}

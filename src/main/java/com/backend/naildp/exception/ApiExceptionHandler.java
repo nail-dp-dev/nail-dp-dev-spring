@@ -1,7 +1,5 @@
 package com.backend.naildp.exception;
 
-import static com.backend.naildp.exception.ErrorCode.*;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,9 +18,9 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<?>> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
-		ApiResponse<?> apiResponse = ApiResponse.of(WRONG_TYPE);
-		apiResponse.setMessage(exception.getMessage());
-		return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+		ApiResponse<?> apiResponse = ApiResponse.of();
+		apiResponse.setMessage(exception.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(value = CustomException.class)

@@ -15,7 +15,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.dto.KakaoUserInfoDto;
-import com.backend.naildp.dto.LoginResponseDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.SocialLoginRepository;
@@ -59,8 +58,6 @@ public class KakaoService {
 		UserMapping kakaoUser = socialLoginRepository.findBySocialIdAndPlatform(kakaoId, "kakao").orElse(null);
 
 		if (kakaoUser == null) { // 카카오 유저가 없다면
-			LoginResponseDto loginResponseDto = new LoginResponseDto();
-			loginResponseDto.setRegistered(false);
 
 			// 홈페이지 신규 회원가입
 			log.info("userInfo 쿠키 생성");
@@ -69,8 +66,6 @@ public class KakaoService {
 			return ResponseEntity.ok().body(ApiResponse.successResponse(null, "소셜 회원가입이 완료되었습니다", 2001));
 
 		} else {
-			LoginResponseDto loginResponseDto = new LoginResponseDto();
-			loginResponseDto.setRegistered(true);
 
 			cookieUtil.deleteUserInfoCookie(res);
 

@@ -50,7 +50,7 @@ public class User extends BaseEntity {
 
 	public User(LoginRequestDto loginRequestDto, UserRole role) {
 		this.nickname = loginRequestDto.getNickname();
-		this.phoneNumber = loginRequestDto.getPhone_number();
+		this.phoneNumber = loginRequestDto.getPhoneNumber();
 		this.agreement = loginRequestDto.isAgreement();
 		this.role = role;
 	}

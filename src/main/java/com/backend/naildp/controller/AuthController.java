@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,7 +28,7 @@ public class AuthController {
 	private final KakaoService kakaoService;
 
 	@PostMapping("/auth/signup")
-	public ResponseEntity<ApiResponse<?>> signupUser(@RequestBody LoginRequestDto loginRequestDto,
+	public ResponseEntity<ApiResponse<?>> signupUser(@Valid @RequestBody LoginRequestDto loginRequestDto,
 		HttpServletRequest req,
 		HttpServletResponse res) {
 		return authService.signupUser(loginRequestDto, req, res);
@@ -45,7 +46,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/auth/nickname")
-	public ResponseEntity<ApiResponse<?>> duplicateNickname(@RequestBody NicknameRequestDto requestDto) {
+	public ResponseEntity<ApiResponse<?>> duplicateNickname(@Valid @RequestBody NicknameRequestDto requestDto) {
 		return authService.duplicateNickname(requestDto);
 	}
 
