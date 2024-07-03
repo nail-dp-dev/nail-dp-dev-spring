@@ -1,19 +1,17 @@
 package com.backend.naildp.entity;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.LoginRequestDto;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,26 +26,33 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private UUID id;
 
-	@ElementCollection
-	@CollectionTable(name = "SOCIAL_LOGIN", joinColumns = @JoinColumn(name = "user_id"))
-	private List<SocialLogin> socialLoginList = new ArrayList<>();
+	// @OneToMany(mappedBy = "users", fetch = FetchType.LAZY)
+	// private List<SocialLogin> socialLoginList;
 
 	@Column(nullable = false)
 	private String nickname;
 
 	@Column(nullable = false)
 	private String phoneNumber;
-	private String profileUrl;
 	private Long point;
+	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
+	@Column(nullable = false)
+	private boolean agreement;
 
-	public User(SocialLogin socialLogin, String nickname, String phoneNumber, String profileUrl,
+	public User(String nickname, String phoneNumber,
 		Long point, UserRole role) {
-		this.socialLoginList.add(socialLogin);
 		this.nickname = nickname;
 		this.phoneNumber = phoneNumber;
-		this.profileUrl = profileUrl;
 		this.point = point;
 		this.role = role;
 	}
+
+	public User(LoginRequestDto loginRequestDto, UserRole role) {
+		this.nickname = loginRequestDto.getNickname();
+		this.phoneNumber = loginRequestDto.getPhone_number();
+		this.agreement = loginRequestDto.isAgreement();
+		this.role = role;
+	}
+
 }
