@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.LoginRequestDto;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
@@ -41,7 +42,8 @@ class PostLikeServiceUnitTest {
 		//given
 		Long postId = 1L;
 		String nickname = "nickname";
-		User user = new User(null, nickname, "phoneNumber", "url", 0L, UserRole.USER);
+		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, "phoneNumber", true);
+		User user = new User(loginRequestDto, UserRole.USER);
 		Post post = new Post(user, "content", 0L, Boundary.ALL, false);
 		PostLike postLike = new PostLike(user, post);
 

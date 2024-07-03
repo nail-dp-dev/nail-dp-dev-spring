@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.LoginRequestDto;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
@@ -40,11 +41,11 @@ class PostLikeRepositoryTest {
 
 	@BeforeEach
 	void setup() {
-		User user1 = createTestMember("mj@naver.com", "mj", "0100000");
-		User user2 = createTestMember("jw@naver.com", "jw", "0109999");
-		User writer1 = createTestMember("writer1@naver.com", "writer1", "0101111");
-		User writer2 = createTestMember("writer2@naver.com", "writer2", "0102222");
-		User writer3 = createTestMember("writer3@naver.com", "writer3", "0103333");
+		User user1 = createTestMember("mj@naver.com", "mj", "0100000", 1L);
+		User user2 = createTestMember("jw@naver.com", "jw", "0109999", 2L);
+		User writer1 = createTestMember("writer1@naver.com", "writer1", "0101111", 3L);
+		User writer2 = createTestMember("writer2@naver.com", "writer2", "0102222", 4L);
+		User writer3 = createTestMember("writer3@naver.com", "writer3", "0103333", 5L);
 
 		// 게시물 생성
 		List<Post> writerPosts1 = createTestPostWithPhoto(writer1, 5, 5);
@@ -165,10 +166,12 @@ class PostLikeRepositoryTest {
 
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber) {
-		SocialLogin naverLogin = new SocialLogin("NAVER", email);
-		User user = new User(naverLogin, nickname, phoneNumber, "프로필url", 1000L, UserRole.USER);
+	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLogInId) {
+		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
+		User user = new User(loginRequestDto, UserRole.USER);
+		SocialLogin socialLogin = new SocialLogin(socialLogInId, "kakao", email, user);
 		em.persist(user);
+		em.persist(socialLogin);
 		return user;
 	}
 

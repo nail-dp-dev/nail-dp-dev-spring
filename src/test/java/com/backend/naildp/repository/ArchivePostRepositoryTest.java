@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.LoginRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
@@ -38,8 +39,8 @@ class ArchivePostRepositoryTest {
 
 	@BeforeEach
 	void setup() {
-		User user = createTestMember("mj@naver.com", "mj", "0101111");
-		User writer = createTestMember("writer@naver.com", "writer", "0102222");
+		User user = createTestMember("mj@naver.com", "mj", "0101111", 1L);
+		User writer = createTestMember("writer@naver.com", "writer", "0102222", 2L);
 
 		// 게시물 생성
 		List<Post> userPosts = createTestPostWithPhoto(5, user);
@@ -82,10 +83,12 @@ class ArchivePostRepositoryTest {
 		writers.forEach(user -> assertThat(user.getPhoneNumber()).isEqualTo("0102222"));
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber) {
-		SocialLogin naverLogin = new SocialLogin("NAVER", email);
-		User user = new User(naverLogin, nickname, phoneNumber, "프로필url", 1000L, UserRole.USER);
+	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
+		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
+		User user = new User(loginRequestDto, UserRole.USER);
+		SocialLogin socialLogin = new SocialLogin(socialLoginId, "kakao", email, user);
 		em.persist(user);
+		em.persist(socialLogin);
 		return user;
 	}
 

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.LoginRequestDto;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
@@ -43,9 +44,10 @@ class PostLikeServiceTest {
 
 	@BeforeEach
 	void setup() {
-		User user = createTestMember("test@naver.com", "testUser", "0100000");
-		User userAlreadyLikePost = createTestMember("testUserLikePost@naver.com", "testUserLikePost", "0102222");
-		User writer = createTestMember("writer@naver.com", "writer", "0101111");
+		User user = createTestMember("test@naver.com", "testUser", "0100000", 1L);
+		User userAlreadyLikePost = createTestMember("testUserLikePost@naver.com", "testUserLikePost", "0102222",
+			2L);
+		User writer = createTestMember("writer@naver.com", "writer", "0101111", 3L);
 
 		createTestPostAndPhoto(writer, 5);
 
@@ -111,10 +113,13 @@ class PostLikeServiceTest {
 		assertThat(deletedPostLike).hasSize(0);
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber) {
-		SocialLogin naverLogin = new SocialLogin("NAVER", email);
-		User user = new User(naverLogin, nickname, phoneNumber, "프로필url", 1000L, UserRole.USER);
-		return userRepository.save(user);
+	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
+		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
+		User user = new User(loginRequestDto, UserRole.USER);
+		SocialLogin socialLogin = new SocialLogin(socialId, "kakao", email, user);
+		User savedUser = userRepository.save(user);
+		em.persist(socialLogin);
+		return savedUser;
 	}
 
 	private void createTestPostAndPhoto(User writer, int postCnt) {
