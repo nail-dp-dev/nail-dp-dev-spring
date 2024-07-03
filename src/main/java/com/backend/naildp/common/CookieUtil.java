@@ -34,7 +34,6 @@ public class CookieUtil {
 			response.addCookie(cookie);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
-			// 인코딩 예외 처리
 		}
 	}
 

@@ -44,9 +44,10 @@ dependencies {
     testRuntimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     // Gson
-    dependencies {
-        implementation 'com.google.code.gson:gson'
-    }
+    implementation 'com.google.code.gson:gson'
+
+    //validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 }
 

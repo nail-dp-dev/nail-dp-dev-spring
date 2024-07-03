@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,8 @@ public class KakaoService {
 	@Value("${kakao.redirect.uri}") // Base64 Encode 한 SecretKe
 	private String redirectUri;
 
-	public ApiResponse<?> kakaoLogin(String code, HttpServletResponse res) throws JsonProcessingException {
+	public ResponseEntity<ApiResponse<?>> kakaoLogin(String code, HttpServletResponse res) throws
+		JsonProcessingException {
 		log.info("인가코드 : " + code);
 		// 인가 코드로 액세스 토큰 요청
 		String accessToken = getToken(code);
@@ -58,20 +58,22 @@ public class KakaoService {
 		UserMapping kakaoUser = socialLoginRepository.findBySocialIdAndPlatform(kakaoId, "kakao").orElse(null);
 
 		if (kakaoUser == null) { // 카카오 유저가 없다면
+
 			// 홈페이지 신규 회원가입
 			log.info("userInfo 쿠키 생성");
 			cookieUtil.setUserInfoCookie(res, kakaoUserInfo);
 
-			return ApiResponse.successResponse(HttpStatus.CREATED, null, "회원가입 완료", null);
+			return ResponseEntity.ok().body(ApiResponse.successResponse(null, "소셜 회원가입이 완료되었습니다", 2001));
 
 		} else {
+
 			cookieUtil.deleteUserInfoCookie(res);
 
 			log.info("jwt 쿠키 생성");
 			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
 			jwtUtil.addJwtToCookie(createToken, res);
 
-			return ApiResponse.successResponse(HttpStatus.OK, null, "로그인 완료", null);
+			return ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그인이 완료되었습니다", 2000));
 
 		}
 
