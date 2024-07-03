@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class LoginResponseDto {
-	private boolean registered;
+public class PhoneNumberRequestDto {
+	private String phoneNumber;
 }
