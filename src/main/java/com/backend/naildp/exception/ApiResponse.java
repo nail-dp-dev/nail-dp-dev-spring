@@ -1,7 +1,5 @@
 package com.backend.naildp.exception;
 
-import org.springframework.http.HttpStatus;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,29 +12,28 @@ public class ApiResponse<T> {
 
 	private T data;
 	private String message;
-	private HttpStatus httpStatus;
+	private int code;
 
-	private String code;
-
-	public static <T> ApiResponse<T> successResponse(HttpStatus status, T data, String message, String code) {
-		return new ApiResponse<>(status, data, message, code);
+	public static <T> ApiResponse<T> successResponse(T data, String message, int code) {
+		return new ApiResponse<>(data, message, code);
 	}
 
-	private ApiResponse(HttpStatus status, T data, String message, String code) {
-		this.httpStatus = status;
+	private ApiResponse(T data, String message, int code) {
 		this.data = data;
 		this.message = message;
 		this.code = code;
 	}
 
 	public ApiResponse(ErrorCode code) {
-		this.httpStatus = code.getHttpStatus();
 		this.code = code.getErrorCode();
-		this.message = code.getMessage();
 	}
 
 	public static ApiResponse<?> of(ErrorCode code) {
 		return new ApiResponse<>(code);
+	}
+
+	public static ApiResponse<?> of() {
+		return new ApiResponse<>();
 	}
 
 }
