@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,9 +30,10 @@ class HomeControllerUnitTest {
 	@MockBean
 	PostService postService;
 
+	@DisplayName("최신 게시물 조회 API 테스트")
 	@Test
 	@WithMockUser(username = "testUser", roles = {"USER"})
-	void test() throws Exception {
+	void newPostsApiTest() throws Exception {
 		List<HomePostResponse> homePostResponses = new ArrayList<>();
 		ApiResponse<List<HomePostResponse>> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
 			2000);
