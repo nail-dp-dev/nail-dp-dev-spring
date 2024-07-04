@@ -36,7 +36,10 @@ public class PostLikeService {
 	}
 
 	@Transactional
-	public void unlikeByPostId(Long postId) {
-		postLikeRepository.deletePostLikeByPostId(postId);
+	public void unlikeByPostId(Long postId, String nickname) {
+		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(nickname, postId)
+			.orElseThrow(() -> new CustomException("해당 게시물은 존재하지 않습니다.", ErrorCode.NOT_FOUND));
+
+		postLikeRepository.deleteById(postLike.getId());
 	}
 }

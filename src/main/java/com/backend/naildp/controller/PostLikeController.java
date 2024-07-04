@@ -29,8 +29,9 @@ public class PostLikeController {
 	}
 
 	@DeleteMapping("/{postId}/likes")
-	public ResponseEntity<?> unlikePost(@PathVariable("postId") Long postId) {
-		postLikeService.unlikeByPostId(postId);
+	public ResponseEntity<?> unlikePost(@PathVariable("postId") Long postId,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		postLikeService.unlikeByPostId(postId, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 취소", 2000));
 	}
 }
