@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.naildp.common.ApiResponse;
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,6 @@ public class HomeController {
 	public ResponseEntity<?> homePosts(@RequestParam(name = "choice") String choice, @AuthenticationPrincipal
 		UserDetails userDetails) {
 		List<HomePostResponse> homePostResponses = postService.homePosts(userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses));
+		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
 	}
 }

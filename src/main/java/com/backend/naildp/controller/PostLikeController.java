@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.naildp.common.ApiResponse;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostLikeService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,12 +25,12 @@ public class PostLikeController {
 	public ResponseEntity<?> likePost(@PathVariable("postId") Long postId,
 		@AuthenticationPrincipal UserDetails userDetails) {
 		Long likePostId = postLikeService.likeByPostId(postId, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(likePostId));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
 	}
 
 	@DeleteMapping("/{postId}/likes")
 	public ResponseEntity<?> unlikePost(@PathVariable("postId") Long postId) {
 		postLikeService.unlikeByPostId(postId);
-		return ResponseEntity.ok(ApiResponse.successResponse(null));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 취소", 2000));
 	}
 }
