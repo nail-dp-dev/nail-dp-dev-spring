@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -24,10 +26,10 @@ public class PostLikeService {
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
 		User user = userRepository.findUserByNickname(username)
-			.orElseThrow(() -> new IllegalArgumentException("nickname 으로 회원을 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		Post post = postRepository.findById(postId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 포스트를 조회할 수 없습니다."));
+			.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
 		return savedPostLike.getId();
