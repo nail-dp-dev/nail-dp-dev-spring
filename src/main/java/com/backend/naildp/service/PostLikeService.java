@@ -40,6 +40,6 @@ public class PostLikeService {
 		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(nickname, postId)
 			.orElseThrow(() -> new CustomException("해당 게시물은 존재하지 않습니다.", ErrorCode.NOT_FOUND));
 
-		postLikeRepository.deleteById(postLike.getId());
+		postLikeRepository.deletePostLikeById(postLike.getId());
 	}
 }
