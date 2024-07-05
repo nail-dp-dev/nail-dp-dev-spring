@@ -73,13 +73,14 @@ class PostLikeControllerUnitTest {
 		Long resultId = 10L;
 		ApiResponse<Object> apiResponse = ApiResponse.successResponse(null, "좋아요 취소", 2000);
 
-		when(postLikeService.likeByPostId(anyLong(), anyString())).thenReturn(resultId);
+		doNothing().when(postLikeService).unlikeByPostId(anyLong(), anyString());
 
 		mvc.perform(delete("/posts/{postId}/likes", 3L).with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-			.andExpect(jsonPath("$.code").value(apiResponse.getCode()));
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andDo(print());
 	}
 
 	@DisplayName("게시물 좋아요 취소 API 예외 테스트")
