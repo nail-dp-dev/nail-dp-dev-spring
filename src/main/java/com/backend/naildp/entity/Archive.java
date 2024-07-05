@@ -2,6 +2,9 @@ package com.backend.naildp.entity;
 
 import static jakarta.persistence.FetchType.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.backend.naildp.common.Boundary;
 
 import jakarta.persistence.Column;
@@ -11,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,10 +33,18 @@ public class Archive extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@OneToMany(mappedBy = "archive")
+	private List<ArchivePost> archivePosts = new ArrayList<>();
+
 	@Column(nullable = false)
 	private String name;
 
 	@Column(nullable = false)
 	private Boundary boundary;
 
+	public Archive(User user, String name, Boundary boundary) {
+		this.user = user;
+		this.name = name;
+		this.boundary = boundary;
+	}
 }

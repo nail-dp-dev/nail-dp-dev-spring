@@ -1,5 +1,8 @@
 package com.backend.naildp.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.backend.naildp.common.Boundary;
 
 import jakarta.persistence.Column;
@@ -10,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +32,9 @@ public class Post extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@OneToMany(mappedBy = "post")
+	private List<Photo> photos = new ArrayList<>();
+
 	private String postContent;
 
 	@Column(nullable = false)
@@ -45,5 +52,9 @@ public class Post extends BaseEntity {
 		this.sharing = sharing;
 		this.boundary = boundary;
 		this.tempSave = tempSave;
+	}
+
+	public void addPhoto(Photo photo) {
+		this.photos.add(photo);
 	}
 }
