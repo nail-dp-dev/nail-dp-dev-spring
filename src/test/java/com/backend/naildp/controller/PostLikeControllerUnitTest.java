@@ -82,4 +82,23 @@ class PostLikeControllerUnitTest {
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()));
 	}
 
+	@DisplayName("게시물 좋아요 취소 API 예외 테스트")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void cancelPostLikeApiException() throws Exception {
+		Long resultId = 10L;
+		String errorMessage = "해당 게시물은 존재하지 않습니다.";
+		ApiResponse<?> apiResponse = ApiResponse.of(ErrorCode.NOT_FOUND);
+		apiResponse.setMessage(errorMessage);
+
+		doThrow(new CustomException(errorMessage, ErrorCode.NOT_FOUND))
+			.when(postLikeService).unlikeByPostId(anyLong(), anyString());
+
+		mvc.perform(delete("/posts/{postId}/likes", 3L).with(csrf()))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()));
+	}
+
 }
