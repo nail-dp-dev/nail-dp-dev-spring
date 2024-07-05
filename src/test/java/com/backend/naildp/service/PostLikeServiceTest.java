@@ -105,7 +105,7 @@ class PostLikeServiceTest {
 		List<Post> posts = postLikes.stream().map(PostLike::getPost).distinct().collect(Collectors.toList());
 
 		//when
-		posts.forEach(post -> postLikeService.unlikeByPostId(post.getId()));
+		posts.forEach(post -> postLikeService.unlikeByPostId(post.getId(), nickname));
 
 		//then
 		List<PostLike> deletedPostLike = postLikeRepository.findAllByUserNickname(nickname);

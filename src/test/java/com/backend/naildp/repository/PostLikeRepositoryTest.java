@@ -152,13 +152,9 @@ class PostLikeRepositoryTest {
 		//given
 		String nickname = "mj";
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
-		List<Long> likedPostIds = postLikes.stream()
-			.map(PostLike::getPost)
-			.map(Post::getId)
-			.collect(Collectors.toList());
 
 		//when
-		likedPostIds.forEach(postId -> postLikeRepository.deletePostLikeByPostId(postId));
+		postLikes.forEach(postLike -> postLikeRepository.deletePostLikeById(postLike.getId()));
 
 		//then
 		List<PostLike> deletedPostLikes = postLikeRepository.findAllByUserNickname(nickname);

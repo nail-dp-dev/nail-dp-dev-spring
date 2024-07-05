@@ -65,11 +65,20 @@ class PostLikeServiceUnitTest {
 	void cancelPostLikeByPostId() {
 		//given
 		Long postId = 1L;
+		String nickname = "nickname";
+		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, "phoneNumber", true);
+		User user = new User(loginRequestDto, UserRole.USER);
+		Post post = new Post(user, "content", 0L, Boundary.ALL, false);
+		PostLike postLike = new PostLike(user, post);
+
+		given(postLikeRepository.findPostLikeByUserNicknameAndPostId(anyString(), anyLong()))
+			.willReturn(Optional.of(postLike));
 
 		//when
-		postLikeService.unlikeByPostId(postId);
+		postLikeService.unlikeByPostId(postId, nickname);
 
 		//then
-		verify(postLikeRepository, times(1)).deletePostLikeByPostId(anyLong());
+		verify(postLikeRepository).findPostLikeByUserNicknameAndPostId(anyString(), anyLong());
+		verify(postLikeRepository).deletePostLikeById(postLike.getId());
 	}
 }
