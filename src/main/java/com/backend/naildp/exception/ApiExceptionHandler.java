@@ -11,14 +11,21 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<?>> handleExceptions(Exception exception) {
-		ApiResponse<?> apiResponse = ApiResponse.of();
+		ApiResponse<?> apiResponse = ApiResponse.of(HttpStatus.INTERNAL_SERVER_ERROR.value());
+		apiResponse.setMessage(exception.getMessage());
+		return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler(RuntimeException.class)
+	public ResponseEntity<ApiResponse<?>> handleExceptions(RuntimeException exception) {
+		ApiResponse<?> apiResponse = ApiResponse.of(HttpStatus.BAD_REQUEST.value());
 		apiResponse.setMessage(exception.getMessage());
 		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<?>> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
-		ApiResponse<?> apiResponse = ApiResponse.of();
+		ApiResponse<?> apiResponse = ApiResponse.of(HttpStatus.BAD_REQUEST.value());
 		apiResponse.setMessage(exception.getBindingResult().getAllErrors().get(0).getDefaultMessage());
 		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
 	}
