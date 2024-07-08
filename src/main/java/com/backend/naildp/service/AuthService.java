@@ -109,7 +109,7 @@ public class AuthService {
 			try {
 				jwtAuthorizationFilter.setAuthentication(info.getSubject());
 			} catch (Exception e) {
-				log.error(e.getMessage());
+				throw new RuntimeException("Authentication 에러", e);
 			}
 		}
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "jwt토큰 검증 확인", 2000));
