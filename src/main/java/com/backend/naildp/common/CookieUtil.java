@@ -57,12 +57,19 @@ public class CookieUtil {
 		return null;
 	}
 
-	public void deleteUserInfoCookie(HttpServletResponse response) {
-		Cookie cookie = new Cookie("userInfo", null);
-		cookie.setMaxAge(0);
-		cookie.setHttpOnly(true);
-		cookie.setPath("/");
+	public void deleteCookie(String cookieName, HttpServletRequest req, HttpServletResponse res) {
+		Cookie[] cookies = req.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals(cookieName)) {
+					cookie.setMaxAge(0);
+					cookie.setHttpOnly(true);
+					cookie.setPath("/");
 
-		response.addCookie(cookie);
+					res.addCookie(cookie);
+				}
+			}
+
+		}
 	}
 }

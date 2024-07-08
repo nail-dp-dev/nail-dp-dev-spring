@@ -138,13 +138,4 @@ public class JwtUtil {
 		return null;
 	}
 
-	public void logoutUser(HttpServletResponse response) {
-		Cookie cookie = new Cookie(AUTHORIZATION_HEADER, null);
-		cookie.setMaxAge(0);
-		cookie.setHttpOnly(true);
-		cookie.setPath("/");
-
-		response.addCookie(cookie);
-	}
-
 }
