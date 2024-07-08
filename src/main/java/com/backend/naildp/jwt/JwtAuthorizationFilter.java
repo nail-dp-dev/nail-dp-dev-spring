@@ -1,6 +1,7 @@
 package com.backend.naildp.jwt;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j(topic = "JWT 검증 및 인가")
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
+	private static final String[] PERMIT_URL_ARRAY = {
+		"/auth/**",
+		"/signup/",
+		"/error"
+	};
 	private final JwtUtil jwtUtil;
 	private final UserDetailsServiceImpl userDetailsService;
 
@@ -34,6 +40,11 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain filterChain) throws
 		ServletException,
 		IOException {
+
+		if (Arrays.asList(PERMIT_URL_ARRAY).contains(req.getRequestURI())) {
+			filterChain.doFilter(req, res);
+			return;
+		}
 
 		String tokenValue = jwtUtil.getTokenFromRequest(req);
 		log.info("Token from request: {}", tokenValue);
