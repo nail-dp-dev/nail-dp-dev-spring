@@ -1,13 +1,12 @@
 package com.backend.naildp.exception;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class ApiResponse<T> {
 
 	private T data;
@@ -28,12 +27,16 @@ public class ApiResponse<T> {
 		this.code = code.getErrorCode();
 	}
 
+	public ApiResponse(int code) {
+		this.code = code;
+	}
+
 	public static ApiResponse<?> of(ErrorCode code) {
 		return new ApiResponse<>(code);
 	}
 
-	public static ApiResponse<?> of() {
-		return new ApiResponse<>();
+	public static ApiResponse<?> of(int code) {
+		return new ApiResponse<>(code);
 	}
 
 }

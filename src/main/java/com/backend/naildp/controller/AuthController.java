@@ -54,4 +54,14 @@ public class AuthController {
 	public ResponseEntity<ApiResponse<?>> duplicatePhone(@RequestBody PhoneNumberRequestDto requestDto) {
 		return authService.duplicatePhone(requestDto);
 	}
+
+	@GetMapping("/auth/cookie")
+	public ResponseEntity<ApiResponse<?>> checkCookie(HttpServletRequest req) {
+		return authService.checkCookie(req);
+	}
+
+	@GetMapping("/auth/logout")
+	public ResponseEntity<ApiResponse<?>> logoutUser(HttpServletResponse res) {
+		return authService.logoutUser(res);
+	}
 }

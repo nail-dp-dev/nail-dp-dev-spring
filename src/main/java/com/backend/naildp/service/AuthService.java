@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.UserRole;
@@ -18,11 +19,13 @@ import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +41,7 @@ public class AuthService {
 	private final SocialLoginRepository socialLoginRepository;
 	private final ProfileRepository profileRepository;
 	private final JwtUtil jwtUtil;
+	private final JwtAuthorizationFilter jwtAuthorizationFilter;
 
 	@Transactional
 	public ResponseEntity<ApiResponse<?>> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req,
@@ -87,5 +91,32 @@ public class AuthService {
 			throw new CustomException("이미 존재하는 전화번호입니다", ErrorCode.ALREADY_EXIST);
 		}
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "사용 가능한 전화번호입니다", 2000));
+	}
+
+	public ResponseEntity<ApiResponse<?>> checkCookie(HttpServletRequest req) {
+
+		String tokenValue = jwtUtil.getTokenFromRequest(req);
+		if (tokenValue == null) {
+			throw new NullPointerException("jwt 토큰이 존재하지 않습니다.");
+		}
+
+		if (StringUtils.hasText(tokenValue)) {
+			// JWT 토큰 substring
+			tokenValue = jwtUtil.substringToken(tokenValue);
+			jwtUtil.validateToken(tokenValue);
+			Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
+
+			try {
+				jwtAuthorizationFilter.setAuthentication(info.getSubject());
+			} catch (Exception e) {
+				log.error(e.getMessage());
+			}
+		}
+		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "jwt토큰 검증 확인", 2000));
+	}
+
+	public ResponseEntity<ApiResponse<?>> logoutUser(HttpServletResponse res) {
+		jwtUtil.logoutUser(res);
+		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그아웃 성공", 2000));
 	}
 }
