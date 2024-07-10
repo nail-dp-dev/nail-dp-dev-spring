@@ -25,6 +25,6 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
 	@Query("select pl from PostLike pl join fetch pl.post p "
 		+ "where pl.user.nickname = :nickname and p.boundary <> :boundary and p.tempSave = false")
-	Page<PostLike> findPostLikesByUserNickname(PageRequest pageRequest, @Param("nickname") String nickname,
+	Page<PostLike> findPagedPostLikesByBoundaryOpened(PageRequest pageRequest, @Param("nickname") String nickname,
 		@Param("boundary") Boundary boundary);
 }

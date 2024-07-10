@@ -50,7 +50,8 @@ public class PostService {
 		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		// 좋아요한 게시글 조회
-		Page<PostLike> postLikes = postLikeRepository.findPostLikesByUserNickname(pageRequest, nickname, Boundary.NONE);
+		Page<PostLike> postLikes = postLikeRepository.findPagedPostLikesByBoundaryOpened(pageRequest, nickname,
+			Boundary.NONE);
 		Page<Post> likedPost = postLikes.map(PostLike::getPost);
 
 		// 게시글 저장 여부 체크
