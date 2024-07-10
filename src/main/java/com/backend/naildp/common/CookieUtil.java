@@ -54,7 +54,7 @@ public class CookieUtil {
 				}
 			}
 		}
-		return null;
+		throw new NullPointerException("쿠키가 존재하지 않습니다.");
 	}
 
 	public void deleteCookie(String cookieName, HttpServletRequest req, HttpServletResponse res) {
@@ -70,6 +70,8 @@ public class CookieUtil {
 				}
 			}
 
+		} else {
+			throw new NullPointerException("쿠키가 존재하지 않습니다.");
 		}
 	}
 }

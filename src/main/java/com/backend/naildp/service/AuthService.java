@@ -83,10 +83,7 @@ public class AuthService {
 
 	@Transactional(readOnly = true)
 	public ResponseEntity<ApiResponse<?>> duplicatePhone(PhoneNumberRequestDto requestDto) {
-		Optional<User> user = Optional.ofNullable(
-			userRepository.findByNickname(requestDto.getPhoneNumber()).orElseThrow(()
-				-> new CustomException("잘못된 요청입니다.", ErrorCode.TEMPORARY_SERVER_ERROR)
-			));
+		Optional<User> user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber());
 		if (user.isPresent()) {
 			throw new CustomException("이미 존재하는 전화번호입니다", ErrorCode.ALREADY_EXIST);
 		}

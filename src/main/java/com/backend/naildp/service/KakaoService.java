@@ -81,7 +81,7 @@ public class KakaoService {
 
 	}
 
-	private String getToken(String code) throws JsonProcessingException {
+	protected String getToken(String code) throws JsonProcessingException {
 		// 요청 URL 만들기
 		URI uri = UriComponentsBuilder.fromUriString("https://kauth.kakao.com")
 			.path("/oauth/token")
@@ -113,7 +113,7 @@ public class KakaoService {
 	}
 
 	// 사용자 정보 가져오기
-	private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
+	protected KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
 		log.info("accessToken : " + accessToken);
 
 		// 요청 URL 만들기
