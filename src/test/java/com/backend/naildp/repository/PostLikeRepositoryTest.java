@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
@@ -159,6 +162,46 @@ class PostLikeRepositoryTest {
 		//then
 		List<PostLike> deletedPostLikes = postLikeRepository.findAllByUserNickname(nickname);
 		assertThat(deletedPostLikes.size()).isEqualTo(0);
+
+	}
+
+	@DisplayName("공개 범위별 좋아요게시물 페이징 조회 테스트")
+	@Test
+	void findPagedPostLikes() {
+		//given
+		int pageNumber = 0;
+		int pageSize = 20;
+		String nickname = "mj";
+		PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		//when
+		Page<PostLike> pagedPostLikesByBoundaryNotNone = postLikeRepository.findPagedPostLikesByBoundaryOpened(
+			pageRequest, nickname, Boundary.NONE);
+		Page<PostLike> pagedPostLikesByBoundaryNotFollowed = postLikeRepository.findPagedPostLikesByBoundaryOpened(
+			pageRequest, nickname, Boundary.FOLLOW);
+		Page<PostLike> pagedPostLikesByBoundaryNotAll = postLikeRepository.findPagedPostLikesByBoundaryOpened(
+			pageRequest, nickname, Boundary.ALL);
+
+		//then
+		assertThat(pagedPostLikesByBoundaryNotNone).hasSize(5);
+		assertThat(pagedPostLikesByBoundaryNotFollowed).hasSize(5);
+		assertThat(pagedPostLikesByBoundaryNotAll).hasSize(0);
+
+		assertThat(pagedPostLikesByBoundaryNotNone.getNumber()).isEqualTo(0);
+		assertThat(pagedPostLikesByBoundaryNotFollowed.getNumber()).isEqualTo(0);
+		assertThat(pagedPostLikesByBoundaryNotAll.getNumber()).isEqualTo(0);
+
+		assertThat(pagedPostLikesByBoundaryNotNone.getSize()).isEqualTo(20);
+		assertThat(pagedPostLikesByBoundaryNotFollowed.getSize()).isEqualTo(20);
+		assertThat(pagedPostLikesByBoundaryNotAll.getSize()).isEqualTo(20);
+
+		assertThat(pagedPostLikesByBoundaryNotNone.getTotalElements()).isEqualTo(5);
+		assertThat(pagedPostLikesByBoundaryNotFollowed.getTotalElements()).isEqualTo(5);
+		assertThat(pagedPostLikesByBoundaryNotAll.getTotalElements()).isEqualTo(0);
+
+		assertThat(pagedPostLikesByBoundaryNotNone.getTotalPages()).isEqualTo(1);
+		assertThat(pagedPostLikesByBoundaryNotFollowed.getTotalPages()).isEqualTo(1);
+		assertThat(pagedPostLikesByBoundaryNotAll.getTotalPages()).isEqualTo(0);
 
 	}
 
