@@ -30,4 +30,8 @@ public class ArchivePost {
 	@JoinColumn(name = "post_id")
 	private Post post;
 
+	public ArchivePost(Archive archive, Post post) {
+		this.archive = archive;
+		this.post = post;
+	}
 }

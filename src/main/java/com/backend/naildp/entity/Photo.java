@@ -31,4 +31,10 @@ public class Photo {
 
 	@Column(nullable = false)
 	private String name;
+
+	public Photo(Post post, String photoUrl, String name) {
+		this.post = post;
+		this.photoUrl = photoUrl;
+		this.name = name;
+	}
 }
