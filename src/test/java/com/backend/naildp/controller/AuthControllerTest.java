@@ -115,6 +115,38 @@ public class AuthControllerTest {
 	}
 
 	@Test
+	@DisplayName("닉네임 유효성 검사 실패 - 빈 문자열")
+	public void testDuplicateNickname_Dto_fail1() throws Exception {
+		// given
+		NicknameRequestDto nicknameRequestDto = new NicknameRequestDto();
+		nicknameRequestDto.setNickname("");
+
+		// when & then
+		mockMvc.perform(post("/auth/nickname")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(nicknameRequestDto)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("닉네임은 특수문자를 제외한 4~15자리여야 합니다."))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("닉네임 유효성 검사 실패 - 특수문자 포함")
+	public void testDuplicateNickname_Dto_fail2() throws Exception {
+		// given
+		NicknameRequestDto invalidNicknameRequest = new NicknameRequestDto();
+		invalidNicknameRequest.setNickname("alswl!@#");
+
+		// when & then
+		mockMvc.perform(post("/auth/nickname")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(invalidNicknameRequest)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("닉네임은 특수문자를 제외한 4~15자리여야 합니다."))
+			.andDo(print());
+	}
+
+	@Test
 	@DisplayName("전화번호 중복 확인 성공")
 	public void testDuplicatePhone() throws Exception {
 		// given
