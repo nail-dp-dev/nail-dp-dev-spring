@@ -46,12 +46,12 @@ public class PostService {
 			.collect(Collectors.toList());
 	}
 
-	public List<HomePostResponse> findLikedPost(String nickname, int pageNumber) {
+	public Page<HomePostResponse> findLikedPost(String nickname, int pageNumber) {
 		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		// 좋아요한 게시글 조회
 		Page<PostLike> postLikes = postLikeRepository.findPostLikesByUserNickname(pageRequest, nickname, Boundary.NONE);
-		List<Post> likedPost = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
+		Page<Post> likedPost = postLikes.map(PostLike::getPost);
 
 		// 게시글 저장 여부 체크
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
@@ -59,7 +59,6 @@ public class PostService {
 			.map(ArchivePost::getPost)
 			.collect(Collectors.toList());
 
-		return likedPost.stream().map(post -> HomePostResponse.likedPostResponse(post, savedPosts))
-			.collect(Collectors.toList());
+		return likedPost.map(post -> HomePostResponse.likedPostResponse(post, savedPosts));
 	}
 }

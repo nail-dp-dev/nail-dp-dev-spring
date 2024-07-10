@@ -2,6 +2,7 @@ package com.backend.naildp.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,7 +35,7 @@ public class HomeController {
 	@PostMapping("/posts/like")
 	public ResponseEntity<?> likedPost(@AuthenticationPrincipal UserDetails userDetails,
 		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber) {
-		List<HomePostResponse> likedPostsResponses = postService.findLikedPost(userDetails.getUsername(), pageNumber);
+		Page<HomePostResponse> likedPostsResponses = postService.findLikedPost(userDetails.getUsername(), pageNumber);
 		return ResponseEntity.ok(ApiResponse.successResponse(likedPostsResponses, "좋아요 체크한 게시물 조회", 2000));
 	}
 }
