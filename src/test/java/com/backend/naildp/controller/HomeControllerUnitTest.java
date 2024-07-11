@@ -43,17 +43,25 @@ class HomeControllerUnitTest {
 	@Test
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void newPostsApiTest() throws Exception {
-		List<HomePostResponse> homePostResponses = new ArrayList<>();
-		ApiResponse<List<HomePostResponse>> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
+		//given
+		List<HomePostResponse> newPostResponses = createLikedPostResponses();
+		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Page<HomePostResponse> homePostResponses = new PageImpl<>(newPostResponses, pageRequest, 20);
+		ApiResponse<?> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
 			2000);
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		// when(postService.homePosts(anyString())).thenReturn(homePostResponses);
+		when(postService.homePosts(eq("NEW"), eq(0), eq("testUser"))).thenReturn(homePostResponses);
 
+		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-			.andExpect(jsonPath("$.code").value(apiResponse.getCode()));
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andExpect(jsonPath("$.data.content").isArray())
+			.andDo(print());
 	}
 
 	@DisplayName("좋아요한 게시물 조회 API 테스트")
