@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +31,7 @@ public class HomeController {
 		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
 	}
 
-	@PostMapping("/posts/like")
+	@GetMapping("/posts/like")
 	public ResponseEntity<?> likedPost(@AuthenticationPrincipal UserDetails userDetails,
 		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber) {
 		Page<HomePostResponse> likedPostsResponses = postService.findLikedPost(userDetails.getUsername(), pageNumber);
