@@ -47,7 +47,7 @@ class HomeControllerUnitTest {
 		ApiResponse<List<HomePostResponse>> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
 			2000);
 
-		when(postService.homePosts(anyString())).thenReturn(homePostResponses);
+		// when(postService.homePosts(anyString())).thenReturn(homePostResponses);
 
 		mvc.perform(get("/home").param("choice", "NEW"))
 			.andExpect(status().isOk())

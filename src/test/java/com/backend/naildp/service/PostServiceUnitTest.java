@@ -50,23 +50,22 @@ class PostServiceUnitTest {
 	@Mock
 	AuditingHandler auditingHandler;
 
-	@DisplayName("최신 게시물 조회 with 좋아요, 저장")
+	@DisplayName("최신 게시물 조회 단위 테스트")
 	@Test
-	void test() {
+	void newPosts() {
 		//given
 		String nickname = "mj";
-		int postCnt = 20;
+		int pageNumber = 0;
 		int pageSize = 20;
-		PageRequest pageRequest = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+		int postCnt = 20;
+		PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		List<Post> posts = createTestPosts(postCnt);
 		Page<Post> pagedPost = new PageImpl<>(posts, pageRequest, pageSize);
 		List<ArchivePost> archivePosts = pagedPost.stream()
-			.filter(post -> Integer.parseInt(post.getPostContent()) % 3 == 0)
 			.map(post -> new ArchivePost(null, post))
 			.collect(Collectors.toList());
 		List<PostLike> postLikes = pagedPost.stream()
-			.filter(post -> Integer.parseInt(post.getPostContent()) % 2 == 0)
 			.map(post -> new PostLike(null, post))
 			.collect(Collectors.toList());
 
@@ -75,37 +74,28 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(nickname)).thenReturn(postLikes);
 
 		//when
-		List<HomePostResponse> homePostResponses = postService.homePosts(nickname);
+		Page<HomePostResponse> homePostResponses = postService.homePosts("NEW", pageNumber, nickname);
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
 			.collect(Collectors.toList());
 		List<HomePostResponse> savedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getSaved)
 			.collect(Collectors.toList());
-		List<HomePostResponse> savedAndLikedPostResponses = homePostResponses.stream()
-			.filter(HomePostResponse::getLike)
-			.filter(HomePostResponse::getSaved)
-			.collect(Collectors.toList());
 
 		//then
-		assertThat(homePostResponses.size()).isEqualTo(postCnt);
-		assertThat(likedPostResponses.size()).isEqualTo(10);
-		assertThat(savedPostResponses.size()).isEqualTo(7);
-		assertThat(savedAndLikedPostResponses.size()).isEqualTo(4);
+		verify(postRepository).findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest);
+		verify(archivePostRepository).findAllByArchiveUserNickname(nickname);
+		verify(postLikeRepository).findAllByUserNickname(nickname);
 
-		// System.out.println("pagedPost 확인");
-		// for (Post post : pagedPost) {
-		// 	System.out.println("=================");
-		// 	System.out.println("post.postContent() = " + post.getPostContent());
-		// 	System.out.println("post.getCreatedDate() = " + post.getCreatedDate());
-		// }
-		// System.out.println("homeResponse 확인");
-		// for (HomePostResponse response : homePostResponses) {
-		// 	System.out.println("==================");
-		// 	System.out.println("response.photoUrl() = " + response.getPhotoUrl());
-		// 	System.out.println("response.like = " + response.getLike());
-		// 	System.out.println("response.saved = " + response.getSaved());
-		// }
+		assertThat(homePostResponses.getNumber()).isEqualTo(0);
+		assertThat(homePostResponses.getSize()).isEqualTo(20);
+		assertThat(homePostResponses.getTotalPages()).isEqualTo(1);
+		assertThat(homePostResponses.getTotalElements()).isEqualTo(20);
+		assertThat(homePostResponses.isFirst()).isTrue();
+		assertThat(homePostResponses.isLast()).isTrue();
+		
+		assertThat(likedPostResponses.size()).isEqualTo(20);
+		assertThat(savedPostResponses.size()).isEqualTo(20);
 	}
 
 	@DisplayName("좋아요한 게시글 조회 테스트")
