@@ -1,7 +1,5 @@
 package com.backend.naildp.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,9 +23,11 @@ public class HomeController {
 	private final PostService postService;
 
 	@GetMapping("/home")
-	public ResponseEntity<?> homePosts(@RequestParam(name = "choice") String choice, @AuthenticationPrincipal
-		UserDetails userDetails) {
-		List<HomePostResponse> homePostResponses = postService.homePosts(userDetails.getUsername());
+	public ResponseEntity<?> homePosts(
+		@RequestParam(name = "choice") String choice,
+		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		Page<HomePostResponse> homePostResponses = postService.homePosts(choice, pageNumber, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
 	}
 
