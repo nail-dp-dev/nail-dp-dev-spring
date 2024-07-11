@@ -1,6 +1,5 @@
 package com.backend.naildp.config;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +14,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.backend.naildp.jwt.ExceptionHandlerFilter;
 import com.backend.naildp.jwt.JwtAuthenticationFilter;
 import com.backend.naildp.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.jwt.JwtUtil;
@@ -31,11 +31,15 @@ public class WebSecurityConfig {
 	//authenticationManager를 가져오기위해ㅔ
 	private final AuthenticationConfiguration authenticationConfiguration;
 
+	private final ExceptionHandlerFilter exceptionHandlerFilter;
+
 	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService,
-		AuthenticationConfiguration authenticationConfiguration) {
+		AuthenticationConfiguration authenticationConfiguration, ExceptionHandlerFilter exceptionHandlerFilter) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
 		this.authenticationConfiguration = authenticationConfiguration;
+		this.exceptionHandlerFilter = exceptionHandlerFilter;
+
 	}
 
 	@Bean
@@ -82,15 +86,16 @@ public class WebSecurityConfig {
 
 		http.authorizeHttpRequests((authorizeHttpRequests) ->
 			authorizeHttpRequests
-				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() // resources 접근 허용 설정
 				.requestMatchers("/").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.requestMatchers("/auth/**").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+				.requestMatchers("/auth/signup").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.anyRequest().authenticated() // 그 외 모든 요청 인증처리
 		);
 
 		// 필터 관리
-		http.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class);
-		http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);
+		// http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 public enum ErrorCode {
 	// 3xx Redirection
 	MOVED_TEMPORARILY(302),
+
 	// 400 Bad Request
 	TEMPORARY_SERVER_ERROR(400),
 
@@ -26,7 +27,6 @@ public enum ErrorCode {
 
 	// EXPIRED_JWT("401_1", "JWT 시간이 만료되었습니다."),
 	// AUTHENTICATION_FAILURE_JWT("401_2", "올바른 JWT 정보가 아닙니다.");
-
 	private final int errorCode;
 
 }

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,8 @@ public class KakaoService {
 	@Value("${kakao.redirect.uri}") // Base64 Encode 한 SecretKe
 	private String redirectUri;
 
-	public ResponseEntity<ApiResponse<?>> kakaoLogin(String code, HttpServletResponse res) throws
+	public ResponseEntity<ApiResponse<?>> kakaoLogin(String code, HttpServletRequest req,
+		HttpServletResponse res) throws
 		JsonProcessingException {
 		log.info("인가코드 : " + code);
 		// 인가 코드로 액세스 토큰 요청
@@ -67,7 +69,7 @@ public class KakaoService {
 
 		} else {
 
-			cookieUtil.deleteUserInfoCookie(res);
+			cookieUtil.deleteCookie("userInfo", req, res);
 
 			log.info("jwt 쿠키 생성");
 			String createToken = jwtUtil.createToken(kakaoUser.getUser().getNickname(), kakaoUser.getUser().getRole());
@@ -79,7 +81,7 @@ public class KakaoService {
 
 	}
 
-	private String getToken(String code) throws JsonProcessingException {
+	protected String getToken(String code) throws JsonProcessingException {
 		// 요청 URL 만들기
 		URI uri = UriComponentsBuilder.fromUriString("https://kauth.kakao.com")
 			.path("/oauth/token")
@@ -111,7 +113,7 @@ public class KakaoService {
 	}
 
 	// 사용자 정보 가져오기
-	private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
+	protected KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
 		log.info("accessToken : " + accessToken);
 
 		// 요청 URL 만들기

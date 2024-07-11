@@ -40,9 +40,10 @@ public class AuthController {
 	}
 
 	@GetMapping("/auth/kakao")
-	public ResponseEntity<ApiResponse<?>> kakaoLogin(@RequestParam("code") String code, HttpServletResponse res) throws
+	public ResponseEntity<ApiResponse<?>> kakaoLogin(@RequestParam("code") String code, HttpServletRequest req,
+		HttpServletResponse res) throws
 		JsonProcessingException {
-		return kakaoService.kakaoLogin(code, res);
+		return kakaoService.kakaoLogin(code, req, res);
 	}
 
 	@PostMapping("/auth/nickname")
@@ -53,5 +54,15 @@ public class AuthController {
 	@PostMapping("/auth/phone")
 	public ResponseEntity<ApiResponse<?>> duplicatePhone(@RequestBody PhoneNumberRequestDto requestDto) {
 		return authService.duplicatePhone(requestDto);
+	}
+
+	@GetMapping("/auth/cookie")
+	public ResponseEntity<ApiResponse<?>> checkCookie(HttpServletRequest req) throws Exception {
+		return authService.checkCookie(req);
+	}
+
+	@GetMapping("/auth/logout")
+	public ResponseEntity<ApiResponse<?>> logoutUser(HttpServletRequest req, HttpServletResponse res) {
+		return authService.logoutUser(req, res);
 	}
 }

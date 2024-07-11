@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.exception.TokenNotValidateException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -90,7 +91,7 @@ public class JwtUtil {
 			return tokenValue.substring(7);
 		}
 		logger.error("Not Found Token");
-		throw new NullPointerException("Not Found Token");
+		throw new TokenNotValidateException("Not Found Token");
 	}
 
 	// JWT 검증
@@ -100,14 +101,18 @@ public class JwtUtil {
 			return true;
 		} catch (SecurityException | MalformedJwtException | SignatureException e) {
 			logger.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
+			throw new TokenNotValidateException("잘못된 JWT 서명입니다.", e);
 		} catch (ExpiredJwtException e) {
 			logger.error("Expired JWT token, 만료된 JWT token 입니다.");
+			throw new TokenNotValidateException("만료된 JWT 토큰입니다.", e);
 		} catch (UnsupportedJwtException e) {
 			logger.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+			throw new TokenNotValidateException("지원되지 않는 JWT 토큰입니다.", e);
 		} catch (IllegalArgumentException e) {
 			logger.error("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+			throw new TokenNotValidateException("잘못된 JWT 토큰 입니다.", e);
+
 		}
-		return false;
 	}
 
 	// JWT에서 사용자 정보 가져오기
@@ -128,6 +133,7 @@ public class JwtUtil {
 					}
 				}
 			}
+
 		}
 		return null;
 	}
