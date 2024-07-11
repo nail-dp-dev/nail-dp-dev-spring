@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostLike {
+public class PostLike extends BaseEntity {
 
 	@Id
 	@GeneratedValue
