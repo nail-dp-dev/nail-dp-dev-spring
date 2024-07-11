@@ -70,8 +70,6 @@ public class CookieUtil {
 				}
 			}
 
-		} else {
-			throw new NullPointerException("쿠키가 존재하지 않습니다.");
 		}
 	}
 }

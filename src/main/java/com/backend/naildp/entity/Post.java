@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.dto.post.PostRequestDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,8 +39,7 @@ public class Post extends BaseEntity {
 	private List<Photo> photos = new ArrayList<>();
 
 	private String postContent;
-
-	@Column(nullable = false)
+	
 	private Long sharing;
 
 	@Enumerated(value = EnumType.STRING)
@@ -55,6 +55,13 @@ public class Post extends BaseEntity {
 		this.sharing = sharing;
 		this.boundary = boundary;
 		this.tempSave = tempSave;
+	}
+
+	public Post(PostRequestDto postRequestDto, User user) {
+		this.user = user;
+		this.postContent = postRequestDto.getPostContent();
+		this.boundary = postRequestDto.getBoundary();
+		this.tempSave = postRequestDto.getTempSave();
 	}
 
 	public void addPhoto(Photo photo) {

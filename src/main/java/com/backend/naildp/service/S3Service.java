@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class S3ImageService {
+public class S3Service {
 
 	private final AmazonS3 amazonS3;
 	private Set<String> uploadedFileNames = new HashSet<>();
@@ -41,7 +41,7 @@ public class S3ImageService {
 		for (MultipartFile multipartFile : multipartFiles) {
 
 			if (isDuplicate(multipartFile)) {
-				throw new CustomException("file", ErrorCode.FILE_EXCEPTION);
+				throw new CustomException("isDuplicate error", ErrorCode.FILE_EXCEPTION);
 			}
 
 			String uploadedUrl = saveFile(multipartFile);
@@ -82,6 +82,9 @@ public class S3ImageService {
 
 	// 단일 파일 저장
 	public String saveFile(MultipartFile file) {
+		if (file == null || file.isEmpty()) { //.isEmpty()도 되는지 확인해보기
+			throw new CustomException("Not Input files", ErrorCode.INPUT_NULL);
+		}
 		String randomFilename = generateRandomFilename(file);
 
 		log.info("File upload started: " + randomFilename);
@@ -138,8 +141,9 @@ public class S3ImageService {
 
 	// 파일 확장자 체크
 	private String validateFileExtension(String originalFilename) {
+		log.info(originalFilename);
 		String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
-		List<String> allowedExtensions = Arrays.asList("jpg", "png", "gif", "jpeg");
+		List<String> allowedExtensions = Arrays.asList("jpg", "png", "gif", "jpeg", "mp4");
 
 		if (!allowedExtensions.contains(fileExtension)) {
 			throw new CustomException("Invalid File Extension", ErrorCode.INVALID_FILE_EXTENSION);
