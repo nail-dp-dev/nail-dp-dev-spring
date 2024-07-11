@@ -1,4 +1,4 @@
-package com.backend.naildp.dto;
+package com.backend.naildp.dto.auth;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

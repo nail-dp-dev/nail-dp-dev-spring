@@ -9,10 +9,10 @@ import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.KakaoUserInfoDto;
-import com.backend.naildp.dto.LoginRequestDto;
-import com.backend.naildp.dto.NicknameRequestDto;
-import com.backend.naildp.dto.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.KakaoUserInfoDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.auth.NicknameRequestDto;
+import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;

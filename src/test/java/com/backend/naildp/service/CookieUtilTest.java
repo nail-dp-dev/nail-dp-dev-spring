@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.backend.naildp.JwtUtilTest;
 import com.backend.naildp.common.CookieUtil;
-import com.backend.naildp.dto.KakaoUserInfoDto;
+import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.google.gson.Gson;
 
 import jakarta.servlet.http.Cookie;

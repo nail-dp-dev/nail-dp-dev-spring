@@ -17,9 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.backend.naildp.dto.LoginRequestDto;
-import com.backend.naildp.dto.NicknameRequestDto;
-import com.backend.naildp.dto.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.auth.NicknameRequestDto;
+import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.AuthService;
 import com.backend.naildp.service.KakaoService;
