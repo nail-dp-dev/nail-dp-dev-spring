@@ -8,7 +8,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.LoginRequestDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

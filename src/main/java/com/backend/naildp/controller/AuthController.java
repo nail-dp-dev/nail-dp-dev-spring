@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.naildp.dto.LoginRequestDto;
-import com.backend.naildp.dto.NicknameRequestDto;
-import com.backend.naildp.dto.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.auth.NicknameRequestDto;
+import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.AuthService;
 import com.backend.naildp.service.KakaoService;

@@ -3,7 +3,7 @@ package com.backend.naildp.entity;
 import java.util.UUID;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.LoginRequestDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

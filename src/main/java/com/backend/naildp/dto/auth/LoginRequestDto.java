@@ -1,4 +1,4 @@
-package com.backend.naildp.dto;
+package com.backend.naildp.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
