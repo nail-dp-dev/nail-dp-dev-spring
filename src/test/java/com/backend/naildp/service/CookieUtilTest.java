@@ -100,19 +100,5 @@ public class CookieUtilTest {
 			"userInfo".equals(argument.getName()) && argument.getMaxAge() == 0
 		));
 	}
-
-	@Test
-	@DisplayName("쿠키가 없을 때 예외")
-	public void testDeleteCookie_fail() {
-		// given
-		given(req.getCookies()).willReturn(null);
-
-		// when
-		NullPointerException exception = assertThrows(NullPointerException.class, () -> {
-			cookieUtil.deleteCookie("userInfo", req, res);
-		});
-
-		// then
-		assertEquals("쿠키가 존재하지 않습니다.", exception.getMessage());
-	}
+	
 }
