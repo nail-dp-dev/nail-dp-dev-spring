@@ -89,3 +89,20 @@ public class PostService {
 		return ResponseEntity.ok().body(ApiResponse.successResponse(post, "게시글 작성이 완료되었습니다", 2001));
 	}
 }
+	public Page<HomePostResponse> findLikedPost(String nickname, int pageNumber) {
+		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		// 좋아요한 게시글 조회
+		Page<PostLike> postLikes = postLikeRepository.findPagedPostLikesByBoundaryOpened(pageRequest, nickname,
+			Boundary.NONE);
+		Page<Post> likedPost = postLikes.map(PostLike::getPost);
+
+		// 게시글 저장 여부 체크
+		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
+		List<Post> savedPosts = archivePosts.stream()
+			.map(ArchivePost::getPost)
+			.collect(Collectors.toList());
+
+		return likedPost.map(post -> HomePostResponse.likedPostResponse(post, savedPosts));
+	}
+}
