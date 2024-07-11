@@ -88,7 +88,7 @@ public class PostService {
 
 		return ResponseEntity.ok().body(ApiResponse.successResponse(post, "게시글 작성이 완료되었습니다", 2001));
 	}
-}
+
 	public Page<HomePostResponse> findLikedPost(String nickname, int pageNumber) {
 		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
 
