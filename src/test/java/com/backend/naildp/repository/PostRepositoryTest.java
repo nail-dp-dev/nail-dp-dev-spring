@@ -106,9 +106,9 @@ class PostRepositoryTest {
 
 		// when
 		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest1);
+		Page<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
 		PageRequest pageRequest2 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest2);
+		Page<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest2);
 
 		// then
 		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));

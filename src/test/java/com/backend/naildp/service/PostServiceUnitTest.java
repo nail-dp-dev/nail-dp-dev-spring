@@ -69,7 +69,7 @@ class PostServiceUnitTest {
 			.map(post -> new PostLike(null, post))
 			.collect(Collectors.toList());
 
-		when(postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest)).thenReturn(pagedPost);
+		when(postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest)).thenReturn(pagedPost);
 		when(archivePostRepository.findAllByArchiveUserNickname(nickname)).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(nickname)).thenReturn(postLikes);
 
@@ -83,7 +83,7 @@ class PostServiceUnitTest {
 			.collect(Collectors.toList());
 
 		//then
-		verify(postRepository).findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest);
+		verify(postRepository).findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
 		verify(archivePostRepository).findAllByArchiveUserNickname(nickname);
 		verify(postLikeRepository).findAllByUserNickname(nickname);
 
@@ -93,7 +93,7 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.getTotalElements()).isEqualTo(20);
 		assertThat(homePostResponses.isFirst()).isTrue();
 		assertThat(homePostResponses.isLast()).isTrue();
-		
+
 		assertThat(likedPostResponses.size()).isEqualTo(20);
 		assertThat(savedPostResponses.size()).isEqualTo(20);
 	}

@@ -31,7 +31,7 @@ public class PostService {
 
 	public Page<HomePostResponse> homePosts(String choice, int pageNumber, String nickname) {
 		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> recentPosts = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest);
+		Page<Post> recentPosts = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
