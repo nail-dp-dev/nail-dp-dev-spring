@@ -11,12 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.LoginRequestDto;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @DataJpaTest
+@Import(JpaAuditingConfiguration.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PostRepositoryTest {
 
