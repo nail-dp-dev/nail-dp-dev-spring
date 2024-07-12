@@ -74,7 +74,8 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(nickname)).thenReturn(postLikes);
 
 		//when
-		Page<HomePostResponse> homePostResponses = postService.homePosts("NEW", pageNumber, nickname);
+		Page<HomePostResponse> homePostResponses = (Page<HomePostResponse>)postService.homePosts("NEW", pageNumber,
+			nickname);
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
 			.collect(Collectors.toList());

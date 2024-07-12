@@ -27,7 +27,8 @@ public class HomeController {
 		@RequestParam(name = "choice") String choice,
 		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		Page<HomePostResponse> homePostResponses = postService.homePosts(choice, pageNumber, userDetails.getUsername());
+		Page<HomePostResponse> homePostResponses = (Page<HomePostResponse>)postService.homePosts(choice, pageNumber,
+			userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
 	}
 

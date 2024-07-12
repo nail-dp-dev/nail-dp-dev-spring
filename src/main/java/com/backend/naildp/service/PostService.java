@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -47,9 +48,9 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 
-	public Page<HomePostResponse> homePosts(String choice, int pageNumber, String nickname) {
+	public Slice<HomePostResponse> homePosts(String choice, int pageNumber, String nickname) {
 		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> recentPosts = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
+		Slice<Post> recentPosts = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
