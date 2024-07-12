@@ -47,9 +47,9 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 
-	public List<HomePostResponse> homePosts(String nickname) {
-		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> recentPosts = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest);
+	public Page<HomePostResponse> homePosts(String choice, int pageNumber, String nickname) {
+		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Page<Post> recentPosts = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
@@ -59,9 +59,7 @@ public class PostService {
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
 
-		return recentPosts.stream()
-			.map(post -> new HomePostResponse(post, savedPosts, likedPosts))
-			.collect(Collectors.toList());
+		return recentPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
 	}
 
 	@Transactional
