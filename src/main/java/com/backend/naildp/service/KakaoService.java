@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.backend.naildp.common.CookieUtil;
-import com.backend.naildp.dto.KakaoUserInfoDto;
+import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.SocialLoginRepository;

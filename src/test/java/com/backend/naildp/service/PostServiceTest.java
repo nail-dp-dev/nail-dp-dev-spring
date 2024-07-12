@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.LoginRequestDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;

@@ -18,7 +18,7 @@ import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.LoginRequestDto;
+import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;

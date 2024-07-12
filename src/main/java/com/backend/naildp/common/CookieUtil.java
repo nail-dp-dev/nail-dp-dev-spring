@@ -6,7 +6,7 @@ import java.net.URLEncoder;
 
 import org.springframework.stereotype.Component;
 
-import com.backend.naildp.dto.KakaoUserInfoDto;
+import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.google.gson.Gson;
 
 import jakarta.servlet.http.Cookie;
@@ -70,8 +70,6 @@ public class CookieUtil {
 				}
 			}
 
-		} else {
-			throw new NullPointerException("쿠키가 존재하지 않습니다.");
 		}
 	}
 }
