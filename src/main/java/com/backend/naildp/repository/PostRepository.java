@@ -18,4 +18,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 		countQuery = "select count(p) from Post p where p.tempSave = false")
 	Slice<Post> findPostsAndPhotoByBoundaryAll(@Param("boundary") Boundary boundary, PageRequest pageRequest);
 
+	Slice<Post> findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(Long id, Boundary boundary,
+		PageRequest pageRequest);
+
 }

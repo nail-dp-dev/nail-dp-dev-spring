@@ -69,6 +69,43 @@ class PostRepositoryTest {
 		log.info("========= 사전 데이터 끝 =========");
 	}
 
+	@DisplayName("커서 기반 페이징으로 Post 조회")
+	@Test
+	void cursorPagingPosts() {
+		//given
+		int size = 20;
+		int secondSize = 35;
+		List<Post> findPosts = em.createQuery(
+				"select p from Post p where p.tempSave = false order by p.createdDate desc", Post.class)
+			.getResultList();
+
+		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest secondPageRequest = PageRequest.of(0, secondSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Long firstPostId = findPosts.get(0).getId();
+		Long nextPostId = findPosts.get(19).getId();
+		System.out.println("firstPostId = " + firstPostId);
+		System.out.println("nextPostId = " + nextPostId);
+		em.clear();
+
+		//when
+		Slice<Post> slicedPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(
+			firstPostId, Boundary.NONE, pageRequest);
+		Slice<Post> nextSlicedPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(
+			nextPostId, Boundary.NONE, secondPageRequest);
+
+		//then
+		assertThat(slicedPosts).hasSize(size);
+		assertThat(slicedPosts.hasNext()).isTrue();
+		assertThat(slicedPosts.getNumber()).isEqualTo(0);
+		assertThat(slicedPosts.getNumberOfElements()).isEqualTo(size);
+
+		assertThat(nextSlicedPosts).hasSize(10);
+		assertThat(nextSlicedPosts.hasNext()).isFalse();
+		assertThat(nextSlicedPosts.getNumber()).isEqualTo(0);
+		assertThat(nextSlicedPosts.getNumberOfElements()).isEqualTo(10);
+
+	}
+
 	@DisplayName("최신순으로 페이징한 포스트 목록 가져오기")
 	@Test
 	void getNewPost() {
