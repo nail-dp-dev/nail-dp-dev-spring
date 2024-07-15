@@ -23,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.exception.ApiResponse;
@@ -41,7 +43,7 @@ class HomeControllerUnitTest {
 	@Autowired
 	ObjectMapper objectMapper;
 
-	@DisplayName("최신 게시물 조회 API 테스트")
+	@DisplayName("최신 게시물 조회 API 테스트 - 첫 호출")
 	@Test
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void newPostsApiTest() throws Exception {
@@ -53,7 +55,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(homePostResponses);
+		when(postService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(homePostResponses);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
@@ -62,8 +64,37 @@ class HomeControllerUnitTest {
 			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			// .andExpect(jsonPath("$.data.content").isArray())
+			.andExpect(jsonPath("$.data.last").value(false))
 			.andDo(print());
+	}
+
+	@DisplayName("최신 게시물 조회 API 테스트 - 두번째 호출")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void newPostsApiTestSecondCall() throws Exception {
+		//given
+		List<HomePostResponse> newPostResponses = createLikedPostResponses();
+		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Slice<HomePostResponse> homePostResponses = new SliceImpl<>(newPostResponses, pageRequest, false);
+		ApiResponse<Slice<HomePostResponse>> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
+			2000);
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+		MultiValueMap<String, String> paramMap = new LinkedMultiValueMap<>();
+		paramMap.add("choice", "NEW");
+		paramMap.add("size", "20");
+		paramMap.add("cursorPostId", "10");
+		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(homePostResponses);
+
+		mvc.perform((get("/home").queryParams(paramMap)))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().json(jsonResponse))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andExpect(jsonPath("$.data.last").value(true))
+			.andDo(print());
+
 	}
 
 	@DisplayName("좋아요한 게시물 조회 API 테스트")

@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
@@ -64,7 +65,7 @@ class PostServiceUnitTest {
 		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		List<Post> posts = createTestPosts(POST_CNT);
-		Slice<Post> pagedPost = new PageImpl<>(posts, pageRequest, PAGE_SIZE);
+		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, true);
 		List<ArchivePost> archivePosts = pagedPost.stream()
 			.map(post -> new ArchivePost(null, post))
 			.collect(Collectors.toList());
@@ -97,10 +98,12 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.getNumber()).isEqualTo(0);
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
 		assertThat(homePostResponses.isFirst()).isTrue();
-		assertThat(homePostResponses.isLast()).isTrue();
+		assertThat(homePostResponses.hasNext()).isTrue();
 
 		assertThat(likedPostResponses.size()).isEqualTo(20);
 		assertThat(savedPostResponses.size()).isEqualTo(20);
+
+		System.out.println("homePostResponses = " + homePostResponses.hasNext());
 	}
 
 	@DisplayName("최신 게시물 조회 단위 테스트 - 두번쨰 호출부터")
@@ -111,7 +114,7 @@ class PostServiceUnitTest {
 		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		List<Post> posts = createTestPosts(POST_CNT);
-		Slice<Post> pagedPost = new PageImpl<>(posts, pageRequest, PAGE_SIZE);
+		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, false);
 		List<ArchivePost> archivePosts = pagedPost.stream()
 			.map(post -> new ArchivePost(null, post))
 			.collect(Collectors.toList());
@@ -144,7 +147,7 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.getNumber()).isEqualTo(0);
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
 		assertThat(homePostResponses.isFirst()).isTrue();
-		assertThat(homePostResponses.isLast()).isTrue();
+		assertThat(homePostResponses.hasNext()).isFalse();
 
 		assertThat(likedPostResponses.size()).isEqualTo(20);
 		assertThat(savedPostResponses.size()).isEqualTo(20);
