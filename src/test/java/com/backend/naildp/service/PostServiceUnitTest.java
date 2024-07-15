@@ -51,19 +51,20 @@ class PostServiceUnitTest {
 	@Mock
 	AuditingHandler auditingHandler;
 
-	@DisplayName("최신 게시물 조회 단위 테스트")
+	final static String NICKNAME = "mj";
+	final static int POST_CNT = 20;
+	final static int PAGE_NUMBER = 0;
+	final static int PAGE_SIZE = 20;
+
+	@DisplayName("최신 게시물 조회 단위 테스트 - 첫 호출")
 	@Test
 	void newPosts() {
 		//given
-		String nickname = "mj";
-		int pageNumber = 0;
-		int pageSize = 20;
-		int postCnt = 20;
 		long cursorPostId = -1L;
-		PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdDate"));
 
-		List<Post> posts = createTestPosts(postCnt);
-		Page<Post> pagedPost = new PageImpl<>(posts, pageRequest, pageSize);
+		List<Post> posts = createTestPosts(POST_CNT);
+		Slice<Post> pagedPost = new PageImpl<>(posts, pageRequest, PAGE_SIZE);
 		List<ArchivePost> archivePosts = pagedPost.stream()
 			.map(post -> new ArchivePost(null, post))
 			.collect(Collectors.toList());
@@ -71,13 +72,14 @@ class PostServiceUnitTest {
 			.map(post -> new PostLike(null, post))
 			.collect(Collectors.toList());
 
-		when(postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest)).thenReturn(pagedPost);
-		when(archivePostRepository.findAllByArchiveUserNickname(nickname)).thenReturn(archivePosts);
-		when(postLikeRepository.findAllByUserNickname(nickname)).thenReturn(postLikes);
+		when(postRepository.findPostsByBoundaryNotAndTempSaveFalse(eq(Boundary.NONE), eq(pageRequest))).thenReturn(
+			pagedPost);
+		when(archivePostRepository.findAllByArchiveUserNickname(eq(NICKNAME))).thenReturn(archivePosts);
+		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
 
 		//when
-		Slice<HomePostResponse> homePostResponses = postService.homePosts("NEW", pageSize,
-			cursorPostId, nickname);
+		Slice<HomePostResponse> homePostResponses = postService.homePosts("NEW", PAGE_SIZE,
+			cursorPostId, NICKNAME);
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
 			.collect(Collectors.toList());
@@ -86,9 +88,58 @@ class PostServiceUnitTest {
 			.collect(Collectors.toList());
 
 		//then
-		verify(postRepository).findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
-		verify(archivePostRepository).findAllByArchiveUserNickname(nickname);
-		verify(postLikeRepository).findAllByUserNickname(nickname);
+		verify(postRepository).findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
+		verify(postRepository, never()).findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(),
+			any(Boundary.class), any(PageRequest.class));
+		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
+		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
+
+		assertThat(homePostResponses.getNumber()).isEqualTo(0);
+		assertThat(homePostResponses.getSize()).isEqualTo(20);
+		assertThat(homePostResponses.isFirst()).isTrue();
+		assertThat(homePostResponses.isLast()).isTrue();
+
+		assertThat(likedPostResponses.size()).isEqualTo(20);
+		assertThat(savedPostResponses.size()).isEqualTo(20);
+	}
+
+	@DisplayName("최신 게시물 조회 단위 테스트 - 두번쨰 호출부터")
+	@Test
+	void newPostsWithCursorId() {
+		//given
+		long cursorPostId = 10L;
+		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		List<Post> posts = createTestPosts(POST_CNT);
+		Slice<Post> pagedPost = new PageImpl<>(posts, pageRequest, PAGE_SIZE);
+		List<ArchivePost> archivePosts = pagedPost.stream()
+			.map(post -> new ArchivePost(null, post))
+			.collect(Collectors.toList());
+		List<PostLike> postLikes = pagedPost.stream()
+			.map(post -> new PostLike(null, post))
+			.collect(Collectors.toList());
+
+		when(postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(eq(cursorPostId), eq(Boundary.NONE),
+			any(PageRequest.class))).thenReturn(pagedPost);
+		when(archivePostRepository.findAllByArchiveUserNickname(NICKNAME)).thenReturn(archivePosts);
+		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
+
+		//when
+		Slice<HomePostResponse> homePostResponses = postService.homePosts("NEW", PAGE_SIZE,
+			cursorPostId, NICKNAME);
+		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
+			.filter(HomePostResponse::getLike)
+			.collect(Collectors.toList());
+		List<HomePostResponse> savedPostResponses = homePostResponses.stream()
+			.filter(HomePostResponse::getSaved)
+			.collect(Collectors.toList());
+
+		//then
+		verify(postRepository, never()).findPostsByBoundaryNotAndTempSaveFalse(Boundary.ALL, pageRequest);
+		verify(postRepository).findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(eq(cursorPostId),
+			any(Boundary.class), any(PageRequest.class));
+		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
+		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
 
 		assertThat(homePostResponses.getNumber()).isEqualTo(0);
 		assertThat(homePostResponses.getSize()).isEqualTo(20);

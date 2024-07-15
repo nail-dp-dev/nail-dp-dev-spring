@@ -52,7 +52,7 @@ public class PostService {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
 		Slice<Post> recentPosts;
 		if (cursorPostId == -1L) {
-			recentPosts = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.ALL, pageRequest);
+			recentPosts = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
 		} else {
 			recentPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId,
 				Boundary.NONE, pageRequest);
