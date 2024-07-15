@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
@@ -108,10 +109,13 @@ class PostRepositoryTest {
 		int pageSize = PAGE_SIZE;
 
 		// when
+		System.out.println("==================== 1");
 		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts1 = (Page<Post>)postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
+		Slice<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
+		System.out.println("==================== 2");
 		PageRequest pageRequest2 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts2 = (Page<Post>)postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest2);
+		Slice<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL,
+			pageRequest2);
 
 		// then
 		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
@@ -119,13 +123,15 @@ class PostRepositoryTest {
 
 		assertThat(pagePosts1.getSize()).isEqualTo(pageSize);
 		assertThat(pagePosts2.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
-		assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
+		// assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
+		// assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
 
 		for (Post post : pagePosts1) {
 			log.info("------------- post.Content = " + post.getPostContent() + " -------------");
 			log.info("post.CreatedDate = " + post.getCreatedDate());
+			System.out.println("======= 사진 가져오기 =======");
 			List<Photo> photos = post.getPhotos();
+			System.out.println("======= 사진 가져오기 완료 =======");
 			log.info("photos.size = " + photos.size());
 			for (Photo photo : photos) {
 				log.info("photo.url = " + photo.getPhotoUrl());

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -73,6 +74,40 @@ public class PostServiceTest {
 
 		createTestPostLikes(testUser, writer);
 		System.out.println("======= BeforeEach 끝 ======");
+	}
+
+	@DisplayName("최신 게시물 불러오기 테스트")
+	@Test
+	void findNewPosts() {
+		//given
+		String nickname = "testUser";
+		int postCnt = 60;
+		int pageNumber = 0;
+		int pageSize = 20;
+		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
+
+		//when
+		System.out.println("첫 페이지");
+		Slice<HomePostResponse> responses = postService.homePosts("NEW", pageNumber, nickname);
+		System.out.println("마지막 페이지");
+		Slice<HomePostResponse> lastPageResponses = postService.homePosts("NEW", totalPages - 1, nickname);
+		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
+		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
+
+		//then
+		assertThat(responses.getSize()).isEqualTo(pageSize);
+		assertThat(responses.getNumber()).isEqualTo(pageNumber);
+		assertThat(responses.hasNext()).isTrue();
+		assertThat(lastPageResponses.hasNext()).isFalse();
+
+		// assertThat(responses.getTotalElements()).isEqualTo(postCnt);
+		// assertThat(responses.getTotalPages()).isEqualTo(totalPages);
+
+		assertThat(savedList).containsOnly(true);
+		assertThat(savedList).hasSize(pageSize);
+
+		assertThat(likedList).contains(true);
+		assertThat(likedList).hasSize(pageSize);
 	}
 
 	@DisplayName("좋아요한 게시물 불러오기 테스트")
