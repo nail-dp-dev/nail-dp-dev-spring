@@ -8,11 +8,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.entity.ArchivePost;
@@ -48,7 +50,7 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 
-	public Slice<HomePostResponse> homePosts(String choice, int size, long cursorPostId, String nickname) {
+	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
 		Slice<Post> recentPosts;
 		if (cursorPostId == -1L) {
@@ -66,7 +68,7 @@ public class PostService {
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
 
-		return recentPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
+		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts)
 	}
 
 	@Transactional

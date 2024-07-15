@@ -1,7 +1,6 @@
 package com.backend.naildp.controller;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostService;
 
@@ -27,11 +27,11 @@ public class HomeController {
 	public ResponseEntity<?> homePosts(
 		@RequestParam(name = "choice") String choice,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "postId") long cursorPostId,
+		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		Slice<HomePostResponse> homePostResponses = postService.homePosts(choice, size, cursorPostId,
+		PostSummaryResponse postSummaryResponse = postService.homePosts(choice, size, cursorPostId,
 			userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
 	}
 
 	@GetMapping("/posts/like")
