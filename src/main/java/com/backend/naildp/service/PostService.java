@@ -48,9 +48,15 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 
-	public Slice<HomePostResponse> homePosts(String choice, int pageNumber, String nickname) {
-		PageRequest pageRequest = PageRequest.of(pageNumber, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Slice<Post> recentPosts = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
+	public Slice<HomePostResponse> homePosts(String choice, int size, long cursorPostId, String nickname) {
+		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Slice<Post> recentPosts;
+		if (cursorPostId == -1L) {
+			recentPosts = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest);
+		} else {
+			recentPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId,
+				Boundary.NONE, pageRequest);
+		}
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()

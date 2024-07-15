@@ -88,9 +88,10 @@ public class PostServiceTest {
 
 		//when
 		System.out.println("첫 페이지");
-		Slice<HomePostResponse> responses = postService.homePosts("NEW", pageNumber, nickname);
+		Slice<HomePostResponse> responses = postService.homePosts("NEW", pageNumber, cursorPostId, nickname);
 		System.out.println("마지막 페이지");
-		Slice<HomePostResponse> lastPageResponses = postService.homePosts("NEW", totalPages - 1, nickname);
+		Slice<HomePostResponse> lastPageResponses = postService.homePosts("NEW", totalPages - 1, cursorPostId,
+			nickname);
 		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
 		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
 

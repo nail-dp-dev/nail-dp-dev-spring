@@ -75,7 +75,7 @@ class PostServiceUnitTest {
 
 		//when
 		Page<HomePostResponse> homePostResponses = (Page<HomePostResponse>)postService.homePosts("NEW", pageNumber,
-			nickname);
+			cursorPostId, nickname);
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
 			.collect(Collectors.toList());

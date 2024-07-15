@@ -26,9 +26,10 @@ public class HomeController {
 	@GetMapping("/home")
 	public ResponseEntity<?> homePosts(
 		@RequestParam(name = "choice") String choice,
-		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber,
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, defaultValue = "-1", value = "postId") long cursorPostId,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		Slice<HomePostResponse> homePostResponses = postService.homePosts(choice, pageNumber,
+		Slice<HomePostResponse> homePostResponses = postService.homePosts(choice, size, cursorPostId,
 			userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
 	}
