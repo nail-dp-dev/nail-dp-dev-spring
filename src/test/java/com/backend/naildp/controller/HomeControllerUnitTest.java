@@ -53,7 +53,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), eq(0), cursorPostId, eq("testUser"))).thenReturn(homePostResponses);
+		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(homePostResponses);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))

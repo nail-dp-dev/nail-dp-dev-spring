@@ -84,14 +84,13 @@ public class PostServiceTest {
 		int postCnt = 60;
 		int pageNumber = 0;
 		int pageSize = 20;
+		long cursorPostId = -1L;
 		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
 
 		//when
 		System.out.println("첫 페이지");
-		Slice<HomePostResponse> responses = postService.homePosts("NEW", pageNumber, cursorPostId, nickname);
-		System.out.println("마지막 페이지");
-		Slice<HomePostResponse> lastPageResponses = postService.homePosts("NEW", totalPages - 1, cursorPostId,
-			nickname);
+		Slice<HomePostResponse> responses = postService.homePosts("NEW", pageSize, cursorPostId, nickname);
+
 		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
 		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
 
@@ -99,10 +98,6 @@ public class PostServiceTest {
 		assertThat(responses.getSize()).isEqualTo(pageSize);
 		assertThat(responses.getNumber()).isEqualTo(pageNumber);
 		assertThat(responses.hasNext()).isTrue();
-		assertThat(lastPageResponses.hasNext()).isFalse();
-
-		// assertThat(responses.getTotalElements()).isEqualTo(postCnt);
-		// assertThat(responses.getTotalPages()).isEqualTo(totalPages);
 
 		assertThat(savedList).containsOnly(true);
 		assertThat(savedList).hasSize(pageSize);

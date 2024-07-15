@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -103,39 +102,6 @@ class PostRepositoryTest {
 		assertThat(nextSlicedPosts.hasNext()).isFalse();
 		assertThat(nextSlicedPosts.getNumber()).isEqualTo(0);
 		assertThat(nextSlicedPosts.getNumberOfElements()).isEqualTo(10);
-
-	}
-
-	@DisplayName("최신순으로 페이징한 포스트 목록 가져오기")
-	@Test
-	void getNewPost() {
-		// given
-		int pageSize = PAGE_SIZE;
-
-		// when
-		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts1 = postRepository.findByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest1);
-
-		PageRequest pageRequest2 = PageRequest.of(1, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts2 = postRepository.findByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest2);
-
-		// then
-		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
-		pagePosts2.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
-
-		assertThat(pagePosts1.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts2.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
-		assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
-
-		for (Post post : pagePosts1) {
-			log.info("post.Content = " + post.getPostContent());
-			log.info("post.CreatedDate = " + post.getCreatedDate());
-		}
-		for (Post post : pagePosts2) {
-			log.info("post.Content = " + post.getPostContent());
-			log.info("post.CreatedDate = " + post.getCreatedDate());
-		}
 
 	}
 
