@@ -14,4 +14,5 @@ public class PostRequestDto {
 	private Boolean tempSave;
 	private Boundary boundary;
 	private List<TagRequestDto> tags;
+	private List<String> deletedFileUrls;
 }

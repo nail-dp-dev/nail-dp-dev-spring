@@ -16,6 +16,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 
@@ -35,8 +36,8 @@ public class S3Service {
 	private String bucket;
 
 	// 여러장의 파일 저장
-	public List<String> saveFiles(List<MultipartFile> multipartFiles) {
-		List<String> uploadedUrls = new ArrayList<>();
+	public List<FileRequestDto> saveFiles(List<MultipartFile> multipartFiles) {
+		List<FileRequestDto> uploadedUrls = new ArrayList<>();
 
 		for (MultipartFile multipartFile : multipartFiles) {
 
@@ -44,7 +45,7 @@ public class S3Service {
 				throw new CustomException("isDuplicate error", ErrorCode.FILE_EXCEPTION);
 			}
 
-			String uploadedUrl = saveFile(multipartFile);
+			FileRequestDto uploadedUrl = saveFile(multipartFile);
 			uploadedUrls.add(uploadedUrl);
 		}
 
@@ -61,8 +62,12 @@ public class S3Service {
 			throw new CustomException("Not Exist File", ErrorCode.FILE_EXCEPTION);
 		}
 
+		log.info(fileBucket);
+		log.info(bucket);
 		String objectKey = String.join("/", Arrays.copyOfRange(urlParts, 3, urlParts.length));
 
+		log.info(objectKey);
+		log.info(bucket);
 		if (!amazonS3.doesObjectExist(bucket, objectKey)) {
 			throw new CustomException("Not Exist File", ErrorCode.FILE_EXCEPTION);
 		}
@@ -81,7 +86,7 @@ public class S3Service {
 	}
 
 	// 단일 파일 저장
-	public String saveFile(MultipartFile file) {
+	public FileRequestDto saveFile(MultipartFile file) {
 		if (file == null || file.isEmpty()) { //.isEmpty()도 되는지 확인해보기
 			throw new CustomException("Not Input files", ErrorCode.INPUT_NULL);
 		}
@@ -108,7 +113,12 @@ public class S3Service {
 
 		log.info("File upload completed: " + randomFilename);
 
-		return amazonS3.getUrl(bucket, randomFilename).toString();
+		FileRequestDto fileRequestDto = new FileRequestDto();
+		String fileUrl = amazonS3.getUrl(bucket, randomFilename).toString();
+		fileRequestDto.setFileUrl(fileUrl);
+		fileRequestDto.setFileName(file.getOriginalFilename());
+		fileRequestDto.setFileSize(file.getSize());
+		return fileRequestDto;
 	}
 
 	// 요청에 중복되는 파일 여부 확인

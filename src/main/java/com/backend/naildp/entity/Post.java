@@ -39,7 +39,7 @@ public class Post extends BaseEntity {
 	private List<Photo> photos = new ArrayList<>();
 
 	private String postContent;
-	
+
 	private Long sharing;
 
 	@Enumerated(value = EnumType.STRING)
@@ -64,7 +64,14 @@ public class Post extends BaseEntity {
 		this.tempSave = postRequestDto.getTempSave();
 	}
 
+	public void update(PostRequestDto postRequestDto) {
+		this.postContent = postRequestDto.getPostContent();
+		this.boundary = postRequestDto.getBoundary();
+		this.tempSave = postRequestDto.getTempSave();
+	}
+
 	public void addPhoto(Photo photo) {
 		this.photos.add(photo);
 	}
+
 }
