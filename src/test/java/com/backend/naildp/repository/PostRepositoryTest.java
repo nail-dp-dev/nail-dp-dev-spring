@@ -105,6 +105,37 @@ class PostRepositoryTest {
 
 	}
 
+	@DisplayName("최신순으로 페이징한 Post 조회 테스트")
+	@Test
+	void pagingPosts() {
+		//given
+		int pageSizeBelowTotalPostCnt = TOTAL_POST_CNT - 1;
+		int pageSizeAboveTotalPostCnt = TOTAL_POST_CNT + 1;
+		int postCnt = TOTAL_POST_CNT;
+
+		PageRequest pageRequestBelowPostCnt = PageRequest.of(0, pageSizeBelowTotalPostCnt,
+			Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequestAbovePostCnt = PageRequest.of(0, pageSizeAboveTotalPostCnt,
+			Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		//when
+		Slice<Post> slicedPostsBelowPostCnt = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE,
+			pageRequestBelowPostCnt);
+		Slice<Post> slicedPostsAbovePostCnt = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE,
+			pageRequestAbovePostCnt);
+
+		//then
+		assertThat(slicedPostsBelowPostCnt).hasSize(pageSizeBelowTotalPostCnt);
+		assertThat(slicedPostsBelowPostCnt.hasNext()).isTrue();
+		assertThat(slicedPostsBelowPostCnt.getNumber()).isEqualTo(0);
+		assertThat(slicedPostsBelowPostCnt.getNumberOfElements()).isEqualTo(pageSizeBelowTotalPostCnt);
+
+		assertThat(slicedPostsAbovePostCnt).hasSize(postCnt);
+		assertThat(slicedPostsAbovePostCnt.hasNext()).isFalse();
+		assertThat(slicedPostsAbovePostCnt.getNumber()).isEqualTo(0);
+		assertThat(slicedPostsAbovePostCnt.getNumberOfElements()).isEqualTo(postCnt);
+	}
+
 	@DisplayName("최신순으로 페이징한 게시물과 사진 목록 가져오기")
 	@Test
 	void getNewPostsWithPhoto() {
