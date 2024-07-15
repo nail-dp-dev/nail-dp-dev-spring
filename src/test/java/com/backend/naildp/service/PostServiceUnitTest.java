@@ -18,6 +18,7 @@ import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
@@ -58,6 +59,7 @@ class PostServiceUnitTest {
 		int pageNumber = 0;
 		int pageSize = 20;
 		int postCnt = 20;
+		long cursorPostId = -1L;
 		PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		List<Post> posts = createTestPosts(postCnt);
@@ -74,7 +76,7 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(nickname)).thenReturn(postLikes);
 
 		//when
-		Page<HomePostResponse> homePostResponses = (Page<HomePostResponse>)postService.homePosts("NEW", pageNumber,
+		Slice<HomePostResponse> homePostResponses = postService.homePosts("NEW", pageSize,
 			cursorPostId, nickname);
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
@@ -90,8 +92,6 @@ class PostServiceUnitTest {
 
 		assertThat(homePostResponses.getNumber()).isEqualTo(0);
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
-		assertThat(homePostResponses.getTotalPages()).isEqualTo(1);
-		assertThat(homePostResponses.getTotalElements()).isEqualTo(20);
 		assertThat(homePostResponses.isFirst()).isTrue();
 		assertThat(homePostResponses.isLast()).isTrue();
 
