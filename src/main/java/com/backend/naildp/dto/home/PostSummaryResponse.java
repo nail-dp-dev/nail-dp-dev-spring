@@ -16,10 +16,10 @@ import lombok.NoArgsConstructor;
 public class PostSummaryResponse {
 
 	private Long oldestPostId;
-	private Slice<HomePostResponse> homePostResponses;
+	private Slice<HomePostResponse> postSummaryList;
 
 	public PostSummaryResponse(Slice<Post> latestPosts, List<Post> savedPosts, List<Post> likedPosts) {
 		oldestPostId = latestPosts.getContent().get(latestPosts.getSize() - 1).getId();
-		homePostResponses = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
+		postSummaryList = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
 	}
 }

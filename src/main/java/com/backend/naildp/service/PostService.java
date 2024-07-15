@@ -8,7 +8,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,7 +67,7 @@ public class PostService {
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
 
-		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts)
+		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts);
 	}
 
 	@Transactional

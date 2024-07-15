@@ -27,6 +27,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,14 +49,12 @@ class HomeControllerUnitTest {
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void newPostsApiTest() throws Exception {
 		//given
-		List<HomePostResponse> newPostResponses = createLikedPostResponses();
-		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Slice<HomePostResponse> homePostResponses = new SliceImpl<>(newPostResponses, pageRequest, true);
-		ApiResponse<?> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
+		PostSummaryResponse postSummaryResponse = new PostSummaryResponse(100L, createSlicePostResponses(true));
+		ApiResponse<?> apiResponse = ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회",
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(homePostResponses);
+		when(postService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
@@ -64,7 +63,7 @@ class HomeControllerUnitTest {
 			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data.last").value(false))
+			.andExpect(jsonPath("$.data.postSummaryList.last").value(false))
 			.andDo(print());
 	}
 
@@ -73,10 +72,8 @@ class HomeControllerUnitTest {
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void newPostsApiTestSecondCall() throws Exception {
 		//given
-		List<HomePostResponse> newPostResponses = createLikedPostResponses();
-		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Slice<HomePostResponse> homePostResponses = new SliceImpl<>(newPostResponses, pageRequest, false);
-		ApiResponse<Slice<HomePostResponse>> apiResponse = ApiResponse.successResponse(homePostResponses, "최신 게시물 조회",
+		PostSummaryResponse postSummaryResponse = new PostSummaryResponse(100L, createSlicePostResponses(false));
+		ApiResponse<?> apiResponse = ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회",
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
@@ -84,7 +81,7 @@ class HomeControllerUnitTest {
 		paramMap.add("choice", "NEW");
 		paramMap.add("size", "20");
 		paramMap.add("cursorPostId", "10");
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(homePostResponses);
+		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		mvc.perform((get("/home").queryParams(paramMap)))
 			.andExpect(status().isOk())
@@ -92,7 +89,7 @@ class HomeControllerUnitTest {
 			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data.last").value(true))
+			.andExpect(jsonPath("$.data.postSummaryList.last").value(true))
 			.andDo(print());
 
 	}
@@ -130,6 +127,17 @@ class HomeControllerUnitTest {
 			likedPostResponses.add(likedPostResponse);
 		}
 		return likedPostResponses;
+	}
+
+	private Slice<HomePostResponse> createSlicePostResponses(boolean hasNext) {
+		List<HomePostResponse> postResponses = new ArrayList<>();
+		for (long i = 1; i <= 20; i++) {
+			HomePostResponse likedPostResponse = createHomePostResponse(i);
+			postResponses.add(likedPostResponse);
+		}
+		// List<HomePostResponse> newPostResponses = createLikedPostResponses();
+		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
+		return new SliceImpl<>(postResponses, pageRequest, hasNext);
 	}
 
 	private HomePostResponse createHomePostResponse(long i) {

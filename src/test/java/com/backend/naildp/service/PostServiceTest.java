@@ -19,6 +19,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
@@ -89,7 +90,8 @@ public class PostServiceTest {
 
 		//when
 		System.out.println("첫 페이지");
-		Slice<HomePostResponse> responses = postService.homePosts("NEW", pageSize, cursorPostId, nickname);
+		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", pageSize, cursorPostId, nickname);
+		Slice<HomePostResponse> responses = postSummaryResponse.getPostSummaryList();
 
 		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
 		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();

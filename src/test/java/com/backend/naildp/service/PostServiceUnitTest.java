@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -79,8 +80,9 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
 
 		//when
-		Slice<HomePostResponse> homePostResponses = postService.homePosts("NEW", PAGE_SIZE,
+		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE,
 			cursorPostId, NICKNAME);
+		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
 			.collect(Collectors.toList());
@@ -128,8 +130,8 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
 
 		//when
-		Slice<HomePostResponse> homePostResponses = postService.homePosts("NEW", PAGE_SIZE,
-			cursorPostId, NICKNAME);
+		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
+		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
 			.filter(HomePostResponse::getLike)
 			.collect(Collectors.toList());
