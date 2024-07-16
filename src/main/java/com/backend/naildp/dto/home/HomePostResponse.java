@@ -1,5 +1,6 @@
 package com.backend.naildp.dto.home;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.backend.naildp.entity.Photo;
@@ -21,6 +22,7 @@ public class HomePostResponse {
 	private String photoUrl;
 	private Boolean like;
 	private Boolean saved;
+	private LocalDateTime createdDate;
 
 	public HomePostResponse(Post post, List<Post> savedPosts, List<Post> likedPosts) {
 		postId = post.getId();
@@ -28,6 +30,7 @@ public class HomePostResponse {
 		photoUrl = post.getPhotos().get(0).getPhotoUrl();
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
+		createdDate = post.getCreatedDate();
 	}
 
 	public static HomePostResponse likedPostResponse(Post post, List<Post> savedPost) {
@@ -39,6 +42,7 @@ public class HomePostResponse {
 			.photoUrl(photo.getPhotoUrl())
 			.like(true)
 			.saved(savedPost.contains(post))
+			.createdDate(post.getCreatedDate())
 			.build();
 	}
 }

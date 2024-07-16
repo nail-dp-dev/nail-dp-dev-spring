@@ -11,12 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @DataJpaTest
+@Import(JpaAuditingConfiguration.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PostRepositoryTest {
 
@@ -106,9 +109,9 @@ class PostRepositoryTest {
 
 		// when
 		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest1);
+		Page<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
 		PageRequest pageRequest2 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundary(Boundary.ALL, pageRequest2);
+		Page<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest2);
 
 		// then
 		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
