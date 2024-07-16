@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,12 +45,21 @@ public class PostController {
 	}
 
 	@PatchMapping("/{postId}")
-	ResponseEntity<ApiResponse<?>> updatePost(@AuthenticationPrincipal UserDetailsImpl userDetails,
+	ResponseEntity<ApiResponse<?>> editPost(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@Valid @RequestPart(value = "content", required = false) PostRequestDto postRequestDto,
 		@RequestPart(value = "photos", required = false) List<MultipartFile> files,
 		@PathVariable("postId") Long postId) {
 
-		return postService.updatePost(userDetails.getUser().getNickname(), postRequestDto, files, postId);
+		return postService.editPost(userDetails.getUser().getNickname(), postRequestDto, files, postId);
 
 	}
+
+	@GetMapping("/edit/{postId}")
+	ResponseEntity<ApiResponse<?>> getEditingPost(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("postId") Long postId) {
+
+		return postService.getEditingPost(userDetails.getUser().getNickname(), postId);
+
+	}
+
 }

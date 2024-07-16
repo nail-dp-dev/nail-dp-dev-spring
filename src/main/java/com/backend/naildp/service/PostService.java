@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
@@ -106,7 +107,7 @@ public class PostService {
 	}
 
 	@Transactional
-	public ResponseEntity<ApiResponse<?>> updatePost(String nickname, PostRequestDto postRequestDto,
+	public ResponseEntity<ApiResponse<?>> editPost(String nickname, PostRequestDto postRequestDto,
 		List<MultipartFile> files, Long postId) {
 
 		User user = userRepository.findByNickname(nickname)
@@ -152,5 +153,36 @@ public class PostService {
 
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "게시글 수정이 완료되었습니다", 2001));
 	}
-	// 용량문제
+
+	// 게시물 수정 조회
+	public ResponseEntity<ApiResponse<?>> getEditingPost(String nickname, Long postId) {
+
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		Post post = postRepository.findById(postId)
+			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		List<Photo> photos = photoRepository.findAllByPostId(postId);
+
+		List<String> tagNames = post.getTagPosts().stream()
+			.map(tagPost -> tagPost.getTag().getName())
+			.collect(Collectors.toList());
+
+		List<FileRequestDto> fileRequestDtos = photos.stream()
+			.map(FileRequestDto::new)
+			.toList();
+
+		EditPostResponseDto editPostResponseDto = EditPostResponseDto.builder()
+			.postContent(post.getPostContent())
+			.tags(tagNames)
+			.photos(fileRequestDtos)
+			.tempSave(post.getTempSave())
+			.boundary(post.getBoundary())
+			.build();
+
+		return ResponseEntity.ok().body(ApiResponse.successResponse(editPostResponseDto, "수정 게시글 조회 완료", 2000));
+		// 용량문제
+	}
+
 }

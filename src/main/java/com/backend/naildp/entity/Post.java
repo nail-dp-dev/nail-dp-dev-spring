@@ -38,6 +38,9 @@ public class Post extends BaseEntity {
 	@OneToMany(mappedBy = "post")
 	private List<Photo> photos = new ArrayList<>();
 
+	@OneToMany(mappedBy = "post")
+	private List<TagPost> tagPosts = new ArrayList<>();
+
 	private String postContent;
 
 	private Long sharing;
