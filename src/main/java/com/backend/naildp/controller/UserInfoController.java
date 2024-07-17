@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.UserInfoService;
@@ -21,7 +22,10 @@ public class UserInfoController {
 
 	@GetMapping()
 	ResponseEntity<ApiResponse<?>> getUserInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		return userInfoService.getUserInfo(userDetails.getUser().getNickname());
+
+		UserInfoResponseDto userInfoResponseDto = userInfoService.getUserInfo(userDetails.getUser().getNickname());
+
+		return ResponseEntity.ok(ApiResponse.successResponse(userInfoResponseDto, "사용자 정보 조회 성공", 2000));
 
 	}
 }

@@ -2,14 +2,12 @@ package com.backend.naildp.service;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
@@ -30,12 +28,13 @@ public class UserInfoService {
 	private final ArchivePostRepository archivePostRepository;
 	private final FollowRepository followRepository;
 
-	public ResponseEntity<ApiResponse<?>> getUserInfo(String nickname) {
+	public UserInfoResponseDto getUserInfo(String nickname) {
 
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(user.getNickname());
+		List<ArchivePost> archivePosts = archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse(
+			user.getNickname());
 
 		List<String> followings = followRepository.findFollowingNicknamesByUserNickname(user.getNickname());
 
@@ -45,15 +44,13 @@ public class UserInfoService {
 					archivePost.getPost().getUser().getNickname())))
 			.count();
 
-		UserInfoResponseDto userInfoResponseDto = UserInfoResponseDto.builder()
+		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())
 			.point(user.getPoint())
 			.profileUrl(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user).getProfileUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
 			.saveCount(count)
-			.followerCount(followRepository.countFollowsByFollowerNickname(user.getNickname()))
+			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
 			.build();
-
-		return ResponseEntity.ok().body(ApiResponse.successResponse(userInfoResponseDto, "로그인 유저정보 조회", 2000));
 	}
 }

@@ -59,7 +59,7 @@ public class AuthService {
 		socialLoginRepository.save(socialLogin);
 
 		if (userInfo.getProfileUrl() != null) {
-			Profile profile = new Profile(user, userInfo.getProfileUrl(), userInfo.getProfileUrl());
+			Profile profile = new Profile(user, userInfo.getProfileUrl(), userInfo.getProfileUrl(), true);
 			profileRepository.save(profile);
 		}
 
