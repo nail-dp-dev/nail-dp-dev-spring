@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +24,6 @@ import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
@@ -66,7 +64,7 @@ public class PostService {
 	}
 
 	@Transactional
-	public ResponseEntity<ApiResponse<?>> uploadPost(String nickname, PostRequestDto postRequestDto,
+	public void uploadPost(String nickname, PostRequestDto postRequestDto,
 		List<MultipartFile> files) {
 
 		User user = userRepository.findByNickname(nickname)
@@ -85,8 +83,6 @@ public class PostService {
 
 		}
 		fileRequestDtos.stream().map(fileRequestDto -> new Photo(post, fileRequestDto)).forEach(photoRepository::save);
-
-		return ResponseEntity.ok().body(ApiResponse.successResponse(post, "게시글 작성이 완료되었습니다", 2001));
 	}
 
 	public Page<HomePostResponse> findLikedPost(String nickname, int pageNumber) {
@@ -105,7 +101,7 @@ public class PostService {
 	}
 
 	@Transactional
-	public ResponseEntity<ApiResponse<?>> editPost(String nickname, PostRequestDto postRequestDto,
+	public void editPost(String nickname, PostRequestDto postRequestDto,
 		List<MultipartFile> files, Long postId) {
 
 		User user = userRepository.findByNickname(nickname)
@@ -148,12 +144,10 @@ public class PostService {
 					s3Service.deleteFile(fileUrl);
 				});
 		}
-
-		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "게시글 수정이 완료되었습니다", 2001));
 	}
 
 	// 게시물 수정 조회
-	public ResponseEntity<ApiResponse<?>> getEditingPost(String nickname, Long postId) {
+	public EditPostResponseDto getEditingPost(String nickname, Long postId) {
 
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -171,16 +165,13 @@ public class PostService {
 			.map(FileRequestDto::new)
 			.toList();
 
-		EditPostResponseDto editPostResponseDto = EditPostResponseDto.builder()
+		return EditPostResponseDto.builder()
 			.postContent(post.getPostContent())
 			.tags(tagNames)
 			.photos(fileRequestDtos)
 			.tempSave(post.getTempSave())
 			.boundary(post.getBoundary())
 			.build();
-
-		return ResponseEntity.ok().body(ApiResponse.successResponse(editPostResponseDto, "수정 게시글 조회 완료", 2000));
-		// 용량문제
 	}
 
 }

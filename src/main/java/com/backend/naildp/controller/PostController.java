@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
@@ -40,7 +41,9 @@ public class PostController {
 		if (files == null) {
 			throw new CustomException("Not Input File", ErrorCode.INPUT_NULL);
 		}
-		return postService.uploadPost(userDetails.getUser().getNickname(), postRequestDto, files);
+		postService.uploadPost(userDetails.getUser().getNickname(), postRequestDto, files);
+
+		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "게시글 작성이 완료되었습니다", 2001));
 
 	}
 
@@ -50,7 +53,9 @@ public class PostController {
 		@RequestPart(value = "photos", required = false) List<MultipartFile> files,
 		@PathVariable("postId") Long postId) {
 
-		return postService.editPost(userDetails.getUser().getNickname(), postRequestDto, files, postId);
+		postService.editPost(userDetails.getUser().getNickname(), postRequestDto, files, postId);
+
+		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "게시글 수정이 완료되었습니다", 2001));
 
 	}
 
@@ -58,8 +63,10 @@ public class PostController {
 	ResponseEntity<ApiResponse<?>> getEditingPost(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("postId") Long postId) {
 
-		return postService.getEditingPost(userDetails.getUser().getNickname(), postId);
+		EditPostResponseDto editPostResponseDto = postService.getEditingPost(userDetails.getUser().getNickname(),
+			postId);
 
+		return ResponseEntity.ok().body(ApiResponse.successResponse(editPostResponseDto, "수정 게시글 조회 완료", 2000));
 	}
 
 }
