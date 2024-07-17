@@ -77,6 +77,34 @@ public class PostServiceTest {
 		System.out.println("======= BeforeEach 끝 ======");
 	}
 
+	@DisplayName("최신 게시글 조회 메서드 연속 호출 테스트")
+	@Test
+	void callNewPostsTwice() {
+		//given
+		int firstCallPageSize = 30;
+		int secondCallPageSize = 40;
+
+		String nickname = "testUser";
+
+		//when
+		PostSummaryResponse firstPostSummaryResponse = postService.homePosts("NEW", firstCallPageSize, -1L, nickname);
+		Long oldestPostId = firstPostSummaryResponse.getOldestPostId();
+		PostSummaryResponse secondPostSummaryResponse = postService.homePosts("NEW", secondCallPageSize, oldestPostId,
+			nickname);
+
+		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
+		Slice<HomePostResponse> secondSummaryList = secondPostSummaryResponse.getPostSummaryList();
+
+		//then
+		assertThat(firstSummaryList.hasNext()).isTrue();
+		assertThat(firstSummaryList.getSize()).isEqualTo(firstCallPageSize);
+		assertThat(firstSummaryList.getNumberOfElements()).isEqualTo(firstCallPageSize);
+
+		assertThat(secondSummaryList.hasNext()).isFalse();
+		assertThat(secondSummaryList.getSize()).isEqualTo(secondCallPageSize);
+		assertThat(secondSummaryList.getNumberOfElements()).isEqualTo(60 - firstCallPageSize);
+	}
+
 	@DisplayName("최신 게시물 불러오기 테스트")
 	@Test
 	void findNewPosts() {

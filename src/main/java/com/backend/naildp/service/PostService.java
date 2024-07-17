@@ -35,7 +35,9 @@ import com.backend.naildp.repository.TagRepository;
 import com.backend.naildp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -50,6 +52,7 @@ public class PostService {
 	private final PhotoRepository photoRepository;
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
+		log.info("PostService#homePosts 실행");
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
 		Slice<Post> recentPosts;
 		if (cursorPostId == -1L) {
@@ -58,14 +61,17 @@ public class PostService {
 			recentPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId,
 				Boundary.NONE, pageRequest);
 		}
+		log.info("PostService#homePosts - 게시물 페이징으로 가져오기");
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
 			.map(ArchivePost::getPost)
 			.collect(Collectors.toList());
+		log.info("PostService#homePosts - 저장한 게시물 가져오기");
 
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
+		log.info("PostService#homePosts - 좋아요 체크한 게시물 가져오기");
 
 		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts);
 	}
