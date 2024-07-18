@@ -53,22 +53,14 @@ public class PostService {
 	private final PhotoRepository photoRepository;
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
-		log.info("PostService#homePosts 실행");
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
+
 		if (!StringUtils.hasText(nickname)) {
 			Slice<Post> recentPosts = postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
 			return new PostSummaryResponse(recentPosts);
 		}
 
-		Slice<Post> recentPosts;
-		if (cursorPostId == -1L) {
-			recentPosts = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
-		} else {
-			recentPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId,
-				Boundary.NONE, pageRequest);
-		}
-		log.info("PostService#homePosts - 게시물 페이징으로 가져오기");
-
+		Slice<Post> recentPosts = getRecentPosts(cursorPostId, pageRequest);
 		if (recentPosts.isEmpty()) {
 			log.debug("최신 게시물이 하나도 없습니다.");
 			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
@@ -78,11 +70,9 @@ public class PostService {
 		List<Post> savedPosts = archivePosts.stream()
 			.map(ArchivePost::getPost)
 			.collect(Collectors.toList());
-		log.info("PostService#homePosts - 저장한 게시물 가져오기");
 
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
-		log.info("PostService#homePosts - 좋아요 체크한 게시물 가져오기");
 
 		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts);
 	}
@@ -127,5 +117,13 @@ public class PostService {
 			.collect(Collectors.toList());
 
 		return likedPost.map(post -> HomePostResponse.likedPostResponse(post, savedPosts));
+	}
+
+	private Slice<Post> getRecentPosts(long cursorPostId, PageRequest pageRequest) {
+		if (cursorPostId == -1L) {
+			return postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
+		}
+		return postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId, Boundary.NONE,
+			pageRequest);
 	}
 }
