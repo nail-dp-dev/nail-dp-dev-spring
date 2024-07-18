@@ -188,6 +188,33 @@ class PostServiceUnitTest {
 		assertThat(likedList.getTotalElements()).isEqualTo(20);
 	}
 
+	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트")
+	@Test
+	void recentPostsAccessByAnonymousUser() {
+		//given
+		long cursorId = -1L;
+		String nickname = "";
+		List<Post> posts = createTestPosts(POST_CNT);
+		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, false);
+
+		when(postRepository.findPostsByBoundaryAndTempSaveFalse(eq(Boundary.ALL), eq(pageRequest)))
+			.thenReturn(pagedPost);
+
+		//when
+		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
+
+		//then
+		verify(postRepository).findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
+		verify(postRepository, never())
+			.findPostsByBoundaryNotAndTempSaveFalse(any(Boundary.class), any(PageRequest.class));
+		verify(postRepository, never())
+			.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(), any(Boundary.class),
+				any(PageRequest.class));
+		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
+		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
+	}
+
 	private List<Post> createTestPosts(int postCnt) {
 		List<Post> posts = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
