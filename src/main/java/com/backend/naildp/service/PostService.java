@@ -63,6 +63,11 @@ public class PostService {
 		}
 		log.info("PostService#homePosts - 게시물 페이징으로 가져오기");
 
+		if (recentPosts.isEmpty()) {
+			log.debug("최신 게시물이 하나도 없습니다.");
+			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+		}
+
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
 			.map(ArchivePost::getPost)
