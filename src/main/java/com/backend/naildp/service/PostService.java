@@ -144,6 +144,9 @@ public class PostService {
 					s3Service.deleteFile(fileUrl);
 				});
 		}
+		// test를 위한 명시적 저장
+		postRepository.save(post);
+
 	}
 
 	// 게시물 수정 조회
@@ -173,5 +176,4 @@ public class PostService {
 			.boundary(post.getBoundary())
 			.build();
 	}
-
 }
