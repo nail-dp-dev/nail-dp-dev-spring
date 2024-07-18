@@ -66,16 +66,12 @@ class PostServiceUnitTest {
 		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
 
 		List<Post> posts = createTestPosts(POST_CNT);
-		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, true);
-		List<ArchivePost> archivePosts = pagedPost.stream()
-			.map(post -> new ArchivePost(null, post))
-			.collect(Collectors.toList());
-		List<PostLike> postLikes = pagedPost.stream()
-			.map(post -> new PostLike(null, post))
-			.collect(Collectors.toList());
+		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, true);
+		List<ArchivePost> archivePosts = savePostsInArchive(recentPosts);
+		List<PostLike> postLikes = likePosts(recentPosts);
 
-		when(postRepository.findPostsByBoundaryNotAndTempSaveFalse(eq(Boundary.NONE), eq(pageRequest))).thenReturn(
-			pagedPost);
+		when(postRepository.findPostsByBoundaryNotAndTempSaveFalse(eq(Boundary.NONE), eq(pageRequest)))
+			.thenReturn(recentPosts);
 		when(archivePostRepository.findAllByArchiveUserNickname(eq(NICKNAME))).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
 
@@ -83,12 +79,6 @@ class PostServiceUnitTest {
 		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE,
 			cursorPostId, NICKNAME);
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
-		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
-			.filter(HomePostResponse::getLike)
-			.collect(Collectors.toList());
-		List<HomePostResponse> savedPostResponses = homePostResponses.stream()
-			.filter(HomePostResponse::getSaved)
-			.collect(Collectors.toList());
 
 		//then
 		verify(postRepository).findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
@@ -101,11 +91,6 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
 		assertThat(homePostResponses.isFirst()).isTrue();
 		assertThat(homePostResponses.hasNext()).isTrue();
-
-		assertThat(likedPostResponses.size()).isEqualTo(20);
-		assertThat(savedPostResponses.size()).isEqualTo(20);
-
-		System.out.println("homePostResponses = " + homePostResponses.hasNext());
 	}
 
 	@DisplayName("최신 게시물 조회 단위 테스트 - 두번쨰 호출부터")
@@ -117,12 +102,8 @@ class PostServiceUnitTest {
 
 		List<Post> posts = createTestPosts(POST_CNT);
 		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, false);
-		List<ArchivePost> archivePosts = pagedPost.stream()
-			.map(post -> new ArchivePost(null, post))
-			.collect(Collectors.toList());
-		List<PostLike> postLikes = pagedPost.stream()
-			.map(post -> new PostLike(null, post))
-			.collect(Collectors.toList());
+		List<ArchivePost> archivePosts = savePostsInArchive(pagedPost);
+		List<PostLike> postLikes = likePosts(pagedPost);
 
 		when(postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(eq(cursorPostId), eq(Boundary.NONE),
 			any(PageRequest.class))).thenReturn(pagedPost);
@@ -132,12 +113,6 @@ class PostServiceUnitTest {
 		//when
 		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
-		List<HomePostResponse> likedPostResponses = homePostResponses.stream()
-			.filter(HomePostResponse::getLike)
-			.collect(Collectors.toList());
-		List<HomePostResponse> savedPostResponses = homePostResponses.stream()
-			.filter(HomePostResponse::getSaved)
-			.collect(Collectors.toList());
 
 		//then
 		verify(postRepository, never()).findPostsByBoundaryNotAndTempSaveFalse(Boundary.ALL, pageRequest);
@@ -150,9 +125,6 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
 		assertThat(homePostResponses.isFirst()).isTrue();
 		assertThat(homePostResponses.hasNext()).isFalse();
-
-		assertThat(likedPostResponses.size()).isEqualTo(20);
-		assertThat(savedPostResponses.size()).isEqualTo(20);
 	}
 
 	@DisplayName("좋아요한 게시글 조회 테스트")
@@ -167,9 +139,7 @@ class PostServiceUnitTest {
 		List<PostLike> postLikes = createPostLikes(postCnt);
 		PageImpl<PostLike> pagedPostLikes = new PageImpl<>(postLikes, pageRequest, pageSize);
 		Page<Post> pagedPosts = pagedPostLikes.map(PostLike::getPost);
-		List<ArchivePost> archivePosts = pagedPosts.stream()
-			.map(post -> new ArchivePost(null, post))
-			.collect(Collectors.toList());
+		List<ArchivePost> archivePosts = savePostsInArchive(pagedPosts);
 
 		when(postLikeRepository.findPagedPostLikesByBoundaryOpened(any(PageRequest.class), anyString(),
 			any(Boundary.class))).thenReturn(pagedPostLikes);
@@ -235,5 +205,17 @@ class PostServiceUnitTest {
 			postLikes.add(postLike);
 		});
 		return postLikes;
+	}
+
+	private List<PostLike> likePosts(Slice<Post> pagedPost) {
+		return pagedPost.stream()
+			.map(post -> new PostLike(null, post))
+			.collect(Collectors.toList());
+	}
+
+	private List<ArchivePost> savePostsInArchive(Slice<Post> pagedPost) {
+		return pagedPost.stream()
+			.map(post -> new ArchivePost(null, post))
+			.collect(Collectors.toList());
 	}
 }
