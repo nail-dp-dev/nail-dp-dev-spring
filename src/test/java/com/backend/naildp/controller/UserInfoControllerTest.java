@@ -97,4 +97,19 @@ public class UserInfoControllerTest {
 			.andExpect(jsonPath("$.message").value("nickname 으로 회원을 찾을 수 없습니다."))
 			.andExpect(jsonPath("$.code").value(4002));
 	}
+
+	@Test
+	@DisplayName("사용자 정보 조회 - 썸네일 예외")
+	public void testGetUserInfoThumbnailNotFound() throws Exception {
+		// Given
+		doThrow(new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND))
+			.when(userInfoService).getUserInfo(anyString());
+
+		// Then
+		mockMvc.perform(get("/user").with(csrf())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("설정된 프로필 썸네일이 없습니다."))
+			.andExpect(jsonPath("$.code").value(4002));
+	}
 }

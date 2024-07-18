@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.ArchivePost;
+import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -38,16 +39,25 @@ public class UserInfoService {
 
 		List<String> followings = followRepository.findFollowingNicknamesByUserNickname(user.getNickname());
 
-		int count = (int)archivePosts.stream()
-			.filter(archivePost -> archivePost.getPost().getBoundary() == Boundary.ALL || (
-				archivePost.getPost().getBoundary() == Boundary.FOLLOW && followings.contains(
-					archivePost.getPost().getUser().getNickname())))
-			.count();
+		int count = 0;
+
+		if (!archivePosts.isEmpty()) {
+			count = (int)archivePosts.stream()
+				.filter(archivePost -> archivePost.getPost().getBoundary() == Boundary.ALL || (
+					archivePost.getPost().getBoundary() == Boundary.FOLLOW && followings.contains(
+						archivePost.getPost().getUser().getNickname())))
+				.count();
+		}
+
+		Profile profile = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user);
+		if (profile == null || profile.getProfileUrl() == null) {
+			throw new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND); // 에러코드 변경 필요
+		}
 
 		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())
 			.point(user.getPoint())
-			.profileUrl(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user).getProfileUrl())
+			.profileUrl(profile.getProfileUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
