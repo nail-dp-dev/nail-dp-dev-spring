@@ -34,7 +34,7 @@ public class User extends BaseEntity {
 
 	@Column(nullable = false)
 	private String phoneNumber;
-	private Long point;
+	private Long point = 0L;
 	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
 	@Column(nullable = false)
