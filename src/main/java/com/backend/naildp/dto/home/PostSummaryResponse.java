@@ -27,4 +27,14 @@ public class PostSummaryResponse {
 		postSummaryList = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
 		log.info("PostService#homePosts - postSummaryList 설정");
 	}
+
+	public PostSummaryResponse(Slice<Post> latestPosts) {
+		log.info("PostSummaryResponse 응답값 만들기 - 익명 사용자");
+
+		oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
+		log.info("PostService#homePosts - oldestPostId 설정");
+
+		postSummaryList = latestPosts.map(HomePostResponse::recentPostForAnonymous);
+		log.info("PostService#homePosts - postSummaryList 설정");
+	}
 }

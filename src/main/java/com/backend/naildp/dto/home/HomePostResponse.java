@@ -45,4 +45,17 @@ public class HomePostResponse {
 			.createdDate(post.getCreatedDate())
 			.build();
 	}
+
+	public static HomePostResponse recentPostForAnonymous(Post post) {
+		Photo photo = post.getPhotos().get(0);
+
+		return HomePostResponse.builder()
+			.postId(post.getId())
+			.photoId(photo.getId())
+			.photoUrl(photo.getPhotoUrl())
+			.like(false)
+			.saved(false)
+			.createdDate(post.getCreatedDate())
+			.build();
+	}
 }
