@@ -30,11 +30,15 @@ public class Profile extends BaseEntity {
 	private String profileUrl;
 
 	@Column(nullable = false)
+	private Boolean thumbnail;
+
+	@Column(nullable = false)
 	private String name;
 
-	public Profile(User user, String profileUrl, String name) {
+	public Profile(User user, String profileUrl, String name, boolean thumbnail) {
 		this.user = user;
 		this.profileUrl = profileUrl;
 		this.name = name;
+		this.thumbnail = thumbnail;
 	}
 }
