@@ -43,16 +43,17 @@ public class UserInfoService {
 
 		if (!archivePosts.isEmpty()) {
 			count = (int)archivePosts.stream()
-				.filter(archivePost -> archivePost.getPost().getBoundary() == Boundary.ALL || (
-					archivePost.getPost().getBoundary() == Boundary.FOLLOW && followings.contains(
-						archivePost.getPost().getUser().getNickname())))
+				.map(ArchivePost::getPost)
+				.filter(post -> {
+					Boundary boundary = post.getBoundary();
+					return boundary == Boundary.ALL || (boundary == Boundary.FOLLOW && followings.contains(
+						post.getUser().getNickname()));
+				})
 				.count();
 		}
 
-		Profile profile = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user);
-		if (profile == null || profile.getProfileUrl() == null) {
-			throw new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND); // 에러코드 변경 필요
-		}
+		Profile profile = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user)
+			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
 
 		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())

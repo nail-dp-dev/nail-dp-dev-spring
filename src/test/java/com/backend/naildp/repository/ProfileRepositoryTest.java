@@ -2,6 +2,8 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,14 +54,14 @@ class ProfileRepositoryTest {
 		// Given
 
 		// When
-		Profile foundProfile1 = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1);
-		Profile foundProfile2 = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user2);
+		Optional<Profile> foundProfile1 = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1);
+		Optional<Profile> foundProfile2 = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user2);
 
 		// Then
-		assertThat(foundProfile1).isNotNull();
-		assertThat(foundProfile1.getProfileUrl()).isEqualTo("mjProfileUrl.jpg");
+		assertThat(foundProfile1).isPresent();
+		assertThat(foundProfile1.get().getProfileUrl()).isEqualTo("mjProfileUrl.jpg");
 
-		assertThat(foundProfile2).isNull();
+		assertThat(foundProfile2).isNotPresent();
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
