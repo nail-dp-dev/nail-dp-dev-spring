@@ -63,7 +63,7 @@ class PostServiceUnitTest {
 	void newPosts() {
 		//given
 		long cursorPostId = -1L;
-		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
 
 		List<Post> posts = createTestPosts(POST_CNT);
 		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, true);
@@ -113,7 +113,7 @@ class PostServiceUnitTest {
 	void newPostsWithCursorId() {
 		//given
 		long cursorPostId = 10L;
-		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
 
 		List<Post> posts = createTestPosts(POST_CNT);
 		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, false);

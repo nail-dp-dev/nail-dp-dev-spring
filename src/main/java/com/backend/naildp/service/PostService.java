@@ -53,7 +53,7 @@ public class PostService {
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
 		log.info("PostService#homePosts 실행");
-		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
 		Slice<Post> recentPosts;
 		if (cursorPostId == -1L) {
 			recentPosts = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
