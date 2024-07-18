@@ -1,6 +1,7 @@
 package com.backend.naildp.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.Collections;
@@ -23,6 +24,7 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -167,4 +169,24 @@ class UserInfoServiceTest {
 		assertThat(userInfoResponseDto.getSaveCount()).isEqualTo(0);
 	}
 
+	@Test
+	@DisplayName("사용자를 찾지 못할 때 예외 발생")
+	void testGetUserInfo_UserNotFound() {
+		// Given
+		given(userRepository.findByNickname("alswl")).willReturn(Optional.empty());
+
+		// Then
+		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("user1"));
+	}
+
+	@Test
+	@DisplayName("설정된 프로필 썸네일이 없을 때 예외 발생")
+	void testGetUserInfo_NoProfileThumbnail() {
+		// Given
+		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
+		given(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1)).willReturn(null);
+
+		// Then
+		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("alswl"));
+	}
 }
