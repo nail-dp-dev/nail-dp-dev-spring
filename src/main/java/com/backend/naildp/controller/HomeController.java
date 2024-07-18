@@ -2,7 +2,9 @@ package com.backend.naildp.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,10 +29,16 @@ public class HomeController {
 	public ResponseEntity<?> homePosts(
 		@RequestParam(name = "choice") String choice,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId,
-		@AuthenticationPrincipal UserDetails userDetails) {
+		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null) {
+			PostSummaryResponse postSummaryResponse = postService.homePosts(choice, size, cursorPostId, "");
+			return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
+		}
+
 		PostSummaryResponse postSummaryResponse = postService.homePosts(choice, size, cursorPostId,
-			userDetails.getUsername());
+			authentication.getName());
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
 	}
 

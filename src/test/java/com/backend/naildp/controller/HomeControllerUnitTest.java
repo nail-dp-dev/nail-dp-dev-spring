@@ -12,7 +12,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -32,7 +33,8 @@ import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(HomeController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class HomeControllerUnitTest {
 
 	@Autowired
@@ -91,7 +93,50 @@ class HomeControllerUnitTest {
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
 			.andExpect(jsonPath("$.data.postSummaryList.last").value(true))
 			.andDo(print());
+	}
 
+	@DisplayName("로그인 안한 사용자 최신 게시물 조회 API 테스트 - 첫번째 호출")
+	@Test
+	void newPostsApiTestWithLogoutUserFirstCall() throws Exception {
+		//given
+		PostSummaryResponse postSummaryResponse = new PostSummaryResponse(100L, createSlicePostResponses(true));
+		ApiResponse<?> apiResponse = ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회",
+			2000);
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+
+		// when & then
+		mvc.perform((get("/home").param("choice", "NEW")))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().json(jsonResponse))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andExpect(jsonPath("$.data.postSummaryList.last").value(false))
+			.andDo(print());
+	}
+
+	@DisplayName("로그인 안한 사용자 최신 게시물 조회 API 테스트 - 두번째 호출")
+	@Test
+	void newPostsApiTestWithLogoutUserSecondCall() throws Exception {
+		//given
+		PostSummaryResponse postSummaryResponse = new PostSummaryResponse(100L, createSlicePostResponses(false));
+		ApiResponse<?> apiResponse = ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회",
+			2000);
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+
+		// when & then
+		mvc.perform((get("/home").param("choice", "NEW")))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().json(jsonResponse))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andExpect(jsonPath("$.data.postSummaryList.last").value(true))
+			.andDo(print());
 	}
 
 	@DisplayName("좋아요한 게시물 조회 API 테스트")
