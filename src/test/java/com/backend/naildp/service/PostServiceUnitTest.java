@@ -30,7 +30,10 @@ import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 
@@ -51,6 +54,9 @@ class PostServiceUnitTest {
 	PostLikeRepository postLikeRepository;
 
 	@Mock
+	FollowRepository followRepository;
+
+	@Mock
 	AuditingHandler auditingHandler;
 
 	final static String NICKNAME = "mj";
@@ -63,14 +69,16 @@ class PostServiceUnitTest {
 	void newPosts() {
 		//given
 		long cursorPostId = -1L;
-		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+		PageRequest pageRequest = createPageRequest(PAGE_NUMBER, PAGE_SIZE, "id");
 
+		List<User> followingUser = new ArrayList<>();
 		List<Post> posts = createTestPosts(POST_CNT);
 		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, true);
 		List<ArchivePost> archivePosts = savePostsInArchive(recentPosts);
 		List<PostLike> postLikes = likePosts(recentPosts);
 
-		when(postRepository.findPostsByBoundaryNotAndTempSaveFalse(eq(Boundary.NONE), eq(pageRequest)))
+		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
+		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
 			.thenReturn(recentPosts);
 		when(archivePostRepository.findAllByArchiveUserNickname(eq(NICKNAME))).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
@@ -81,9 +89,10 @@ class PostServiceUnitTest {
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 
 		//then
-		verify(postRepository).findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
-		verify(postRepository, never()).findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(),
-			any(Boundary.class), any(PageRequest.class));
+		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
+		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		verify(postRepository, never()).findRecentPostsByIdAndFollowing(anyLong(),
+			anyList(), any(PageRequest.class));
 		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
 
@@ -98,15 +107,17 @@ class PostServiceUnitTest {
 	void newPostsWithCursorId() {
 		//given
 		long cursorPostId = 10L;
-		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+		PageRequest pageRequest = createPageRequest(PAGE_NUMBER, PAGE_SIZE, "id");
 
+		List<User> followingUser = new ArrayList<>();
 		List<Post> posts = createTestPosts(POST_CNT);
 		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, false);
 		List<ArchivePost> archivePosts = savePostsInArchive(pagedPost);
 		List<PostLike> postLikes = likePosts(pagedPost);
 
-		when(postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(eq(cursorPostId), eq(Boundary.NONE),
-			any(PageRequest.class))).thenReturn(pagedPost);
+		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
+		when(postRepository.findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest)))
+			.thenReturn(pagedPost);
 		when(archivePostRepository.findAllByArchiveUserNickname(NICKNAME)).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
 
@@ -115,9 +126,9 @@ class PostServiceUnitTest {
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 
 		//then
-		verify(postRepository, never()).findPostsByBoundaryNotAndTempSaveFalse(Boundary.ALL, pageRequest);
-		verify(postRepository).findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(eq(cursorPostId),
-			any(Boundary.class), any(PageRequest.class));
+		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
+		verify(postRepository).findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest));
+		verify(postRepository, never()).findRecentPostsByFollowing(anyList(), eq(pageRequest));
 		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
 
@@ -127,6 +138,32 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.hasNext()).isFalse();
 	}
 
+	@DisplayName("최신 게시물 조회 단위 테스트 - 게시물이 존재하지 않으면 예외 발생")
+	@Test
+	void newPostsException() {
+		//given
+		long cursorPostId = -1L;
+		PageRequest pageRequest = createPageRequest(PAGE_NUMBER, PAGE_SIZE, "id");
+
+		List<User> followingUser = new ArrayList<>();
+		List<Post> posts = createTestPosts(0);
+		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, true);
+
+		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
+		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
+			.thenReturn(recentPosts);
+
+		//when & then
+		assertThatThrownBy(() -> postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("게시물이 없습니다.");
+
+		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
+		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
+		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
+	}
+
 	@DisplayName("좋아요한 게시글 조회 테스트")
 	@Test
 	void findPagedLikedPost() {
@@ -134,7 +171,7 @@ class PostServiceUnitTest {
 		String nickname = "mj";
 		int postCnt = 20;
 		int pageSize = 20;
-		PageRequest pageRequest = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequest = createPageRequest(0, pageSize, "createdDate");
 
 		List<PostLike> postLikes = createPostLikes(postCnt);
 		PageImpl<PostLike> pagedPostLikes = new PageImpl<>(postLikes, pageRequest, pageSize);
@@ -165,7 +202,7 @@ class PostServiceUnitTest {
 		long cursorId = -1L;
 		String nickname = "";
 		List<Post> posts = createTestPosts(POST_CNT);
-		PageRequest pageRequest = PageRequest.of(PAGE_NUMBER, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+		PageRequest pageRequest = createPageRequest(PAGE_NUMBER, PAGE_SIZE, "id");
 		Slice<Post> pagedPost = new SliceImpl<>(posts, pageRequest, false);
 
 		when(postRepository.findPostsByBoundaryAndTempSaveFalse(eq(Boundary.ALL), eq(pageRequest)))
@@ -217,5 +254,9 @@ class PostServiceUnitTest {
 		return pagedPost.stream()
 			.map(post -> new ArchivePost(null, post))
 			.collect(Collectors.toList());
+	}
+
+	private PageRequest createPageRequest(int pageNumber, int pageSize, String property) {
+		return PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, property));
 	}
 }
