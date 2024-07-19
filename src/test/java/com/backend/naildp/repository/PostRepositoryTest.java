@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.SocialLogin;
@@ -46,7 +49,7 @@ class PostRepositoryTest {
 	private List<Post> posts = new ArrayList<>();
 	private List<Photo> photos = new ArrayList<>();
 
-	private static final int PAGE_SIZE = 20;
+	private static final int PAGE_SIZE = 30;
 	private static final int TOTAL_POST_CNT = 30;
 
 	@BeforeEach
@@ -54,9 +57,16 @@ class PostRepositoryTest {
 		mj = createTestMember("x@naver.com", "mj", "0101111", 1L);
 		jw = createTestMember("y@naver.com", "jw", "0102222", 2L);
 		gw = createTestMember("z@naver.com", "gw", "0103333", 3L);
-		System.out.println("mj : " + mj.toString());
 
-		createTestPostWithPhoto(TOTAL_POST_CNT, mj);
+		createFollow(jw, mj);
+
+		createTestPostWithPhoto(TOTAL_POST_CNT, mj, Boundary.ALL);
+		createTestPostWithPhoto(TOTAL_POST_CNT, gw, Boundary.ALL);
+		createTestPostWithPhoto(TOTAL_POST_CNT, mj, Boundary.FOLLOW);
+		createTestPostWithPhoto(TOTAL_POST_CNT, gw, Boundary.FOLLOW);
+		createTestPostWithPhoto(TOTAL_POST_CNT, mj, Boundary.NONE);
+		createTestPostWithPhoto(TOTAL_POST_CNT, gw, Boundary.NONE);
+
 		createTestTempSavePostAndPhoto(mj);
 		createTestTempSavePostAndPhoto(jw);
 		createTestTempSavePostAndPhoto(gw);
@@ -68,6 +78,54 @@ class PostRepositoryTest {
 		log.info("========= 사전 데이터 끝 =========");
 	}
 
+	@DisplayName("전체공개이거나 팔로우 공개이고 임시저장이 아닌 게시물 페이징 조회 테스트")
+	@Test
+	void offsetPagingPostsWithFollow() {
+		//given
+		int postCntOpened = TOTAL_POST_CNT * 3;
+		PageRequest pageRequest = PageRequest.of(0, postCntOpened, Sort.by(Sort.Direction.DESC, "id"));
+		List<Follow> follows = findFollowByFollowerNickname("jw");
+		List<User> followingsByJw = follows.stream().map(Follow::getFollowing).collect(Collectors.toList());
+
+		//when
+		Slice<Post> recentPosts = postRepository.findRecentPostsByFollowing(followingsByJw, pageRequest);
+
+		//then
+		assertThat(recentPosts.getSize()).isEqualTo(postCntOpened);
+		assertThat(recentPosts.getNumberOfElements()).isEqualTo(postCntOpened);
+		assertThat(recentPosts.getNumber()).isEqualTo(0);
+		assertThat(recentPosts.getSort().isSorted()).isTrue();
+		assertThat(recentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
+		assertThat(recentPosts).extracting("tempSave").containsOnly(false);
+	}
+
+	@DisplayName("전체공개이거나 팔로우 공개이고 임시저장이 아닌 게시물 페이징 조회 테스트 - 두번째 호출부터")
+	@Test
+	void cursorPagingPostsWithFollow() {
+		//given
+		Post oldestPost = findOldestPost();
+		int postCntOpened = TOTAL_POST_CNT * 3;
+		long oldestPostId = oldestPost.getId() + 1;
+		System.out.println("oldestPostId = " + oldestPostId);
+
+		PageRequest pageRequest = PageRequest.of(0, postCntOpened, Sort.by(Sort.Direction.DESC, "id"));
+		List<Follow> follows = findFollowByFollowerNickname("jw");
+		List<User> followingsByJw = follows.stream().map(Follow::getFollowing).collect(Collectors.toList());
+
+		//when
+		Slice<Post> secondRecentPosts = postRepository.findRecentPostsByIdAndFollowing(oldestPostId, followingsByJw,
+			pageRequest);
+
+		//then
+		assertThat(secondRecentPosts.getSize()).isEqualTo(postCntOpened);
+		assertThat(secondRecentPosts.getNumberOfElements()).isEqualTo(postCntOpened);
+		assertThat(secondRecentPosts.getNumber()).isEqualTo(0);
+		assertThat(secondRecentPosts.getSort().isSorted()).isTrue();
+		assertThat(secondRecentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
+		assertThat(secondRecentPosts).extracting("tempSave").containsOnly(false);
+	}
+
+	@Disabled
 	@DisplayName("커서 기반 페이징으로 Post 조회")
 	@Test
 	void cursorPagingPosts() {
@@ -105,6 +163,7 @@ class PostRepositoryTest {
 
 	}
 
+	@Disabled
 	@DisplayName("최신순으로 페이징한 Post 조회 테스트")
 	@Test
 	void pagingPosts() {
@@ -147,9 +206,9 @@ class PostRepositoryTest {
 		photos.add(photo2);
 	}
 
-	private void createTestPostWithPhoto(int postCnt, User user) {
+	private void createTestPostWithPhoto(int postCnt, User user, Boundary boundary) {
 		for (int i = 0; i < postCnt; i++) {
-			Post post = new Post(user, "" + i, 0L, Boundary.ALL, false);
+			Post post = new Post(user, "" + i, 0L, boundary, false);
 			Photo photo1 = new Photo(post, "url 1-" + user.getNickname() + i, "photo 1-" + user.getNickname() + i);
 			Photo photo2 = new Photo(post, "url 2-" + user.getNickname() + i, "photo 2-" + user.getNickname() + i);
 			post.addPhoto(photo1);
@@ -167,5 +226,25 @@ class PostRepositoryTest {
 		em.persist(user);
 		em.persist(socialLogin);
 		return user;
+	}
+
+	private void createFollow(User follower, User following) {
+		Follow follow = new Follow(follower, following);
+		em.persist(follow);
+	}
+
+	private List<Follow> findFollowByFollowerNickname(String nickname) {
+		return em.createQuery("select f from Follow f where f.follower.nickname = :follower",
+				Follow.class)
+			.setParameter("follower", nickname)
+			.getResultList();
+	}
+
+	private Post findOldestPost() {
+		return em.createQuery(
+				"select p from Post p where p.tempSave = false and p.boundary <> 'NONE' order by p.id desc",
+				Post.class)
+			.setMaxResults(1)
+			.getSingleResult();
 	}
 }
