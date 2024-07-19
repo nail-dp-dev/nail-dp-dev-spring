@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
@@ -68,37 +68,72 @@ class PostRepositoryTest {
 		log.info("========= 사전 데이터 끝 =========");
 	}
 
-	@DisplayName("최신순으로 페이징한 포스트 목록 가져오기")
+	@DisplayName("커서 기반 페이징으로 Post 조회")
 	@Test
-	void getNewPost() {
-		// given
-		int pageSize = PAGE_SIZE;
+	void cursorPagingPosts() {
+		//given
+		int size = 20;
+		int secondSize = 35;
+		List<Post> findPosts = em.createQuery(
+				"select p from Post p where p.tempSave = false order by p.createdDate desc", Post.class)
+			.getResultList();
 
-		// when
-		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts1 = postRepository.findByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest1);
+		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest secondPageRequest = PageRequest.of(0, secondSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+		Long firstPostId = findPosts.get(0).getId();
+		Long nextPostId = findPosts.get(19).getId();
+		System.out.println("firstPostId = " + firstPostId);
+		System.out.println("nextPostId = " + nextPostId);
+		em.clear();
 
-		PageRequest pageRequest2 = PageRequest.of(1, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts2 = postRepository.findByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest2);
+		//when
+		Slice<Post> slicedPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(
+			firstPostId, Boundary.NONE, pageRequest);
+		Slice<Post> nextSlicedPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(
+			nextPostId, Boundary.NONE, secondPageRequest);
 
-		// then
-		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
-		pagePosts2.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
+		//then
+		assertThat(slicedPosts).hasSize(size);
+		assertThat(slicedPosts.hasNext()).isTrue();
+		assertThat(slicedPosts.getNumber()).isEqualTo(0);
+		assertThat(slicedPosts.getNumberOfElements()).isEqualTo(size);
 
-		assertThat(pagePosts1.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts2.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
-		assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
+		assertThat(nextSlicedPosts).hasSize(10);
+		assertThat(nextSlicedPosts.hasNext()).isFalse();
+		assertThat(nextSlicedPosts.getNumber()).isEqualTo(0);
+		assertThat(nextSlicedPosts.getNumberOfElements()).isEqualTo(10);
 
-		for (Post post : pagePosts1) {
-			log.info("post.Content = " + post.getPostContent());
-			log.info("post.CreatedDate = " + post.getCreatedDate());
-		}
-		for (Post post : pagePosts2) {
-			log.info("post.Content = " + post.getPostContent());
-			log.info("post.CreatedDate = " + post.getCreatedDate());
-		}
+	}
 
+	@DisplayName("최신순으로 페이징한 Post 조회 테스트")
+	@Test
+	void pagingPosts() {
+		//given
+		int pageSizeBelowTotalPostCnt = TOTAL_POST_CNT - 1;
+		int pageSizeAboveTotalPostCnt = TOTAL_POST_CNT + 1;
+		int postCnt = TOTAL_POST_CNT;
+
+		PageRequest pageRequestBelowPostCnt = PageRequest.of(0, pageSizeBelowTotalPostCnt,
+			Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequestAbovePostCnt = PageRequest.of(0, pageSizeAboveTotalPostCnt,
+			Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		//when
+		Slice<Post> slicedPostsBelowPostCnt = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE,
+			pageRequestBelowPostCnt);
+		Slice<Post> slicedPostsAbovePostCnt = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE,
+			pageRequestAbovePostCnt);
+
+		//then
+		assertThat(slicedPostsBelowPostCnt).hasSize(pageSizeBelowTotalPostCnt);
+		assertThat(slicedPostsBelowPostCnt.hasNext()).isTrue();
+		assertThat(slicedPostsBelowPostCnt.getNumber()).isEqualTo(0);
+		assertThat(slicedPostsBelowPostCnt.getNumberOfElements()).isEqualTo(pageSizeBelowTotalPostCnt);
+
+		assertThat(slicedPostsAbovePostCnt).hasSize(postCnt);
+		assertThat(slicedPostsAbovePostCnt.hasNext()).isFalse();
+		assertThat(slicedPostsAbovePostCnt.getNumber()).isEqualTo(0);
+		assertThat(slicedPostsAbovePostCnt.getNumberOfElements()).isEqualTo(postCnt);
 	}
 
 	@DisplayName("최신순으로 페이징한 게시물과 사진 목록 가져오기")
@@ -108,10 +143,13 @@ class PostRepositoryTest {
 		int pageSize = PAGE_SIZE;
 
 		// when
+		System.out.println("==================== 1");
 		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
+		Slice<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
+		System.out.println("==================== 2");
 		PageRequest pageRequest2 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest2);
+		Slice<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL,
+			pageRequest2);
 
 		// then
 		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
@@ -119,13 +157,15 @@ class PostRepositoryTest {
 
 		assertThat(pagePosts1.getSize()).isEqualTo(pageSize);
 		assertThat(pagePosts2.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
-		assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
+		// assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
+		// assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
 
 		for (Post post : pagePosts1) {
 			log.info("------------- post.Content = " + post.getPostContent() + " -------------");
 			log.info("post.CreatedDate = " + post.getCreatedDate());
+			System.out.println("======= 사진 가져오기 =======");
 			List<Photo> photos = post.getPhotos();
+			System.out.println("======= 사진 가져오기 완료 =======");
 			log.info("photos.size = " + photos.size());
 			for (Photo photo : photos) {
 				log.info("photo.url = " + photo.getPhotoUrl());
