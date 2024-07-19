@@ -2,7 +2,9 @@ package com.backend.naildp.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostService;
 
@@ -25,10 +28,18 @@ public class HomeController {
 	@GetMapping("/home")
 	public ResponseEntity<?> homePosts(
 		@RequestParam(name = "choice") String choice,
-		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber,
-		@AuthenticationPrincipal UserDetails userDetails) {
-		Page<HomePostResponse> homePostResponses = postService.homePosts(choice, pageNumber, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(homePostResponses, "최신 게시물 조회", 2000));
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null) {
+			PostSummaryResponse postSummaryResponse = postService.homePosts(choice, size, cursorPostId, "");
+			return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
+		}
+
+		PostSummaryResponse postSummaryResponse = postService.homePosts(choice, size, cursorPostId,
+			authentication.getName());
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
 	}
 
 	@GetMapping("/posts/like")

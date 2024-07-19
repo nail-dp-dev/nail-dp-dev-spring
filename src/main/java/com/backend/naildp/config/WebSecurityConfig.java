@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -84,11 +85,14 @@ public class WebSecurityConfig {
 			sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 		);
 
+		http.anonymous(AbstractHttpConfigurer::disable);
+
 		http.authorizeHttpRequests((authorizeHttpRequests) ->
 			authorizeHttpRequests
 				.requestMatchers("/").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.requestMatchers("/auth/**").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.requestMatchers("/auth/signup").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+				.requestMatchers("/home").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.anyRequest().authenticated() // 그 외 모든 요청 인증처리
 		);
 

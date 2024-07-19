@@ -12,12 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
@@ -73,6 +75,65 @@ public class PostServiceTest {
 
 		createTestPostLikes(testUser, writer);
 		System.out.println("======= BeforeEach 끝 ======");
+	}
+
+	@DisplayName("최신 게시글 조회 메서드 연속 호출 테스트")
+	@Test
+	void callNewPostsTwice() {
+		//given
+		int firstCallPageSize = 30;
+		int secondCallPageSize = 40;
+
+		String nickname = "testUser";
+
+		//when
+		PostSummaryResponse firstPostSummaryResponse = postService.homePosts("NEW", firstCallPageSize, -1L, nickname);
+		Long oldestPostId = firstPostSummaryResponse.getOldestPostId();
+		PostSummaryResponse secondPostSummaryResponse = postService.homePosts("NEW", secondCallPageSize, oldestPostId,
+			nickname);
+
+		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
+		Slice<HomePostResponse> secondSummaryList = secondPostSummaryResponse.getPostSummaryList();
+
+		//then
+		assertThat(firstSummaryList.hasNext()).isTrue();
+		assertThat(firstSummaryList.getSize()).isEqualTo(firstCallPageSize);
+		assertThat(firstSummaryList.getNumberOfElements()).isEqualTo(firstCallPageSize);
+
+		assertThat(secondSummaryList.hasNext()).isFalse();
+		assertThat(secondSummaryList.getSize()).isEqualTo(secondCallPageSize);
+		assertThat(secondSummaryList.getNumberOfElements()).isEqualTo(60 - firstCallPageSize);
+	}
+
+	@DisplayName("최신 게시물 불러오기 테스트")
+	@Test
+	void findNewPosts() {
+		//given
+		String nickname = "testUser";
+		int postCnt = 60;
+		int pageNumber = 0;
+		int pageSize = 20;
+		long cursorPostId = -1L;
+		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
+
+		//when
+		System.out.println("첫 페이지");
+		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", pageSize, cursorPostId, nickname);
+		Slice<HomePostResponse> responses = postSummaryResponse.getPostSummaryList();
+
+		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
+		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
+
+		//then
+		assertThat(responses.getSize()).isEqualTo(pageSize);
+		assertThat(responses.getNumber()).isEqualTo(pageNumber);
+		assertThat(responses.hasNext()).isTrue();
+
+		assertThat(savedList).containsOnly(true);
+		assertThat(savedList).hasSize(pageSize);
+
+		assertThat(likedList).contains(true);
+		assertThat(likedList).hasSize(pageSize);
 	}
 
 	@DisplayName("좋아요한 게시물 불러오기 테스트")
