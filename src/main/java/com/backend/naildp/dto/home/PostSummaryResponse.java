@@ -22,13 +22,23 @@ public class PostSummaryResponse {
 
 	public PostSummaryResponse(Slice<Post> latestPosts, List<Post> savedPosts, List<Post> likedPosts) {
 		log.info("PostSummaryResponse 응답값 만들기");
-		oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
+		if (latestPosts.getNumberOfElements() == 0) {
+			oldestPostId = 0L;
+		} else {
+			oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
+		}
+		log.info("cursor Id");
 		postSummaryList = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
 	}
 
 	public PostSummaryResponse(Slice<Post> latestPosts) {
 		log.info("PostSummaryResponse 응답값 만들기 - 익명 사용자");
-		oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
+		if (latestPosts.getNumberOfElements() == 0) {
+			oldestPostId = 0L;
+		} else {
+			oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
+		}
+		log.info("cursor Id");
 		postSummaryList = latestPosts.map(HomePostResponse::recentPostForAnonymous);
 	}
 }
