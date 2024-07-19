@@ -33,6 +33,7 @@ public class FollowRepositoryTest {
 
 	private User user1;
 	private User user2;
+	private Long cnt = 1L;
 
 	@BeforeEach
 	void setup() {
@@ -64,12 +65,36 @@ public class FollowRepositoryTest {
 		assertThat(followCount).isEqualTo(0);
 	}
 
+	@DisplayName("해당 유저가 팔로우한 유저목록 조회 테스트")
+	@Test
+	void findFollowingListByFollowerNickname() {
+		//given
+		User follower = createTestMember("follower@naver.com", "follower", "010", cnt);
+		User followingUser1 = createTestMember("following1@naver.com", "following1", "010", cnt);
+		User followingUser2 = createTestMember("following2@naver.com", "following2", "010", cnt);
+		User followingUser3 = createTestMember("following3@naver.com", "following3", "010", cnt);
+		User followingUser4 = createTestMember("following4@naver.com", "following4", "010", cnt);
+		createTestFollow(follower, followingUser1);
+		createTestFollow(follower, followingUser2);
+		createTestFollow(follower, followingUser3);
+
+		//when
+		List<User> followingUserByFollowerNickname = followRepository.findFollowingUserByFollowerNickname(
+			follower.getNickname());
+
+		//then
+		assertThat(followingUserByFollowerNickname).extracting("nickname")
+			.containsExactly(followingUser1.getNickname(), followingUser2.getNickname(), followingUser3.getNickname());
+		assertThat(followingUserByFollowerNickname).extracting("nickname").doesNotContain(followingUser4.getNickname());
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
 		SocialLogin socialLogin = new SocialLogin(socialLoginId, "kakao", email, user);
 		em.persist(user);
 		em.persist(socialLogin);
+		cnt++;
 		return user;
 	}
 
