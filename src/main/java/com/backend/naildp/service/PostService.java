@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,9 +28,11 @@ import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -53,26 +56,27 @@ public class PostService {
 	private final TagRepository tagRepository;
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
+	private final FollowRepository followRepository;
 	private final S3Service s3Service;
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
 
 		if (!StringUtils.hasText(nickname)) {
-			Slice<Post> recentPosts = postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
+			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
 			return new PostSummaryResponse(recentPosts);
 		}
 
-		Slice<Post> recentPosts = getRecentPosts(cursorPostId, pageRequest);
+		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
+		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, pageRequest);
+
 		if (recentPosts.isEmpty()) {
 			log.debug("최신 게시물이 하나도 없습니다.");
 			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
 		}
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
-		List<Post> savedPosts = archivePosts.stream()
-			.map(ArchivePost::getPost)
-			.collect(Collectors.toList());
+		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
 
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
@@ -194,11 +198,22 @@ public class PostService {
 			.build();
 	}
 
-	private Slice<Post> getRecentPosts(long cursorPostId, PageRequest pageRequest) {
-		if (cursorPostId == -1L) {
-			return postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
+	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
+		if (isFirstPage(cursorPostId)) {
+			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
 		}
-		return postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId, Boundary.NONE,
+		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL,
 			pageRequest);
+	}
+
+	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, PageRequest pageRequest) {
+		if (isFirstPage(cursorPostId)) {
+			return postRepository.findRecentPostsByFollowing(followingUser, pageRequest);
+		}
+		return postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followingUser, pageRequest);
+	}
+
+	private boolean isFirstPage(long cursorPostId) {
+		return cursorPostId == -1L;
 	}
 }

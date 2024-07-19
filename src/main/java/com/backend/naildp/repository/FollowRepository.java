@@ -7,11 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.entity.Follow;
+import com.backend.naildp.entity.User;
 
 public interface FollowRepository extends JpaRepository<Follow, Long> {
 
 	@Query("select f.following.nickname from Follow f where f.follower.nickname=:nickname")
 	List<String> findFollowingNicknamesByUserNickname(@Param("nickname") String nickname);
+
+	@Query("select f.following from Follow f where f.follower.nickname = :followerNickname")
+	List<User> findFollowingUserByFollowerNickname(@Param("followerNickname") String nickname);
 
 	@Query("select count(f) from Follow f where f.following.nickname=:nickname")
 	int countFollowersByUserNickname(@Param("nickname") String nickname);
