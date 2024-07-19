@@ -28,6 +28,7 @@ import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -51,6 +52,7 @@ public class PostService {
 	private final TagRepository tagRepository;
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
+	private final FollowRepository followRepository;
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
@@ -60,7 +62,8 @@ public class PostService {
 			return new PostSummaryResponse(recentPosts);
 		}
 
-		Slice<Post> recentPosts = getRecentPosts(cursorPostId, pageRequest);
+		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
+		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, pageRequest);
 
 		if (recentPosts.isEmpty()) {
 			log.debug("최신 게시물이 하나도 없습니다.");
@@ -126,12 +129,11 @@ public class PostService {
 			pageRequest);
 	}
 
-	private Slice<Post> getRecentPosts(long cursorPostId, PageRequest pageRequest) {
+	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, PageRequest pageRequest) {
 		if (isFirstPage(cursorPostId)) {
-			return postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
+			return postRepository.findRecentPostsByFollowing(followingUser, pageRequest);
 		}
-		return postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId, Boundary.NONE,
-			pageRequest);
+		return postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followingUser, pageRequest);
 	}
 
 	private boolean isFirstPage(long cursorPostId) {
