@@ -33,8 +33,8 @@ public class HomePostResponse {
 		postId = post.getId();
 		photoId = photo.getId();
 		photoUrl = photo.getPhotoUrl();
-		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getName());
-		isVideo = FileExtensionChecker.isVideoExtension(photo.getName());
+		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
+		isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
 		createdDate = post.getCreatedDate();
@@ -47,8 +47,8 @@ public class HomePostResponse {
 			.postId(post.getId())
 			.photoId(photo.getId())
 			.photoUrl(photo.getPhotoUrl())
-			.isPhoto(FileExtensionChecker.isPhotoExtension(photo.getName()))
-			.isVideo(FileExtensionChecker.isVideoExtension(photo.getName()))
+			.isPhoto(FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl()))
+			.isVideo(FileExtensionChecker.isVideoExtension(photo.getPhotoUrl()))
 			.like(true)
 			.saved(savedPost.contains(post))
 			.createdDate(post.getCreatedDate())
@@ -62,8 +62,8 @@ public class HomePostResponse {
 			.postId(post.getId())
 			.photoId(photo.getId())
 			.photoUrl(photo.getPhotoUrl())
-			.isPhoto(FileExtensionChecker.isPhotoExtension(photo.getName()))
-			.isVideo(FileExtensionChecker.isVideoExtension(photo.getName()))
+			.isPhoto(FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl()))
+			.isVideo(FileExtensionChecker.isVideoExtension(photo.getPhotoUrl()))
 			.like(false)
 			.saved(false)
 			.createdDate(post.getCreatedDate())
