@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
@@ -193,7 +195,61 @@ class PostCreateServiceTest {
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
 		// then
-		assertThrows(CustomException.class,
+		CustomException exception = assertThrows(CustomException.class,
 			() -> postService.editPost(nickname, postRequestDto, Collections.emptyList(), postId));
+
+		assertThat(exception.getMessage()).isEqualTo("파일을 첨부해주세요.");
+
+	}
+
+	@Test
+	@DisplayName("게시물 수정 조회 테스트")
+	void testGetEditingPost() {
+		// given
+		String nickname = "testUser";
+		PostRequestDto postRequestDto = new PostRequestDto("postContent", false, Boundary.ALL,
+			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
+			Collections.emptyList());
+
+		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+
+		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
+		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
+
+		Post post = new Post(postRequestDto, user);
+		post.setId(10L);
+		Long postId = post.getId();
+
+		Photo photo1 = new Photo(post, fileRequestDto1);
+		Photo photo2 = new Photo(post, fileRequestDto2);
+
+		post.addPhoto(photo1);
+		post.addPhoto(photo2);
+
+		Tag tag1 = new Tag("tag1");
+		Tag tag2 = new Tag("tag2");
+
+		TagPost tagPost1 = new TagPost(tag1, post);
+		TagPost tagPost2 = new TagPost(tag2, post);
+		post.setTagPosts(List.of(tagPost1, tagPost2));
+
+		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
+		given(postRepository.findById(postId)).willReturn(Optional.of(post));
+		given(photoRepository.findAllByPostId(postId)).willReturn(List.of(photo1, photo2));
+
+		// when
+		EditPostResponseDto responseDto = postService.getEditingPost(nickname, postId);
+
+		// then
+		assertEquals("postContent", responseDto.getPostContent());
+		assertEquals(2, responseDto.getTags().size());
+		assertTrue(responseDto.getTags().contains("tag1"));
+		assertTrue(responseDto.getTags().contains("tag2"));
+		assertFalse(responseDto.getTags().contains("tag3"));
+		assertEquals(2, responseDto.getPhotos().size());
+		assertTrue(responseDto.getPhotos().stream().anyMatch(file -> file.getFileUrl().equals("fileUrl1")));
+		assertTrue(responseDto.getPhotos().stream().anyMatch(file -> file.getFileUrl().equals("fileUrl2")));
+		assertEquals(Boundary.ALL, responseDto.getBoundary());
+		assertFalse(responseDto.getTempSave());
 	}
 }
