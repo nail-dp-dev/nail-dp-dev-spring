@@ -56,20 +56,19 @@ public class PostService {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
 
 		if (!StringUtils.hasText(nickname)) {
-			Slice<Post> recentPosts = postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
+			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
 			return new PostSummaryResponse(recentPosts);
 		}
 
 		Slice<Post> recentPosts = getRecentPosts(cursorPostId, pageRequest);
+
 		if (recentPosts.isEmpty()) {
 			log.debug("최신 게시물이 하나도 없습니다.");
 			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
 		}
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
-		List<Post> savedPosts = archivePosts.stream()
-			.map(ArchivePost::getPost)
-			.collect(Collectors.toList());
+		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
 
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
@@ -119,11 +118,23 @@ public class PostService {
 		return likedPost.map(post -> HomePostResponse.likedPostResponse(post, savedPosts));
 	}
 
+	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
+		if (isFirstPage(cursorPostId)) {
+			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
+		}
+		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL,
+			pageRequest);
+	}
+
 	private Slice<Post> getRecentPosts(long cursorPostId, PageRequest pageRequest) {
-		if (cursorPostId == -1L) {
+		if (isFirstPage(cursorPostId)) {
 			return postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE, pageRequest);
 		}
 		return postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(cursorPostId, Boundary.NONE,
 			pageRequest);
+	}
+
+	private boolean isFirstPage(long cursorPostId) {
+		return cursorPostId == -1L;
 	}
 }

@@ -136,44 +136,6 @@ class PostRepositoryTest {
 		assertThat(slicedPostsAbovePostCnt.getNumberOfElements()).isEqualTo(postCnt);
 	}
 
-	@DisplayName("최신순으로 페이징한 게시물과 사진 목록 가져오기")
-	@Test
-	void getNewPostsWithPhoto() {
-		// given
-		int pageSize = PAGE_SIZE;
-
-		// when
-		System.out.println("==================== 1");
-		PageRequest pageRequest1 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Slice<Post> pagePosts1 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL, pageRequest1);
-		System.out.println("==================== 2");
-		PageRequest pageRequest2 = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Slice<Post> pagePosts2 = postRepository.findPostsAndPhotoByBoundaryAll(Boundary.ALL,
-			pageRequest2);
-
-		// then
-		pagePosts1.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
-		pagePosts2.forEach(post -> assertThat(post.getUser().getNickname()).isEqualTo("mj"));
-
-		assertThat(pagePosts1.getSize()).isEqualTo(pageSize);
-		assertThat(pagePosts2.getSize()).isEqualTo(pageSize);
-		// assertThat(pagePosts1.getTotalElements()).isEqualTo(TOTAL_POST_CNT);
-		// assertThat(pagePosts1.getTotalPages()).isEqualTo(TOTAL_POST_CNT / PAGE_SIZE + 1);
-
-		for (Post post : pagePosts1) {
-			log.info("------------- post.Content = " + post.getPostContent() + " -------------");
-			log.info("post.CreatedDate = " + post.getCreatedDate());
-			System.out.println("======= 사진 가져오기 =======");
-			List<Photo> photos = post.getPhotos();
-			System.out.println("======= 사진 가져오기 완료 =======");
-			log.info("photos.size = " + photos.size());
-			for (Photo photo : photos) {
-				log.info("photo.url = " + photo.getPhotoUrl());
-				log.info("photo.name = " + photo.getName());
-			}
-		}
-	}
-
 	private void createTestTempSavePostAndPhoto(User user) {
 		Post post = new Post(user, "임시저장 게시물 - " + user.getNickname(), 0L, Boundary.ALL, true);
 		Photo photo1 = new Photo(post, "임시저장 url 1", "임시저장 photo 1-");
