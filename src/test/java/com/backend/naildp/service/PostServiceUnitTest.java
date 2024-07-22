@@ -30,6 +30,7 @@ import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
@@ -192,6 +193,25 @@ class PostServiceUnitTest {
 		verify(postLikeRepository).findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class));
 		verify(postLikeRepository, never()).findPostLikesByIdAndFollowing(anyString(), anyLong(), anyList(),
 			any(PageRequest.class));
+	}
+
+	@DisplayName("좋아요한 게시글 조회 예외 - 좋아요때게시글이 없을 때")
+	@Test
+	void noLikedPostsException() {
+		//given
+		String nickname = "mj";
+		int pageSize = 20;
+		PageRequest pageRequest = createPageRequest(0, pageSize, "id");
+		List<User> followingUsers = new ArrayList<>();
+
+		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
+		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class)))
+			.thenThrow(new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED));
+
+		//when & then
+		assertThatThrownBy(() -> postService.findLikedPost(nickname, pageSize, -1L))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("좋아요한 게시물이 없습니다.");
 	}
 
 	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트")
