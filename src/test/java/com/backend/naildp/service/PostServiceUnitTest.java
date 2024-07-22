@@ -15,8 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.auditing.AuditingHandler;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -171,28 +169,29 @@ class PostServiceUnitTest {
 		String nickname = "mj";
 		int postCnt = 20;
 		int pageSize = 20;
-		PageRequest pageRequest = createPageRequest(0, pageSize, "createdDate");
+		PageRequest pageRequest = createPageRequest(0, pageSize, "id");
 
+		List<User> followingUsers = new ArrayList<>();
 		List<PostLike> postLikes = createPostLikes(postCnt);
-		PageImpl<PostLike> pagedPostLikes = new PageImpl<>(postLikes, pageRequest, pageSize);
-		Page<Post> pagedPosts = pagedPostLikes.map(PostLike::getPost);
-		List<ArchivePost> archivePosts = savePostsInArchive(pagedPosts);
+		Slice<PostLike> postLikeSlice = (SliceImpl<PostLike>)new SliceImpl<>(postLikes, pageRequest, false);
+		List<ArchivePost> archivePosts = savePostsInArchive(postLikeSlice.map(PostLike::getPost));
 
-		when(postLikeRepository.findPagedPostLikesByBoundaryOpened(any(PageRequest.class), anyString(),
-			any(Boundary.class))).thenReturn(pagedPostLikes);
-		when(archivePostRepository.findAllByArchiveUserNickname(nickname)).thenReturn(archivePosts);
+		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
+		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class)))
+			.thenReturn(postLikeSlice);
+		when(archivePostRepository.findAllByArchiveUserNickname(eq(nickname))).thenReturn(archivePosts);
 
 		//when
-		Page<HomePostResponse> likedPostResponses = postService.findLikedPost(nickname, 0);
-		Page<Boolean> savedList = likedPostResponses.map(HomePostResponse::getSaved);
-		Page<Boolean> likedList = likedPostResponses.map(HomePostResponse::getLike);
+		PostSummaryResponse response = postService.findLikedPost(nickname, pageSize, -1);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
-		verify(postLikeRepository).findPagedPostLikesByBoundaryOpened(any(PageRequest.class), anyString(),
-			any(Boundary.class));
-		verify(archivePostRepository).findAllByArchiveUserNickname(nickname);
-		assertThat(savedList.getTotalElements()).isEqualTo(20);
-		assertThat(likedList.getTotalElements()).isEqualTo(20);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList).extracting("like").containsOnly(true);
+
+		verify(postLikeRepository).findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class));
+		verify(postLikeRepository, never()).findPostLikesByIdAndFollowing(anyString(), anyLong(), anyList(),
+			any(PageRequest.class));
 	}
 
 	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트")

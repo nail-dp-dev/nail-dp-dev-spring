@@ -11,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,7 +78,7 @@ public class PostServiceTest {
 		savePostsInArchive(archive, postsToFollow);
 		savePostsInArchive(archive, postsToNone);
 
-		createTestPostLikes(testUser, writer);
+		LikeAllPosts(testUser, writer);
 		System.out.println("======= BeforeEach 끝 ======");
 	}
 
@@ -148,27 +147,16 @@ public class PostServiceTest {
 	void findLikedPosts() {
 		//given
 		String nickname = "testUser";
-		int postCnt = 60;
-		int pageNumber = 0;
-		int pageSize = 20;
-		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
+		int pageSize = 60;
 
 		//when
-		Page<HomePostResponse> responses = postService.findLikedPost(nickname, pageNumber);
-		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
-		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
+		PostSummaryResponse response = postService.findLikedPost(nickname, pageSize, -1L);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
-		assertThat(responses.getSize()).isEqualTo(pageSize);
-		assertThat(responses.getNumber()).isEqualTo(pageNumber);
-		assertThat(responses.getTotalElements()).isEqualTo(postCnt);
-		assertThat(responses.getTotalPages()).isEqualTo(totalPages);
-
-		assertThat(savedList).containsOnly(true);
-		assertThat(savedList).hasSize(pageSize);
-
-		assertThat(likedList).contains(true);
-		assertThat(likedList).hasSize(pageSize);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(pageSize);
+		assertThat(postSummaryList).extracting("like").containsOnly(true);
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
@@ -203,7 +191,7 @@ public class PostServiceTest {
 		return postRepository.saveAllAndFlush(postList);
 	}
 
-	private void createTestPostLikes(User user, User writer) {
+	private void LikeAllPosts(User user, User writer) {
 		List<Post> posts = em.createQuery("select p from Post p where p.user = :user", Post.class)
 			.setParameter("user", writer)
 			.getResultList();

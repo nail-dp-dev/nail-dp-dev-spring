@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -167,14 +165,12 @@ class HomeControllerUnitTest {
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void likedPostApiTest() throws Exception {
 		//given
-		List<HomePostResponse> likedPostResponses = createLikedPostResponses();
-		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<HomePostResponse> pagedLikedPostResponses = new PageImpl<>(likedPostResponses, pageRequest, 20);
-		ApiResponse<Page<HomePostResponse>> apiResponse = ApiResponse.successResponse(pagedLikedPostResponses,
+		PostSummaryResponse postSummaryResponse = new PostSummaryResponse(100L, createSlicePostResponses(true));
+		ApiResponse<PostSummaryResponse> apiResponse = ApiResponse.successResponse(postSummaryResponse,
 			"좋아요 체크한 게시물 조회", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.findLikedPost(anyString(), eq(0))).thenReturn(pagedLikedPostResponses);
+		when(postService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/posts/like"))
@@ -183,9 +179,8 @@ class HomeControllerUnitTest {
 			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data.content").isArray())
+			.andExpect(jsonPath("$.data.postSummaryList.last").value(false))
 			.andDo(print());
-
 	}
 
 	private List<HomePostResponse> createLikedPostResponses() {
