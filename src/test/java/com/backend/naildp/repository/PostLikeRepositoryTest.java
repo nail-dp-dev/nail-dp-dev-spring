@@ -14,11 +14,13 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
@@ -49,6 +51,9 @@ class PostLikeRepositoryTest {
 		User writer1 = createTestMember("writer1@naver.com", "writer1", "0101111", 3L);
 		User writer2 = createTestMember("writer2@naver.com", "writer2", "0102222", 4L);
 		User writer3 = createTestMember("writer3@naver.com", "writer3", "0103333", 5L);
+
+		//팔로우 생성
+		createFollow(user1, writer1);
 
 		// 게시물 생성
 		List<Post> publicPostsByWriter1 = createTestPostWithPhoto(writer1, 5, 5, Boundary.ALL);
@@ -122,7 +127,7 @@ class PostLikeRepositoryTest {
 		int pageNumber = 0;
 		int pageSize = 20;
 		String nickname = "user1";
-		PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+		PageRequest pageRequest = createPageRequest(pageNumber, pageSize);
 
 		//when
 		Page<PostLike> pagedPostLikesByBoundaryNotNone = postLikeRepository.findPagedPostLikesByBoundaryOpened(
@@ -154,6 +159,52 @@ class PostLikeRepositoryTest {
 		assertThat(pagedPostLikesByBoundaryNotAll.getTotalPages()).isEqualTo(1);
 	}
 
+	@DisplayName("전체공개이거나 팔로우 공개이고 임시저장이 아닌 PostLike - 오프셋 페이지네이션 테스트")
+	@Test
+	void offsetPaginationPostLikes() {
+		//given
+		String nickname = "user1";
+		PageRequest pageRequest = createPageRequest(0, 50);
+		List<User> followingUsers = findFollowingUsersByNickname(nickname);
+
+		//when
+		Slice<PostLike> postLikesByFollowing = postLikeRepository.findPostLikesByFollowing(nickname, followingUsers,
+			pageRequest);
+		List<PostLike> postLikes = postLikesByFollowing.getContent();
+
+		//then
+		assertThat(postLikesByFollowing).extracting("post")
+			.extracting("boundary")
+			.containsOnly(Boundary.ALL, Boundary.FOLLOW);
+		assertThat(postLikesByFollowing).extracting("post").extracting("tempSave").containsOnly(false);
+	}
+
+	@DisplayName("전체공개이거나 팔로우 공개이고 임시저장이 아닌 PostLike - 커서 페이지네이션 테스트")
+	@Test
+	void cursorPaginationPostLikes() {
+		//given
+		String nickname = "user1";
+		PageRequest pageRequest = createPageRequest(0, 20);
+		List<User> followingUsers = findFollowingUsersByNickname(nickname);
+		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
+		int size = postLikes.size();
+		PostLike oldestPostLike = postLikes.get(size - 1);
+
+		//when
+		Slice<PostLike> postLikesByIdAndFollowing = postLikeRepository.findPostLikesByIdAndFollowing(nickname,
+			oldestPostLike.getId(), followingUsers, pageRequest);
+
+		//then
+		assertThat(postLikesByIdAndFollowing).extracting("post")
+			.extracting("boundary")
+			.containsOnly(Boundary.ALL, Boundary.FOLLOW);
+		assertThat(postLikesByIdAndFollowing).extracting("post").extracting("tempSave").containsOnly(false);
+	}
+
+	private PageRequest createPageRequest(int pageNumber, int pageSize) {
+		return PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "id"));
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLogInId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
@@ -161,6 +212,10 @@ class PostLikeRepositoryTest {
 		em.persist(user);
 		em.persist(socialLogin);
 		return user;
+	}
+
+	private void createFollow(User user, User writer) {
+		em.persist(new Follow(user, writer));
 	}
 
 	private List<Post> createTestPostWithPhoto(User writer, int postCnt, int subPhotoCnt, Boundary boundary) {
@@ -211,5 +266,13 @@ class PostLikeRepositoryTest {
 		return em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
 			.setParameter("nickname", nickname)
 			.getSingleResult();
+	}
+
+	private List<User> findFollowingUsersByNickname(String nickname) {
+		return em.createQuery(
+				"select f.following from Follow f where f.follower.nickname = :nickname",
+				User.class)
+			.setParameter("nickname", nickname)
+			.getResultList();
 	}
 }
