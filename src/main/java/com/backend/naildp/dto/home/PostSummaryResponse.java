@@ -31,4 +31,15 @@ public class PostSummaryResponse {
 		oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
 		postSummaryList = latestPosts.map(HomePostResponse::recentPostForAnonymous);
 	}
+
+	public PostSummaryResponse(Slice<Post> likedPosts, List<Post> savedPosts) {
+		log.info("PostSummaryResponse 좋아요체크한 게시물 응답 만들기");
+		List<Post> posts = likedPosts.getContent();
+		if (posts.isEmpty()) {
+			oldestPostId = null;
+		} else {
+			oldestPostId = posts.get(posts.size() - 1).getId();
+		}
+		postSummaryList = likedPosts.map(post -> HomePostResponse.likedPostResponse(post, savedPosts));
+	}
 }

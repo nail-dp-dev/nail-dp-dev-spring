@@ -1,6 +1,5 @@
 package com.backend.naildp.controller;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostService;
@@ -44,8 +42,10 @@ public class HomeController {
 
 	@GetMapping("/posts/like")
 	public ResponseEntity<?> likedPost(@AuthenticationPrincipal UserDetails userDetails,
-		@RequestParam(required = false, defaultValue = "0", value = "page") int pageNumber) {
-		Page<HomePostResponse> likedPostsResponses = postService.findLikedPost(userDetails.getUsername(), pageNumber);
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostLikeId") long postLikeId) {
+		PostSummaryResponse likedPostsResponses = postService.findLikedPost(userDetails.getUsername(), size,
+			postLikeId);
 		return ResponseEntity.ok(ApiResponse.successResponse(likedPostsResponses, "좋아요 체크한 게시물 조회", 2000));
 	}
 }
