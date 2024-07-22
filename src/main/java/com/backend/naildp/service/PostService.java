@@ -110,6 +110,10 @@ public class PostService {
 		Slice<PostLike> postLikes = getOpenedPostLikes(cursorId, nickname, followingUsers, pageRequest);
 		Slice<Post> likedPosts = postLikes.map(PostLike::getPost);
 
+		if (likedPosts.isEmpty()) {
+			throw new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+		}
+
 		// 게시글 저장 여부 체크
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream()
