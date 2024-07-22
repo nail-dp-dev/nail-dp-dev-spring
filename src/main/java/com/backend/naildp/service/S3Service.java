@@ -153,7 +153,7 @@ public class S3Service {
 	private String validateFileExtension(String originalFilename) {
 		log.info(originalFilename);
 		String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
-		List<String> allowedExtensions = Arrays.asList("jpg", "png", "gif", "jpeg", "mp4");
+		List<String> allowedExtensions = Arrays.asList("jpg", "png", "gif", "jpeg", "mp4", "mov");
 
 		if (!allowedExtensions.contains(fileExtension)) {
 			throw new CustomException("Invalid File Extension", ErrorCode.INVALID_FILE_EXTENSION);
