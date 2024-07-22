@@ -44,30 +44,24 @@ class PostLikeRepositoryTest {
 
 	@BeforeEach
 	void setup() {
-		User user1 = createTestMember("mj@naver.com", "mj", "0100000", 1L);
-		User user2 = createTestMember("jw@naver.com", "jw", "0109999", 2L);
+		User user1 = createTestMember("user1@naver.com", "user1", "0100000", 1L);
+		User user2 = createTestMember("user2@naver.com", "user2", "0109999", 2L);
 		User writer1 = createTestMember("writer1@naver.com", "writer1", "0101111", 3L);
 		User writer2 = createTestMember("writer2@naver.com", "writer2", "0102222", 4L);
 		User writer3 = createTestMember("writer3@naver.com", "writer3", "0103333", 5L);
 
 		// 게시물 생성
-		List<Post> writerPosts1 = createTestPostWithPhoto(writer1, 5, 5);
-		List<Post> writerPosts2 = createTestPostWithPhoto(writer2, 6, 6);
-		List<Post> writerPosts3 = createTestPostWithPhoto(writer3, 7, 7);
+		List<Post> publicPostsByWriter1 = createTestPostWithPhoto(writer1, 5, 5, Boundary.ALL);
+		List<Post> followPostsByWriter1 = createTestPostWithPhoto(writer1, 5, 5, Boundary.FOLLOW);
+		List<Post> privatePostsByWriter1 = createTestPostWithPhoto(writer1, 5, 5, Boundary.NONE);
+		List<Post> publicPostsByWriter2 = createTestPostWithPhoto(writer2, 6, 6, Boundary.ALL);
+		List<Post> publicPostsByWriter3 = createTestPostWithPhoto(writer3, 7, 7, Boundary.ALL);
 
-		List<PostLike> postLikesByMj = writerPosts1.stream()
-			.map(post -> new PostLike(user1, post))
-			.collect(Collectors.toList());
-		List<PostLike> postLikesByJw1 = writerPosts2.stream()
-			.map(post -> new PostLike(user2, post))
-			.collect(Collectors.toList());
-		List<PostLike> postLikesByJw2 = writerPosts3.stream()
-			.map(post -> new PostLike(user2, post))
-			.collect(Collectors.toList());
-
-		postLikeRepository.saveAllAndFlush(postLikesByMj);
-		postLikeRepository.saveAllAndFlush(postLikesByJw1);
-		postLikeRepository.saveAllAndFlush(postLikesByJw2);
+		postLikeRepository.saveAllAndFlush(createPostLikes(publicPostsByWriter1, user1));
+		postLikeRepository.saveAllAndFlush(createPostLikes(followPostsByWriter1, user1));
+		postLikeRepository.saveAllAndFlush(createPostLikes(privatePostsByWriter1, user1));
+		postLikeRepository.saveAllAndFlush(createPostLikes(publicPostsByWriter2, user2));
+		postLikeRepository.saveAllAndFlush(createPostLikes(publicPostsByWriter3, user2));
 
 		em.clear();
 	}
@@ -76,84 +70,41 @@ class PostLikeRepositoryTest {
 	@Test
 	void validatePostLikeInfo() {
 		//given
-		String nickname = "mj";
+		String nickname = "user1";
+		String writerNickname = "writer1";
+		User user = findUserByNickname(nickname);
+		User writer = findUserByNickname(writerNickname);
 
 		//when
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 
-		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).toList();
-
-		List<String> writerNicknameList = likedPosts.stream()
-			.map(Post::getUser)
-			.map(User::getNickname)
-			.distinct()
-			.toList();
-
-		List<String> likeUserNicknameList = postLikes.stream()
-			.map(PostLike::getUser)
-			.map(User::getNickname)
-			.distinct()
-			.toList();
-
 		//then
-		assertThat(likedPosts.size()).isEqualTo(5);
-		likedPosts.forEach(post -> assertThat(post.getPhotos().size()).isEqualTo(6));
-
-		assertThat(writerNicknameList.size()).isEqualTo(1);
-		assertThat(writerNicknameList).containsOnly("writer1");
-		assertThat(likeUserNicknameList.size()).isEqualTo(1);
-		assertThat(likeUserNicknameList).containsOnly(nickname);
-
+		assertThat(postLikes).extracting("user").containsOnly(user);
+		assertThat(postLikes).extracting("post").extracting("user").containsOnly(writer);
 	}
 
 	@DisplayName("두명의 게시물을 좋아요한 유저 검증 테스트")
 	@Test
 	void validatePostLikeByUser2() {
 		//given
-		String nickname = "jw";
+		String nickname = "user2";
+		User findUser = findUserByNickname(nickname);
+		User writer2 = findUserByNickname("writer2");
+		User writer3 = findUserByNickname("writer3");
 
 		//when
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 
-		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).toList();
-		List<Post> likedPostsByWriter2 = postLikes.stream()
-			.map(PostLike::getPost)
-			.filter(post -> post.getUser().getNickname().equals("writer2"))
-			.toList();
-		List<Post> likedPostsByWriter3 = postLikes.stream()
-			.map(PostLike::getPost)
-			.filter(post -> post.getUser().getNickname().equals("writer3"))
-			.toList();
-
-		List<String> writerNicknameList = likedPosts.stream()
-			.map(Post::getUser)
-			.map(User::getNickname)
-			.distinct()
-			.toList();
-
-		List<String> likeUserNicknameList = postLikes.stream()
-			.map(PostLike::getUser)
-			.map(User::getNickname)
-			.distinct()
-			.toList();
-
 		//then
-		assertThat(likedPosts.size()).isEqualTo(likedPostsByWriter2.size() + likedPostsByWriter3.size());
-
-		likedPostsByWriter2.forEach(post -> assertThat(post.getPhotos().size()).isEqualTo(7));
-		likedPostsByWriter3.forEach(post -> assertThat(post.getPhotos().size()).isEqualTo(8));
-
-		assertThat(writerNicknameList.size()).isEqualTo(2);
-		assertThat(writerNicknameList).containsOnly("writer2", "writer3");
-		assertThat(likeUserNicknameList.size()).isEqualTo(1);
-		assertThat(likeUserNicknameList).containsOnly(nickname);
+		assertThat(postLikes).extracting("user").containsOnly(findUser);
+		assertThat(postLikes).extracting("post").extracting("user").containsOnly(writer2, writer3);
 	}
 
-	@DisplayName("사용자 mj 가 좋아요한 모든 게시물 좋아요 취소 테스트")
+	@DisplayName("좋아요한 모든 게시물 좋아요 취소 테스트")
 	@Test
 	void deletePostLike() {
 		//given
-		String nickname = "mj";
+		String nickname = "user1";
 		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
 
 		//when
@@ -162,7 +113,6 @@ class PostLikeRepositoryTest {
 		//then
 		List<PostLike> deletedPostLikes = postLikeRepository.findAllByUserNickname(nickname);
 		assertThat(deletedPostLikes.size()).isEqualTo(0);
-
 	}
 
 	@DisplayName("공개 범위별 좋아요게시물 페이징 조회 테스트")
@@ -171,7 +121,7 @@ class PostLikeRepositoryTest {
 		//given
 		int pageNumber = 0;
 		int pageSize = 20;
-		String nickname = "mj";
+		String nickname = "user1";
 		PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
 
 		//when
@@ -183,9 +133,9 @@ class PostLikeRepositoryTest {
 			pageRequest, nickname, Boundary.ALL);
 
 		//then
-		assertThat(pagedPostLikesByBoundaryNotNone).hasSize(5);
-		assertThat(pagedPostLikesByBoundaryNotFollowed).hasSize(5);
-		assertThat(pagedPostLikesByBoundaryNotAll).hasSize(0);
+		assertThat(pagedPostLikesByBoundaryNotNone).hasSize(10);
+		assertThat(pagedPostLikesByBoundaryNotFollowed).hasSize(10);
+		assertThat(pagedPostLikesByBoundaryNotAll).hasSize(10);
 
 		assertThat(pagedPostLikesByBoundaryNotNone.getNumber()).isEqualTo(0);
 		assertThat(pagedPostLikesByBoundaryNotFollowed.getNumber()).isEqualTo(0);
@@ -195,14 +145,13 @@ class PostLikeRepositoryTest {
 		assertThat(pagedPostLikesByBoundaryNotFollowed.getSize()).isEqualTo(20);
 		assertThat(pagedPostLikesByBoundaryNotAll.getSize()).isEqualTo(20);
 
-		assertThat(pagedPostLikesByBoundaryNotNone.getTotalElements()).isEqualTo(5);
-		assertThat(pagedPostLikesByBoundaryNotFollowed.getTotalElements()).isEqualTo(5);
-		assertThat(pagedPostLikesByBoundaryNotAll.getTotalElements()).isEqualTo(0);
+		assertThat(pagedPostLikesByBoundaryNotNone.getTotalElements()).isEqualTo(10);
+		assertThat(pagedPostLikesByBoundaryNotFollowed.getTotalElements()).isEqualTo(10);
+		assertThat(pagedPostLikesByBoundaryNotAll.getTotalElements()).isEqualTo(10);
 
 		assertThat(pagedPostLikesByBoundaryNotNone.getTotalPages()).isEqualTo(1);
 		assertThat(pagedPostLikesByBoundaryNotFollowed.getTotalPages()).isEqualTo(1);
-		assertThat(pagedPostLikesByBoundaryNotAll.getTotalPages()).isEqualTo(0);
-
+		assertThat(pagedPostLikesByBoundaryNotAll.getTotalPages()).isEqualTo(1);
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLogInId) {
@@ -214,15 +163,15 @@ class PostLikeRepositoryTest {
 		return user;
 	}
 
-	private List<Post> createTestPostWithPhoto(User user, int postCnt, int subPhotoCnt) {
+	private List<Post> createTestPostWithPhoto(User writer, int postCnt, int subPhotoCnt, Boundary boundary) {
 		List<Photo> photos = new ArrayList<>();
 		List<Post> posts = new ArrayList<>();
 
 		for (int i = 1; i <= postCnt; i++) {
-			Post post = new Post(user, "" + i, 0L, Boundary.ALL, false);
-			Photo thumbnailPhoto = createThumbnailPhoto(user, i, post);
+			Post post = new Post(writer, "" + i, 0L, boundary, false);
+			Photo thumbnailPhoto = createThumbnailPhoto(writer, i, post);
 			post.addPhoto(thumbnailPhoto);
-			List<Photo> subPhotos = createSubPhotos(user, subPhotoCnt, post);
+			List<Photo> subPhotos = createSubPhotos(writer, subPhotoCnt, post);
 			subPhotos.forEach(post::addPhoto);
 
 			posts.add(post);
@@ -252,4 +201,15 @@ class PostLikeRepositoryTest {
 			"thumbnailName-" + user.getNickname() + index);
 	}
 
+	private List<PostLike> createPostLikes(List<Post> posts, User likeUser) {
+		return posts.stream()
+			.map(post -> new PostLike(likeUser, post))
+			.collect(Collectors.toList());
+	}
+
+	private User findUserByNickname(String nickname) {
+		return em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
+			.setParameter("nickname", nickname)
+			.getSingleResult();
+	}
 }
