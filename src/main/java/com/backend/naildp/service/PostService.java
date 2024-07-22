@@ -66,7 +66,7 @@ public class PostService {
 		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, pageRequest);
 
 		if (recentPosts.isEmpty()) {
-			log.debug("최신 게시물이 하나도 없습니다.");
+			log.info("최신 게시물이 하나도 없습니다.");
 			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
 		}
 
