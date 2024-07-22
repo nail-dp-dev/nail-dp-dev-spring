@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -21,6 +20,7 @@ import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
+import com.backend.naildp.dto.post.TempPostRequestDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -28,7 +28,6 @@ import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
@@ -85,8 +84,7 @@ public class PostService {
 	}
 
 	@Transactional
-	public void uploadPost(String nickname, PostRequestDto postRequestDto,
-		List<MultipartFile> files) {
+	public void uploadPost(String nickname, PostRequestDto postRequestDto, List<MultipartFile> files) {
 
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -122,8 +120,7 @@ public class PostService {
 	}
 
 	@Transactional
-	public void editPost(String nickname, PostRequestDto postRequestDto,
-		List<MultipartFile> files, Long postId) {
+	public void editPost(String nickname, PostRequestDto postRequestDto, List<MultipartFile> files, Long postId) {
 
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -132,7 +129,8 @@ public class PostService {
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 게시물에는 file 필수 -> deleted url 개수 = 저장된 url 개수 같으면, 새로운 file을 꼭 받아야함.
-		if ((long)post.getPhotos().size() == postRequestDto.getDeletedFileUrls().size() && files.isEmpty()) {
+		if ((long)post.getPhotos().size() == postRequestDto.getDeletedFileUrls().size() && (files == null
+			|| files.isEmpty())) {
 			throw new CustomException("파일을 첨부해주세요.", ErrorCode.INPUT_NULL);
 		}
 
@@ -146,14 +144,14 @@ public class PostService {
 		}
 		post.update(postRequestDto);
 
-		if (files != null) {
+		if (!(files == null || files.isEmpty())) {
 			List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
 			fileRequestDtos.stream()
 				.map(fileRequestDto -> new Photo(post, fileRequestDto))
 				.forEach(photoRepository::save);
 		}
 
-		if (!postRequestDto.getDeletedFileUrls().isEmpty()) {
+		if (!(postRequestDto.getDeletedFileUrls() == null || postRequestDto.getDeletedFileUrls().isEmpty())) {
 			postRequestDto.getDeletedFileUrls()
 				.stream()
 				.map(photoRepository::findByPhotoUrl)
@@ -181,13 +179,12 @@ public class PostService {
 
 		List<Photo> photos = photoRepository.findAllByPostId(postId);
 
-		List<String> tagNames = post.getTagPosts().stream()
+		List<String> tagNames = post.getTagPosts()
+			.stream()
 			.map(tagPost -> tagPost.getTag().getName())
 			.collect(Collectors.toList());
 
-		List<FileRequestDto> fileRequestDtos = photos.stream()
-			.map(FileRequestDto::new)
-			.toList();
+		List<FileRequestDto> fileRequestDtos = photos.stream().map(FileRequestDto::new).toList();
 
 		return EditPostResponseDto.builder()
 			.postContent(post.getPostContent())
@@ -202,8 +199,7 @@ public class PostService {
 		if (isFirstPage(cursorPostId)) {
 			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
 		}
-		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL,
-			pageRequest);
+		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL, pageRequest);
 	}
 
 	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, PageRequest pageRequest) {
@@ -215,5 +211,32 @@ public class PostService {
 
 	private boolean isFirstPage(long cursorPostId) {
 		return cursorPostId == -1L;
+	}
+
+	@Transactional
+	public void tempSavePost(String nickname, TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		if (tempPostRequestDto.getPostContent().isBlank() && tempPostRequestDto.getTags().isEmpty()
+			&& files.isEmpty()) {
+			throw new CustomException("저장할 내용이 없습니다.", ErrorCode.INPUT_NULL);
+		}
+		Post post = new Post(tempPostRequestDto, user);
+		postRepository.save(post);
+		if (!(tempPostRequestDto.getTags() == null || tempPostRequestDto.getTags().isEmpty())) {
+			List<TagRequestDto> tags = tempPostRequestDto.getTags();
+
+			for (TagRequestDto tag : tags) {
+				Tag existingTag = tagRepository.findByName(tag.getTagName())
+					.orElseGet(() -> tagRepository.save(new Tag(tag.getTagName()))); //null 일 때 호출
+				tagPostRepository.save(new TagPost(existingTag, post));
+			}
+		}
+		if (!(files == null || files.isEmpty())) {
+			List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
+			fileRequestDtos.stream()
+				.map(fileRequestDto -> new Photo(post, fileRequestDto))
+				.forEach(photoRepository::save);
+		}
 	}
 }

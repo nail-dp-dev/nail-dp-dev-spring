@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.post.PostRequestDto;
+import com.backend.naildp.dto.post.TempPostRequestDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -66,7 +67,14 @@ public class Post extends BaseEntity {
 		this.user = user;
 		this.postContent = postRequestDto.getPostContent();
 		this.boundary = postRequestDto.getBoundary();
-		this.tempSave = postRequestDto.getTempSave();
+		this.tempSave = false;
+	}
+
+	public Post(TempPostRequestDto tempPostRequestDto, User user) {
+		this.user = user;
+		this.postContent = tempPostRequestDto.getPostContent();
+		this.boundary = tempPostRequestDto.getBoundary();
+		this.tempSave = true;
 	}
 
 	public void update(PostRequestDto postRequestDto) {

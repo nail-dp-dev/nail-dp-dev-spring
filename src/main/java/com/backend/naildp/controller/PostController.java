@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostRequestDto;
+import com.backend.naildp.dto.post.TempPostRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -49,7 +50,7 @@ public class PostController {
 
 	@PatchMapping("/{postId}")
 	ResponseEntity<ApiResponse<?>> editPost(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@Valid @RequestPart(value = "content", required = false) PostRequestDto postRequestDto,
+		@Valid @RequestPart(value = "content") PostRequestDto postRequestDto,
 		@RequestPart(value = "photos", required = false) List<MultipartFile> files,
 		@PathVariable("postId") Long postId) {
 
@@ -67,6 +68,16 @@ public class PostController {
 			postId);
 
 		return ResponseEntity.ok().body(ApiResponse.successResponse(editPostResponseDto, "수정 게시글 조회 완료", 2000));
+	}
+
+	@PostMapping("/temp")
+	ResponseEntity<ApiResponse<?>> tempSavePost(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestPart(value = "content", required = false) TempPostRequestDto tempPostRequestDto,
+		@RequestPart(value = "photos", required = false) List<MultipartFile> files) {
+		postService.tempSavePost(userDetails.getUser().getNickname(), tempPostRequestDto, files);
+
+		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "게시글 임시저장이 완료되었습니다", 2001));
+
 	}
 
 }
