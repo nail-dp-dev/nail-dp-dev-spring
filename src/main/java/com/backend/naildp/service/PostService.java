@@ -89,6 +89,10 @@ public class PostService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
+		if (files == null || files.isEmpty()) {
+			throw new CustomException("Not Input File", ErrorCode.INPUT_NULL);
+		}
+
 		Post post = new Post(postRequestDto, user);
 		postRepository.save(post);
 
@@ -215,14 +219,18 @@ public class PostService {
 
 	@Transactional
 	public void tempSavePost(String nickname, TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {
+
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
 		if (tempPostRequestDto.getPostContent().isBlank() && tempPostRequestDto.getTags().isEmpty()
 			&& files.isEmpty()) {
 			throw new CustomException("저장할 내용이 없습니다.", ErrorCode.INPUT_NULL);
 		}
+
 		Post post = new Post(tempPostRequestDto, user);
 		postRepository.save(post);
+
 		if (!(tempPostRequestDto.getTags() == null || tempPostRequestDto.getTags().isEmpty())) {
 			List<TagRequestDto> tags = tempPostRequestDto.getTags();
 

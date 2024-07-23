@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -23,10 +24,25 @@ public class ApiExceptionHandler {
 		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
 	}
 
+	@ExceptionHandler(NullPointerException.class)
+	protected ResponseEntity<ApiResponse<?>> handleNullPointerException(NullPointerException exception) {
+		ApiResponse<?> apiResponse = ApiResponse.of(HttpStatus.BAD_REQUEST.value());
+		apiResponse.setMessage(exception.getMessage());
+		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<?>> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
 		ApiResponse<?> apiResponse = ApiResponse.of(HttpStatus.BAD_REQUEST.value());
 		apiResponse.setMessage(exception.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(MissingServletRequestPartException.class)
+	protected ResponseEntity<ApiResponse<?>> handleMissingRequestPartException(
+		MissingServletRequestPartException ex) {
+		ApiResponse<?> apiResponse = ApiResponse.of(HttpStatus.BAD_REQUEST.value());
+		apiResponse.setMessage("Required request part is missing");
 		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
 	}
 
