@@ -102,6 +102,58 @@ public class PostCreateControllerTest {
 	}
 
 	@Test
+	@DisplayName("게시글 작성 - tempSave 없음")
+	public void testUploadPost_NotTempSave() throws Exception {
+		MockMultipartFile content = new MockMultipartFile("content", "", "application/json",
+			"{\"postContent\":\"test content\",\"boundary\":\"ALL\",\"tags\":[{\"tagName\":\"tag1\"}]}".getBytes());
+		MockMultipartFile photos = new MockMultipartFile("photos", "photo.jpg", "image/jpeg",
+			"photo content".getBytes());
+
+		mockMvc.perform(multipart("/posts")
+				.file(content)
+				.file(photos)
+				.with(csrf())
+				.contentType(MediaType.MULTIPART_FORM_DATA))
+			.andDo(print())
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("임시저장 여부를 입력해주세요"));
+	}
+
+	@Test
+	@DisplayName("게시글 작성 - 태그 없음")
+	public void testUploadPost_NotTags() throws Exception {
+		MockMultipartFile content = new MockMultipartFile("content", "", "application/json",
+			"{\"postContent\":\"test content\",\"tempSave\":false,\"boundary\":\"ALL\"}".getBytes());
+		MockMultipartFile photos = new MockMultipartFile("photos", "photo.jpg", "image/jpeg",
+			"photo content".getBytes());
+
+		mockMvc.perform(multipart("/posts")
+				.file(content)
+				.file(photos)
+				.with(csrf())
+				.contentType(MediaType.MULTIPART_FORM_DATA))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("태그를 추가해주세요"));
+	}
+
+	@Test
+	@DisplayName("게시글 작성 - 태그 이름 없음")
+	public void testUploadPost_NOtTagName() throws Exception {
+		MockMultipartFile content = new MockMultipartFile("content", "", "application/json",
+			"{\"postContent\":\"test content\",\"tempSave\":false,\"boundary\":\"ALL\",\"tags\":[{\"tagName\":\"\"}]}".getBytes());
+		MockMultipartFile photos = new MockMultipartFile("photos", "photo.jpg", "image/jpeg",
+			"photo content".getBytes());
+
+		mockMvc.perform(multipart("/posts")
+				.file(content)
+				.file(photos)
+				.with(csrf())
+				.contentType(MediaType.MULTIPART_FORM_DATA))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("태그를 입력해주세요"));
+	}
+
+	@Test
 	@DisplayName("게시글 수정")
 	public void testEditPost() throws Exception {
 		MockMultipartFile content = new MockMultipartFile("content", "", "application/json",
