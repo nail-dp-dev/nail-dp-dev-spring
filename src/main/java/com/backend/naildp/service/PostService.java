@@ -150,6 +150,8 @@ public class PostService {
 		long commentCnt = commentRepository.countAllByPost(post);
 
 		// 태그 TagPost - Tag 조회
+		List<TagPost> tagPosts = tagPostRepository.findTagPostAndTagByPost(post);
+		List<Tag> tags = tagPosts.stream().map(TagPost::getTag).collect(Collectors.toList());
 
 		return null;
 	}
