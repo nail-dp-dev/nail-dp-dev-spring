@@ -134,21 +134,13 @@ public class PostService {
 		User writer = post.getUser();
 
 		// 읽기 권한 확인
-		// writer == reader -> boundary 다 허용
-		// writer != reader
-		// boundary = ALL -> 통과
-		// boundary = FOLLOW -> follower 확인 필요 -> follower 포함하는지 확인하는 로직 필요
-		// boundary = NONE -> 통과 X
-		if (!isValidateReader(nickname, writer, post.getBoundary())) {
-			throw new CustomException("게시물을 읽을 수 없습니다.", ErrorCode.NOT_FOUND);
-		}
+		boolean followingStatus = isFollower(nickname, writer, post.getBoundary());
+		int followerCount = followRepository.countFollowersByUserNickname(writer.getNickname());
 
 		// 게시글 좋아요 PostLike 수 조회
-		// long postLikeCnt = postLikeRepository.countPostLikesByPost(post);
 		long postLikeCnt = post.getPostLikes().size();
 
 		// 댓글 Comment 수 조회
-		// long commentCnt = commentRepository.countAllByPost(post);
 		long commentCnt = post.getComments().size();
 
 		// 태그 TagPost - Tag 조회
@@ -158,21 +150,20 @@ public class PostService {
 		return null;
 	}
 
-	private boolean isValidateReader(String nickname, User writer, Boundary boundary) {
+	private boolean isFollower(String nickname, User writer, Boundary boundary) {
+		//not equal
+		//	all & follow -> exists
+		//  none -> exception
+		//equal -> false
 		if (equalsReaderAndWriter(nickname, writer)) {
-			return true;
+			return false;
 		}
-		switch (boundary) {
-			case ALL -> {
-				return true;
-			}
-			case FOLLOW -> {
-				return followRepository.existsByFollowerNicknameAndFollowing(nickname, writer);
-			}
-			default -> {
-				return false;
-			}
+
+		if (boundary == Boundary.NONE) {
+			throw new CustomException("게시물을 읽을 수 없습니다.", ErrorCode.NOT_FOUND);
 		}
+
+		return followRepository.existsByFollowerNicknameAndFollowing(nickname, writer);
 	}
 
 	private boolean equalsReaderAndWriter(String nickname, User writer) {
