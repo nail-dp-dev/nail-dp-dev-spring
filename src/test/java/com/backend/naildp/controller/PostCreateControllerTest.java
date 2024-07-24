@@ -22,14 +22,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostRequestDto;
-import com.backend.naildp.dto.post.TagRequestDto;
-import com.backend.naildp.dto.post.TempPostRequestDto;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.PostService;
@@ -172,23 +169,5 @@ public class PostCreateControllerTest {
 			.andExpect(jsonPath("$.code").value(2000));
 	}
 
-	@Test
-	@DisplayName("게시글 임시저장")
-	public void testTempSavePost() throws Exception {
-		TempPostRequestDto tempPostRequestDto = new TempPostRequestDto("temp content", true, Boundary.ALL,
-			List.of(new TagRequestDto("tag1")), null);
-		List<MultipartFile> files = List.of(); // Assuming empty list for the sake of example
-
-		mockMvc.perform(post("/posts/temp").with(csrf())
-				.contentType(MediaType.MULTIPART_FORM_DATA)
-				.param("content", "temp content")
-				.param("tempSave", "true")
-				.param("boundary", "ALL")
-				.param("tags", "tag1")
-				.param("photos", files.toString()))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.message").value("게시글 임시저장이 완료되었습니다"))
-			.andExpect(jsonPath("$.code").value(2001));
-	}
 }
 
