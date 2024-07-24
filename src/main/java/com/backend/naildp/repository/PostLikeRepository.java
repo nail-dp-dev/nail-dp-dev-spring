@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
@@ -27,4 +28,6 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 		+ "where pl.user.nickname = :nickname and p.boundary <> :boundary and p.tempSave = false")
 	Page<PostLike> findPagedPostLikesByBoundaryOpened(PageRequest pageRequest, @Param("nickname") String nickname,
 		@Param("boundary") Boundary boundary);
+
+	long countPostLikesByPost(Post post);
 }

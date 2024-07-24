@@ -142,6 +142,7 @@ public class PostService {
 		}
 
 		// 게시글 좋아요 PostLike 수 조회
+		long postLikeCnt = postLikeRepository.countPostLikesByPost(post);
 
 		// 댓글 Comment 수 조회
 
