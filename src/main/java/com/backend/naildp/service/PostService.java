@@ -137,6 +137,9 @@ public class PostService {
 		// boundary = ALL -> 통과
 		// boundary = FOLLOW -> follower 확인 필요 -> follower 포함하는지 확인하는 로직 필요
 		// boundary = NONE -> 통과 X
+		if (!isValidateReader(nickname, writer, post.getBoundary())) {
+			throw new CustomException("게시물을 읽을 수 없습니다.", ErrorCode.NOT_FOUND);
+		}
 
 		// 게시글 좋아요 PostLike 수 조회
 
@@ -145,6 +148,27 @@ public class PostService {
 		// 태그 TagPost - Tag 조회
 
 		return null;
+	}
+
+	private boolean isValidateReader(String nickname, User writer, Boundary boundary) {
+		if (equalsReaderAndWriter(nickname, writer)) {
+			return true;
+		}
+		switch (boundary) {
+			case ALL -> {
+				return true;
+			}
+			case FOLLOW -> {
+				return followRepository.existsByFollowerNicknameAndFollowing(nickname, writer);
+			}
+			default -> {
+				return false;
+			}
+		}
+	}
+
+	private boolean equalsReaderAndWriter(String nickname, User writer) {
+		return nickname.equals(writer.getNickname());
 	}
 
 	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
