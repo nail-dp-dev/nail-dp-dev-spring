@@ -121,6 +121,32 @@ public class PostService {
 		return likedPost.map(post -> HomePostResponse.likedPostResponse(post, savedPosts));
 	}
 
+	/**
+	 * /posts/{postId}
+	 * 특정 게시물 상세정보 읽기 API
+	 */
+	public ResponseEntity<?> postInfo(String nickname, Long postId) {
+		// post - writer 정보 가져오기
+		Post post = postRepository.findPostAndWriterById(postId)
+			.orElseThrow(() -> new CustomException("게시물을 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
+		User writer = post.getUser();
+
+		// 읽기 권한 확인
+		// writer == reader -> boundary 다 허용
+		// writer != reader
+		// boundary = ALL -> 통과
+		// boundary = FOLLOW -> follower 확인 필요 -> follower 포함하는지 확인하는 로직 필요
+		// boundary = NONE -> 통과 X
+
+		// 게시글 좋아요 PostLike 수 조회
+
+		// 댓글 Comment 수 조회
+
+		// 태그 TagPost - Tag 조회
+
+		return null;
+	}
+
 	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
 		if (isFirstPage(cursorPostId)) {
 			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
