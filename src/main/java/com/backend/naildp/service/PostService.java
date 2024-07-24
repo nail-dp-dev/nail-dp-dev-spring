@@ -144,10 +144,12 @@ public class PostService {
 		}
 
 		// 게시글 좋아요 PostLike 수 조회
-		long postLikeCnt = postLikeRepository.countPostLikesByPost(post);
+		// long postLikeCnt = postLikeRepository.countPostLikesByPost(post);
+		long postLikeCnt = post.getPostLikes().size();
 
 		// 댓글 Comment 수 조회
-		long commentCnt = commentRepository.countAllByPost(post);
+		// long commentCnt = commentRepository.countAllByPost(post);
+		long commentCnt = post.getComments().size();
 
 		// 태그 TagPost - Tag 조회
 		List<TagPost> tagPosts = tagPostRepository.findTagPostAndTagByPost(post);

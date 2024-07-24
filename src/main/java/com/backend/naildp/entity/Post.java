@@ -38,8 +38,14 @@ public class Post extends BaseEntity {
 	@OneToMany(mappedBy = "post")
 	private List<Photo> photos = new ArrayList<>();
 
+	@OneToMany(mappedBy = "post")
+	private List<Comment> comments = new ArrayList<>();
+
+	@OneToMany(mappedBy = "post")
+	private List<PostLike> postLikes = new ArrayList<>();
+
 	private String postContent;
-	
+
 	private Long sharing;
 
 	@Enumerated(value = EnumType.STRING)
