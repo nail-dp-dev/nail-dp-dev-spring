@@ -28,6 +28,7 @@ import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.repository.CommentRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostLikeRepository;
@@ -53,6 +54,7 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 	private final FollowRepository followRepository;
+	private final CommentRepository commentRepository;
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
@@ -145,6 +147,7 @@ public class PostService {
 		long postLikeCnt = postLikeRepository.countPostLikesByPost(post);
 
 		// 댓글 Comment 수 조회
+		long commentCnt = commentRepository.countAllByPost(post);
 
 		// 태그 TagPost - Tag 조회
 
