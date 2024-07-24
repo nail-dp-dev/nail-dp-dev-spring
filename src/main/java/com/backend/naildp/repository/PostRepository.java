@@ -1,10 +1,12 @@
 package com.backend.naildp.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -34,10 +36,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 	int countPostsByUserAndTempSaveIsFalse(User user);
 
-	// @Query("select p from Post p join fetch p.photos where p.id=:postId")
-	// Optional<Post> findPostAndPhotosById(@Param("postId") Long postId);
-	//
-	// @Query("select p from Post p join fetch p.tagPosts tp join fetch tp.tag where p.id = :postId")
-	// Optional<Post> findPostAndTagPostsById(@Param("postId") Long postId);
+	Optional<Post> findPostByTempSaveIsTrueAndUser(User user);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("DELETE FROM Post p WHERE p.id = :postId")
+	void deletePostById(@Param("postId") Long postId);
 
 }

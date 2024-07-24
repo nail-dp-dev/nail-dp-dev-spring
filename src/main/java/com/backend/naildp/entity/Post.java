@@ -19,14 +19,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Post extends BaseEntity {
 
 	@Id
@@ -46,7 +48,7 @@ public class Post extends BaseEntity {
 
 	private String postContent;
 
-	private Long sharing;
+	private Long sharing = 0L;
 
 	@Enumerated(value = EnumType.STRING)
 	@Column(nullable = false)
@@ -63,28 +65,24 @@ public class Post extends BaseEntity {
 		this.tempSave = tempSave;
 	}
 
-	public Post(PostRequestDto postRequestDto, User user) {
-		this.user = user;
+	public void update(PostRequestDto postRequestDto) {
 		this.postContent = postRequestDto.getPostContent();
 		this.boundary = postRequestDto.getBoundary();
 		this.tempSave = false;
 	}
 
-	public Post(TempPostRequestDto tempPostRequestDto, User user) {
-		this.user = user;
+	public void tempUpdate(TempPostRequestDto tempPostRequestDto) {
 		this.postContent = tempPostRequestDto.getPostContent();
 		this.boundary = tempPostRequestDto.getBoundary();
 		this.tempSave = true;
 	}
 
-	public void update(PostRequestDto postRequestDto) {
-		this.postContent = postRequestDto.getPostContent();
-		this.boundary = postRequestDto.getBoundary();
-		this.tempSave = postRequestDto.getTempSave();
-	}
-
 	public void addPhoto(Photo photo) {
 		this.photos.add(photo);
+	}
+
+	public void addTagPost(TagPost tagPost) {
+		this.tagPosts.add(tagPost);
 	}
 
 }

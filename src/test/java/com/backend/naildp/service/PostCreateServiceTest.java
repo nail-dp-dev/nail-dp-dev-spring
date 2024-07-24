@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -83,7 +84,13 @@ class PostCreateServiceTest {
 			new FileRequestDto("file2", 12345L, "fileUrl2")
 		);
 
-		Post post = new Post(postRequestDto, user);
+		Post post = Post.builder()
+			.photos(List.of())
+			.user(user)
+			.postContent(postRequestDto.getPostContent())
+			.boundary(postRequestDto.getBoundary())
+			.tempSave(false)
+			.build();
 
 		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.save(any(Post.class))).willReturn(post);
@@ -114,6 +121,7 @@ class PostCreateServiceTest {
 	void testEditPost() {
 		// given
 		String nickname = "testUser";
+		Long postId = 10L;
 
 		List<MultipartFile> files = List.of(
 			new MockMultipartFile("newFile1", new byte[] {1, 2, 3}),
@@ -131,9 +139,15 @@ class PostCreateServiceTest {
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			List.of("fileUrl1", "fileUrl2"));
 
-		Post post = new Post(postRequestDto, user);
-		Long postId = 10L;
-		post.setId(postId);
+		Post post = Post.builder()
+			.id(postId)
+			.photos(List.of())
+			.user(user)
+			.postContent(postRequestDto.getPostContent())
+			.boundary(postRequestDto.getBoundary())
+			.tempSave(false)
+			.build();
+
 		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 		given(tagRepository.findByName(anyString())).willAnswer(invocation -> {
@@ -186,8 +200,15 @@ class PostCreateServiceTest {
 
 		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
 
-		Post post = new Post(postRequestDto, user);
-		post.setId(postId);
+		Post post = Post.builder()
+			.id(postId)
+			.photos(new ArrayList<>())
+			.user(user)
+			.postContent(postRequestDto.getPostContent())
+			.boundary(postRequestDto.getBoundary())
+			.tempSave(false)
+			.build();
+
 		post.addPhoto(new Photo(post, new FileRequestDto("file1", 12345L, "fileUrl1")));
 		post.addPhoto(new Photo(post, new FileRequestDto("file2", 12345L, "fileUrl2")));
 
@@ -207,6 +228,8 @@ class PostCreateServiceTest {
 	void testGetEditingPost() {
 		// given
 		String nickname = "testUser";
+		Long postId = 10L;
+
 		PostRequestDto postRequestDto = new PostRequestDto("postContent", false, Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			Collections.emptyList());
@@ -216,9 +239,15 @@ class PostCreateServiceTest {
 		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
 		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
 
-		Post post = new Post(postRequestDto, user);
-		post.setId(10L);
-		Long postId = post.getId();
+		Post post = Post.builder()
+			.id(postId)
+			.user(user)
+			.photos(new ArrayList<>())
+			.postContent(postRequestDto.getPostContent())
+			.boundary(postRequestDto.getBoundary())
+			.tempSave(false)
+			.tagPosts(new ArrayList<>())
+			.build();
 
 		Photo photo1 = new Photo(post, fileRequestDto1);
 		Photo photo2 = new Photo(post, fileRequestDto2);
@@ -231,7 +260,9 @@ class PostCreateServiceTest {
 
 		TagPost tagPost1 = new TagPost(tag1, post);
 		TagPost tagPost2 = new TagPost(tag2, post);
-		post.setTagPosts(List.of(tagPost1, tagPost2));
+
+		post.addTagPost(tagPost1);
+		post.addTagPost(tagPost2);
 
 		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));

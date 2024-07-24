@@ -93,7 +93,17 @@ public class PostService {
 			throw new CustomException("Not Input File", ErrorCode.INPUT_NULL);
 		}
 
-		Post post = new Post(postRequestDto, user);
+		if (files.size() > 10) {
+			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+		}
+
+		Post post = Post.builder()
+			.user(user)
+			.postContent(postRequestDto.getPostContent())
+			.boundary(postRequestDto.getBoundary())
+			.tempSave(true)
+			.build();
+
 		postRepository.save(post);
 
 		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
@@ -132,41 +142,23 @@ public class PostService {
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
+		if (getSize(files) + getSize(post.getPhotos()) - getSize(postRequestDto.getDeletedFileUrls()) > 10) {
+			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+
+		}
+
 		// 게시물에는 file 필수 -> deleted url 개수 = 저장된 url 개수 같으면, 새로운 file을 꼭 받아야함.
-		if ((long)post.getPhotos().size() == postRequestDto.getDeletedFileUrls().size() && (files == null
+		if (getSize(post.getPhotos()) == getSize(postRequestDto.getDeletedFileUrls()) && (files == null
 			|| files.isEmpty())) {
 			throw new CustomException("파일을 첨부해주세요.", ErrorCode.INPUT_NULL);
 		}
 
 		tagPostRepository.deleteAllByPostId(postId);
 
-		List<TagRequestDto> tags = postRequestDto.getTags();
-		for (TagRequestDto tag : tags) {
-			Tag existingTag = tagRepository.findByName(tag.getTagName())
-				.orElseGet(() -> tagRepository.save(new Tag(tag.getTagName()))); //null 일 때 호출
-			tagPostRepository.save(new TagPost(existingTag, post));
-		}
-		post.update(postRequestDto);
+		updateTagsAndFiles(postRequestDto.getTags(), files, post);
 
-		if (!(files == null || files.isEmpty())) {
-			List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
-			fileRequestDtos.stream()
-				.map(fileRequestDto -> new Photo(post, fileRequestDto))
-				.forEach(photoRepository::save);
-		}
+		deleteFileUrls(postRequestDto.getDeletedFileUrls());
 
-		if (!(postRequestDto.getDeletedFileUrls() == null || postRequestDto.getDeletedFileUrls().isEmpty())) {
-			postRequestDto.getDeletedFileUrls()
-				.stream()
-				.map(photoRepository::findByPhotoUrl)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.forEach(photo -> {
-					String fileUrl = photo.getPhotoUrl();
-					photoRepository.delete(photo);
-					s3Service.deleteFile(fileUrl);
-				});
-		}
 		// test를 위한 명시적 저장
 		postRepository.save(post);
 
@@ -223,28 +215,89 @@ public class PostService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		if (tempPostRequestDto.getPostContent().isBlank() && tempPostRequestDto.getTags().isEmpty()
-			&& files.isEmpty()) {
-			throw new CustomException("저장할 내용이 없습니다.", ErrorCode.INPUT_NULL);
+		Optional<Post> postOptional = postRepository.findPostByTempSaveIsTrueAndUser(user);
+		Post post;
+
+		if (postOptional.isPresent()) {
+
+			post = postOptional.get();
+
+			if (getSize(files) + getSize(post.getPhotos()) - getSize(tempPostRequestDto.getDeletedFileUrls()) > 10) {
+				throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+			}
+
+			if (isRequestEmpty(tempPostRequestDto, files)) {
+				if ((long)post.getPhotos().size() == tempPostRequestDto.getDeletedFileUrls().size()) {
+					throw new CustomException("변경사항이 없습니다.", ErrorCode.INPUT_NULL);
+				}
+			}
+
+			post.tempUpdate(tempPostRequestDto);
+			tagPostRepository.deleteAllByPostId(postOptional.get().getId());
+			deleteFileUrls(tempPostRequestDto.getDeletedFileUrls());
+
+		} else {
+
+			if (getSize(files) > 10) {
+				throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+			}
+
+			if (isRequestEmpty(tempPostRequestDto, files)) {
+				throw new CustomException("임시저장 할 내용이 없습니다.", ErrorCode.INPUT_NULL);
+			}
+
+			post = Post.builder()
+				.user(user)
+				.postContent(tempPostRequestDto.getPostContent())
+				.boundary(tempPostRequestDto.getBoundary())
+				.tempSave(true)
+				.build();
+			postRepository.save(post);
 		}
 
-		Post post = new Post(tempPostRequestDto, user);
-		postRepository.save(post);
+		updateTagsAndFiles(tempPostRequestDto.getTags(), files, post);
+	}
 
-		if (!(tempPostRequestDto.getTags() == null || tempPostRequestDto.getTags().isEmpty())) {
-			List<TagRequestDto> tags = tempPostRequestDto.getTags();
+	private void deleteFileUrls(List<String> deletedFileUrls) {
+		if (deletedFileUrls == null || deletedFileUrls.isEmpty()) {
+			return;
+		}
 
+		deletedFileUrls.stream()
+			.map(photoRepository::findByPhotoUrl)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.forEach(photo -> {
+				String fileUrl = photo.getPhotoUrl();
+				photoRepository.delete(photo);
+				s3Service.deleteFile(fileUrl);
+			});
+	}
+
+	private void updateTagsAndFiles(List<TagRequestDto> tags, List<MultipartFile> files, Post post) {
+		if (tags != null && !tags.isEmpty()) {
 			for (TagRequestDto tag : tags) {
 				Tag existingTag = tagRepository.findByName(tag.getTagName())
-					.orElseGet(() -> tagRepository.save(new Tag(tag.getTagName()))); //null 일 때 호출
+					.orElseGet(() -> tagRepository.save(new Tag(tag.getTagName())));
 				tagPostRepository.save(new TagPost(existingTag, post));
 			}
 		}
-		if (!(files == null || files.isEmpty())) {
+
+		if (files != null && !files.isEmpty()) {
 			List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
 			fileRequestDtos.stream()
 				.map(fileRequestDto -> new Photo(post, fileRequestDto))
 				.forEach(photoRepository::save);
 		}
+	}
+
+	private boolean isRequestEmpty(TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {
+		return tempPostRequestDto.getPostContent().isBlank()
+			&& tempPostRequestDto.getTags().isEmpty()
+			&& (files == null || files.isEmpty());
+	}
+
+	private int getSize(List<?> list) {
+		return list == null ? 0 : list.size();
 	}
 }
