@@ -34,4 +34,9 @@ public class TagPost {
 		this.tag = tag;
 		this.post = post;
 	}
+
+	public void update(Tag tag, Post post) {
+		this.tag = tag;
+		this.post = post;
+	}
 }

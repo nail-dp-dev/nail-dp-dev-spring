@@ -126,7 +126,7 @@ public class AuthControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(nicknameRequestDto)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message").value("닉네임은 특수문자를 제외한 4~15자리여야 합니다."))
+			.andExpect(jsonPath("$.message").value("닉네임을 입력해주세요"))
 			.andDo(print());
 	}
 
