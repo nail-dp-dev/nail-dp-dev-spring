@@ -1,6 +1,8 @@
 package com.backend.naildp.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ public class UserInfoService {
 	private final ProfileRepository profileRepository;
 	private final ArchivePostRepository archivePostRepository;
 	private final FollowRepository followRepository;
+	private final S3Service s3Service;
 
 	public UserInfoResponseDto getUserInfo(String nickname) {
 
@@ -63,5 +66,13 @@ public class UserInfoService {
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
 			.build();
+	}
+
+	public Map<String, Object> getPoint(String nickname) {
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		Map<String, Object> response = new HashMap<>();
+		response.put("point", user.getPoint());
+		return response;
 	}
 }
