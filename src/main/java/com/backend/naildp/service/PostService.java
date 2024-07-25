@@ -230,7 +230,7 @@ public class PostService {
 
 			if (isRequestEmpty(tempPostRequestDto, files)) {
 				if (getSize(post.getPhotos()) == getSize(tempPostRequestDto.getDeletedFileUrls())) {
-					throw new CustomException("변경사항이 없습니다.", ErrorCode.INPUT_NULL);
+					throw new CustomException("임시저장 할 내용이 없습니다.", ErrorCode.INPUT_NULL);
 				}
 			}
 
@@ -265,15 +265,16 @@ public class PostService {
 			return;
 		}
 
-		deletedFileUrls.stream()
-			.map(photoRepository::findByPhotoUrl)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.forEach(photo -> {
-				String fileUrl = photo.getPhotoUrl();
-				photoRepository.delete(photo);
-				s3Service.deleteFile(fileUrl);
-			});
+		// 데이터베이스에서 URL 리스트에 해당하는 사진들 조회
+		List<Photo> photos = photoRepository.findByPhotoUrlIn(deletedFileUrls);
+
+		// 사진 삭제 및 S3 파일 삭제
+		photos.forEach(photo -> {
+			String fileUrl = photo.getPhotoUrl();
+			photoRepository.delete(photo);
+			s3Service.deleteFile(fileUrl);
+		});
+
 	}
 
 	private void updateTagsAndFiles(List<TagRequestDto> tags, List<MultipartFile> files, Post post) {

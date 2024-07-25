@@ -130,10 +130,11 @@ class PostCreateServiceTest {
 
 		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
 
+		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
+		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
+
 		List<FileRequestDto> fileRequestDtos = List.of(
-			new FileRequestDto("newFile1", 12345L, "newFileUrl1"),
-			new FileRequestDto("newFile2", 12345L, "newFileUrl2")
-		);
+			fileRequestDto1, fileRequestDto2);
 
 		PostRequestDto postRequestDto = new PostRequestDto("editContent", false, Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
@@ -148,6 +149,9 @@ class PostCreateServiceTest {
 			.tempSave(false)
 			.build();
 
+		Photo photo1 = new Photo(post, fileRequestDto1);
+		Photo photo2 = new Photo(post, fileRequestDto2);
+
 		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 		given(tagRepository.findByName(anyString())).willAnswer(invocation -> {
@@ -156,12 +160,7 @@ class PostCreateServiceTest {
 			return Optional.empty();
 		});
 		given(tagRepository.save(any(Tag.class))).willAnswer(invocation -> invocation.getArgument(0));
-		given(photoRepository.findByPhotoUrl(anyString())).willAnswer(
-			invocation -> {
-				String photoUrl = invocation.getArgument(0);
-				log.info(photoUrl);
-				return Optional.of(new Photo(post, new FileRequestDto(photoUrl, 12345L, photoUrl)));
-			});
+		given(photoRepository.findByPhotoUrlIn(anyList())).willReturn(List.of(photo1, photo2));
 
 		given(s3Service.saveFiles(files)).willReturn(fileRequestDtos);
 
@@ -179,16 +178,12 @@ class PostCreateServiceTest {
 		verify(photoRepository, times(2)).save(any(Photo.class));
 		verify(photoRepository, times(2)).delete(any(Photo.class));
 		verify(s3Service, times(2)).deleteFile(anyString());
+		verify(photoRepository).findByPhotoUrlIn(postRequestDto.getDeletedFileUrls());
 
 		assertEquals("editContent", post.getPostContent());
 		assertEquals(Boundary.ALL, post.getBoundary());
 		assertFalse(post.getTempSave());
 
-		for (String deletedFileUrl : postRequestDto.getDeletedFileUrls()) {
-			verify(photoRepository).findByPhotoUrl(deletedFileUrl);
-			log.info(deletedFileUrl);
-			verify(photoRepository).delete(argThat(photo -> photo.getPhotoUrl().equals(deletedFileUrl)));
-		}
 	}
 
 	@Test
