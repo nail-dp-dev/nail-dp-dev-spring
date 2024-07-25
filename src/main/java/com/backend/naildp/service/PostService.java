@@ -15,12 +15,14 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
+import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
@@ -28,11 +30,11 @@ import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
-import com.backend.naildp.repository.CommentRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.TagPostRepository;
 import com.backend.naildp.repository.TagRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -54,7 +56,7 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 	private final FollowRepository followRepository;
-	private final CommentRepository commentRepository;
+	private final ProfileRepository profileRepository;
 
 	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
@@ -127,27 +129,23 @@ public class PostService {
 	 * /posts/{postId}
 	 * 특정 게시물 상세정보 읽기 API
 	 */
-	public ResponseEntity<?> postInfo(String nickname, Long postId) {
+	public PostInfoResponse postInfo(String nickname, Long postId) {
 		// post - writer 정보 가져오기
 		Post post = postRepository.findPostAndWriterById(postId)
 			.orElseThrow(() -> new CustomException("게시물을 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 		User writer = post.getUser();
+		Profile profile = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(writer)
+			.orElseThrow(() -> new CustomException("작성자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 읽기 권한 확인
 		boolean followingStatus = isFollower(nickname, writer, post.getBoundary());
 		int followerCount = followRepository.countFollowersByUserNickname(writer.getNickname());
 
-		// 게시글 좋아요 PostLike 수 조회
-		long postLikeCnt = post.getPostLikes().size();
-
-		// 댓글 Comment 수 조회
-		long commentCnt = post.getComments().size();
-
 		// 태그 TagPost - Tag 조회
 		List<TagPost> tagPosts = tagPostRepository.findTagPostAndTagByPost(post);
 		List<Tag> tags = tagPosts.stream().map(TagPost::getTag).collect(Collectors.toList());
 
-		return null;
+		return PostInfoResponse.of(post, writer, profile, followingStatus, followerCount, tags);
 	}
 
 	private boolean isFollower(String nickname, User writer, Boundary boundary) {

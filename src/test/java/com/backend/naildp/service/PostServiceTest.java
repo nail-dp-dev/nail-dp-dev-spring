@@ -20,10 +20,8 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
-import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -180,13 +178,13 @@ public class PostServiceTest {
 		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
 			.setParameter("nickname", nickname)
 			.getSingleResult();
-		PostRequestDto postRequestDto = new PostRequestDto("testContent", false, Boundary.ALL, new ArrayList<>());
-		postService.uploadPost(nickname, postRequestDto, new ArrayList<>());
-		Post post = em.createQuery("select p from Post p where p.postContent = 'testContent'", Post.class)
-			.getSingleResult();
-		for (int i = 1; i <= 10; i++) {
-			em.persist(new Comment(user, post, "comment"));
-		}
+		// PostRequestDto postRequestDto = new PostRequestDto("testContent", false, Boundary.ALL, new ArrayList<>());
+		// postService.uploadPost(nickname, postRequestDto, new ArrayList<>());
+		// Post post = em.createQuery("select p from Post p where p.postContent = 'testContent'", Post.class)
+		// 	.getSingleResult();
+		// for (int i = 1; i <= 10; i++) {
+		// 	em.persist(new Comment(user, post, "comment"));
+		// }
 		em.flush();
 		em.clear();
 
