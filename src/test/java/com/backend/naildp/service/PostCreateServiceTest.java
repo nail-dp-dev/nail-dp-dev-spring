@@ -143,8 +143,8 @@ class PostCreateServiceTest {
 			.id(postId)
 			.photos(List.of())
 			.user(user)
-			.postContent(postRequestDto.getPostContent())
-			.boundary(postRequestDto.getBoundary())
+			.postContent("content")
+			.boundary(Boundary.FOLLOW)
 			.tempSave(false)
 			.build();
 
@@ -175,11 +175,14 @@ class PostCreateServiceTest {
 		verify(tagRepository, times(2)).findByName(anyString());
 		verify(tagRepository, times(2)).save(any(Tag.class));
 		verify(tagPostRepository, times(2)).save(any(TagPost.class));
-		verify(postRepository, times(1)).save(post);
 		verify(s3Service, times(1)).saveFiles(files);
 		verify(photoRepository, times(2)).save(any(Photo.class));
 		verify(photoRepository, times(2)).delete(any(Photo.class));
 		verify(s3Service, times(2)).deleteFile(anyString());
+
+		assertEquals("editContent", post.getPostContent());
+		assertEquals(Boundary.ALL, post.getBoundary());
+		assertFalse(post.getTempSave());
 
 		for (String deletedFileUrl : postRequestDto.getDeletedFileUrls()) {
 			verify(photoRepository).findByPhotoUrl(deletedFileUrl);

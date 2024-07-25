@@ -154,15 +154,13 @@ public class PostService {
 			|| files.isEmpty())) {
 			throw new CustomException("파일을 첨부해주세요.", ErrorCode.INPUT_NULL);
 		}
+		post.update(postRequestDto);
 
 		tagPostRepository.deleteAllByPostId(postId);
 
 		updateTagsAndFiles(postRequestDto.getTags(), files, post);
 
 		deleteFileUrls(postRequestDto.getDeletedFileUrls());
-
-		// test를 위한 명시적 저장
-		postRepository.save(post);
 
 	}
 
