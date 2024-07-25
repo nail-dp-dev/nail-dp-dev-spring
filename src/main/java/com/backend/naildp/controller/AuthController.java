@@ -1,6 +1,7 @@
 package com.backend.naildp.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.AuthService;
 import com.backend.naildp.service.KakaoService;
+import com.backend.naildp.validation.ValidationSequence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,7 +49,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/auth/nickname")
-	public ResponseEntity<ApiResponse<?>> duplicateNickname(@Valid @RequestBody NicknameRequestDto requestDto) {
+	public ResponseEntity<ApiResponse<?>> duplicateNickname(
+		@Validated(ValidationSequence.class) @RequestBody NicknameRequestDto requestDto) {
 		return authService.duplicateNickname(requestDto);
 	}
 
