@@ -142,6 +142,8 @@ public class PostService {
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
+		validateUser(post, nickname);
+
 		if (getSize(files) + getSize(post.getPhotos()) - getSize(postRequestDto.getDeletedFileUrls()) > 10) {
 			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
 
@@ -172,6 +174,8 @@ public class PostService {
 
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		validateUser(post, nickname);
 
 		List<Photo> photos = photoRepository.findAllByPostId(postId);
 
@@ -227,7 +231,7 @@ public class PostService {
 			}
 
 			if (isRequestEmpty(tempPostRequestDto, files)) {
-				if ((long)post.getPhotos().size() == tempPostRequestDto.getDeletedFileUrls().size()) {
+				if (getSize(post.getPhotos()) == getSize(tempPostRequestDto.getDeletedFileUrls())) {
 					throw new CustomException("변경사항이 없습니다.", ErrorCode.INPUT_NULL);
 				}
 			}
@@ -299,5 +303,11 @@ public class PostService {
 
 	private int getSize(List<?> list) {
 		return list == null ? 0 : list.size();
+	}
+
+	private void validateUser(Post post, String nickname) {
+		if (!post.getUser().getNickname().equals(nickname)) {
+			throw new CustomException("본인이 작성한 게시글만 수정할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
 	}
 }
