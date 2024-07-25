@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Profile;
@@ -75,4 +77,21 @@ public class UserInfoService {
 		response.put("point", user.getPoint());
 		return response;
 	}
+
+	public void uploadProfile(String nickname, MultipartFile file) {
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		FileRequestDto fileRequestDto = s3Service.saveFile(file);
+
+		Profile profile = Profile.builder()
+			.profileUrl(fileRequestDto.getFileUrl())
+			.thumbnail(false)
+			.name(fileRequestDto.getFileName())
+			.user(user)
+			.build();
+
+		profileRepository.save(profile);
+	}
+
 }
