@@ -165,7 +165,7 @@ public class PostService {
 	}
 
 	private boolean equalsReaderAndWriter(String nickname, User writer) {
-		return nickname.equals(writer.getNickname());
+		return writer.equalsNickname(nickname);
 	}
 
 	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
