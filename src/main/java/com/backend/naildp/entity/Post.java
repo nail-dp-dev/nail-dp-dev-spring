@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.post.PostRequestDto;
+import com.backend.naildp.dto.post.TempPostRequestDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,12 +19,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Post extends BaseEntity {
 
 	@Id
@@ -38,9 +43,12 @@ public class Post extends BaseEntity {
 	@OneToMany(mappedBy = "post")
 	private List<Photo> photos = new ArrayList<>();
 
+	@OneToMany(mappedBy = "post")
+	private List<TagPost> tagPosts = new ArrayList<>();
+
 	private String postContent;
-	
-	private Long sharing;
+
+	private Long sharing = 0L;
 
 	@Enumerated(value = EnumType.STRING)
 	@Column(nullable = false)
@@ -57,14 +65,24 @@ public class Post extends BaseEntity {
 		this.tempSave = tempSave;
 	}
 
-	public Post(PostRequestDto postRequestDto, User user) {
-		this.user = user;
+	public void update(PostRequestDto postRequestDto) {
 		this.postContent = postRequestDto.getPostContent();
 		this.boundary = postRequestDto.getBoundary();
-		this.tempSave = postRequestDto.getTempSave();
+		this.tempSave = false;
+	}
+
+	public void tempUpdate(TempPostRequestDto tempPostRequestDto) {
+		this.postContent = tempPostRequestDto.getPostContent();
+		this.boundary = tempPostRequestDto.getBoundary();
+		this.tempSave = true;
 	}
 
 	public void addPhoto(Photo photo) {
 		this.photos.add(photo);
 	}
+
+	public void addTagPost(TagPost tagPost) {
+		this.tagPosts.add(tagPost);
+	}
+
 }
