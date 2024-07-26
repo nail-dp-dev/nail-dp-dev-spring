@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,8 +61,11 @@ public class PostService {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
 
 		if (!StringUtils.hasText(nickname)) {
+			log.info("익명사용자 확인");
 			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
-			return new PostSummaryResponse(recentPosts);
+
+			return recentPosts.isEmpty() ? PostSummaryResponse.createEmptyResponse() :
+				PostSummaryResponse.createForAnonymous(recentPosts);
 		}
 
 		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
@@ -99,7 +103,7 @@ public class PostService {
 			.user(user)
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
-			.tempSave(true)
+			.tempSave(false)
 			.build();
 
 		postRepository.save(post);
