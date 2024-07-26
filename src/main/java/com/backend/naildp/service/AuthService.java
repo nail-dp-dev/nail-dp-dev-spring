@@ -67,12 +67,12 @@ public class AuthService {
 				.profileUrl(userInfo.getProfileUrl())
 				.name(userInfo.getProfileUrl())
 				.thumbnail(true)
+				.profileType(ProfileType.CUSTOMIZATION)
 				.build();
 
 			UsersProfile usersProfile = UsersProfile.builder()
 				.profile(profile)
 				.user(user)
-				.profileType(ProfileType.CUSTOMIZATION)
 				.build();
 
 			profileRepository.save(profile);

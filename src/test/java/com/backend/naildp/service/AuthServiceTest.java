@@ -26,6 +26,7 @@ import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -34,6 +35,7 @@ import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.UsersProfileRepository;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,6 +68,8 @@ class AuthServiceTest {
 
 	@InjectMocks
 	private AuthService authService;
+	@Mock
+	private UsersProfileRepository usersProfileRepository;
 
 	private LoginRequestDto loginRequestDto;
 	private KakaoUserInfoDto kakaoUserInfoDto;
@@ -97,6 +101,7 @@ class AuthServiceTest {
 		verify(userRepository).save(any(User.class));
 		verify(socialLoginRepository).save(any(SocialLogin.class));
 		verify(profileRepository).save(any(Profile.class));
+		verify(usersProfileRepository).save(any(UsersProfile.class));
 		verify(cookieUtil).deleteCookie("userInfo", req, res);
 		verify(jwtUtil).addJwtToCookie("Authorization", res);
 	}

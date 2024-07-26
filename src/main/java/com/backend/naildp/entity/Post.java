@@ -48,6 +48,7 @@ public class Post extends BaseEntity {
 
 	private String postContent;
 
+	@Builder.Default
 	private Long sharing = 0L;
 
 	@Enumerated(value = EnumType.STRING)

@@ -50,11 +50,11 @@ class UsersProfileRepositoryTest {
 		user1 = createTestMember("mj@naver.com", "mj", "0101111", 1L);
 		user2 = createTestMember("jw@naver.com", "jw", "0102222", 2L);
 
-		profile1 = createTestProfile("mjProfileUrl.jpg", "mjName", true);
-		profile2 = createTestProfile("jwProfile.jpg", "jwName", false);
+		profile1 = createTestProfile("mjProfileUrl.jpg", "mjName", true, ProfileType.CUSTOMIZATION);
+		profile2 = createTestProfile("jwProfile.jpg", "jwName", false, ProfileType.CUSTOMIZATION);
 
-		userProfile1 = createTestUsersProfile(user1, profile1, ProfileType.CUSTOMIZATION);
-		userProfile2 = createTestUsersProfile(user2, profile2, ProfileType.CUSTOMIZATION);
+		userProfile1 = createTestUsersProfile(user1, profile1);
+		userProfile2 = createTestUsersProfile(user2, profile2);
 
 		em.clear();
 
@@ -66,9 +66,9 @@ class UsersProfileRepositoryTest {
 		// Given
 
 		// When
-		Optional<String> foundProfile1 = usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(
+		Optional<String> foundProfile1 = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(
 			user1.getNickname());
-		Optional<String> foundProfile2 = usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(
+		Optional<String> foundProfile2 = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(
 			user2.getNickname());
 
 		// Then
@@ -87,21 +87,21 @@ class UsersProfileRepositoryTest {
 		return user;
 	}
 
-	private Profile createTestProfile(String url, String name, boolean thumb) {
+	private Profile createTestProfile(String url, String name, boolean thumb, ProfileType profileType) {
 		Profile profile = Profile.builder()
 			.profileUrl(url)
 			.thumbnail(thumb)
 			.name(name)
+			.profileType(profileType)
 			.build();
 		em.persist(profile);
 		return profile;
 	}
 
-	private UsersProfile createTestUsersProfile(User user, Profile profile, ProfileType profileType) {
+	private UsersProfile createTestUsersProfile(User user, Profile profile) {
 		UsersProfile usersProfile = UsersProfile.builder()
 			.user(user)
 			.profile(profile)
-			.profileType(profileType)
 			.build();
 		em.persist(usersProfile);
 		return usersProfile;

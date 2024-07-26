@@ -63,7 +63,7 @@ public class UserInfoService {
 				.count();
 		}
 
-		String profileUrl = usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user.getNickname())
+		String profileUrl = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user.getNickname())
 			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
 
 		return UserInfoResponseDto.builder()
@@ -95,16 +95,15 @@ public class UserInfoService {
 			.profileUrl(fileRequestDto.getFileUrl())
 			.thumbnail(false)
 			.name(fileRequestDto.getFileName())
+			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		UsersProfile usersProfile = UsersProfile.builder()
 			.user(user)
 			.profile(profile)
-			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		profileRepository.save(profile);
 		usersProfileRepository.save(usersProfile);
 	}
-
 }

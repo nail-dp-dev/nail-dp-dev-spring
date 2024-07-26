@@ -101,7 +101,7 @@ public class PostService {
 			.user(user)
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
-			.tempSave(true)
+			.tempSave(false)
 			.build();
 
 		postRepository.save(post);
