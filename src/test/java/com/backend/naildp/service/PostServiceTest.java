@@ -19,6 +19,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Follow;
@@ -178,8 +179,13 @@ public class PostServiceTest {
 		List<Post> postList = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
 			Post post = new Post(writer, "content" + i, 0L, boundary, false);
-			Photo thumbnailPhoto = new Photo(post, "thumbnailURL" + i, "thumbnailPhoto" + i);
-			Photo subPhoto = new Photo(post, "subPhotoURL" + i, "subPhoto" + i);
+			FileRequestDto thumbnailFileRequestDto =
+				new FileRequestDto("thumbnailPhoto" + i, 1L, "thumbnailUrl" + i);
+			FileRequestDto subPhotoFileRequestDto =
+				new FileRequestDto("subPhoto" + i, 1L, "subPhotoUrl" + i);
+
+			Photo thumbnailPhoto = new Photo(post, thumbnailFileRequestDto);
+			Photo subPhoto = new Photo(post, subPhotoFileRequestDto);
 
 			post.addPhoto(thumbnailPhoto);
 			post.addPhoto(subPhoto);

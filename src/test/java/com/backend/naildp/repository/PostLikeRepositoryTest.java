@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -245,15 +246,18 @@ class PostLikeRepositoryTest {
 	private List<Photo> createSubPhotos(User user, int cnt, Post post) {
 		List<Photo> photos = new ArrayList<>();
 		for (int i = 1; i <= cnt; i++) {
-			Photo photo = new Photo(post, "subUrl-" + user.getNickname() + i, "subName-" + user.getNickname() + i);
+			FileRequestDto fileRequestDto = new FileRequestDto("subName-" + user.getNickname() + i, 1L,
+				"subUrl-" + user.getNickname() + i);
+			Photo photo = new Photo(post, fileRequestDto);
 			photos.add(photo);
 		}
 		return photos;
 	}
 
 	private Photo createThumbnailPhoto(User user, int index, Post post) {
-		return new Photo(post, "thumbnailUrl-" + user.getNickname() + index,
-			"thumbnailName-" + user.getNickname() + index);
+		FileRequestDto fileRequestDto = new FileRequestDto("thumbnailName-" + user.getNickname() + index, 1L,
+			"thumbnailUrl-" + user.getNickname() + index);
+		return new Photo(post, fileRequestDto);
 	}
 
 	private List<PostLike> createPostLikes(List<Post> posts, User likeUser) {
