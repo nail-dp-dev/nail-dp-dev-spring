@@ -71,12 +71,16 @@ class UserInfoServiceTest {
 		MockitoAnnotations.openMocks(this);
 
 		user1 = new User("alswl", "010-1234-5678", 1000L, UserRole.USER);
-		profile1 = new Profile("alswl.profileUrl.jpg", "name", true);
+		profile1 = Profile.builder()
+			.profileType(ProfileType.CUSTOMIZATION)
+			.name("name")
+			.profileUrl("alswl.profileUrl.jpg")
+			.thumbnail(true)
+			.build();
 
 		userProfile1 = UsersProfile.builder()
 			.user(user1)
 			.profile(profile1)
-			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		post1 = new Post(user1, "alswl postContent", 0L, Boundary.ALL, false);
@@ -99,7 +103,7 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
-		given(usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user1.getNickname())).willReturn(
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
@@ -127,7 +131,7 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
-		given(usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user1.getNickname())).willReturn(
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
@@ -153,7 +157,7 @@ class UserInfoServiceTest {
 			List.of(archivePost1, archivePost2));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
 			List.of(user2.getNickname(), "user3"));
-		given(usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user1.getNickname())).willReturn(
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
@@ -176,7 +180,7 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(List.of(user2.getNickname()));
-		given(usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user1.getNickname())).willReturn(
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
@@ -203,7 +207,7 @@ class UserInfoServiceTest {
 	void testGetUserInfo_NoProfileThumbnail() {
 		// Given
 		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user1.getNickname())).willReturn(
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.empty());
 
 		// Then
