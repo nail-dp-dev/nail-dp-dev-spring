@@ -20,6 +20,7 @@ import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.UsersProfileRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +34,7 @@ public class UserInfoService {
 	private final ArchivePostRepository archivePostRepository;
 	private final FollowRepository followRepository;
 	private final S3Service s3Service;
+	private final UsersProfileRepository usersProfileRepository;
 
 	public UserInfoResponseDto getUserInfo(String nickname) {
 
@@ -57,13 +59,13 @@ public class UserInfoService {
 				.count();
 		}
 
-		Profile profile = profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user)
+		String profileUrl = usersProfileRepository.findProfileUrlByUserIdAndThumbnailTrue(user.getNickname())
 			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
 
 		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())
 			.point(user.getPoint())
-			.profileUrl(profile.getProfileUrl())
+			.profileUrl(profileUrl)
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
@@ -88,7 +90,6 @@ public class UserInfoService {
 			.profileUrl(fileRequestDto.getFileUrl())
 			.thumbnail(false)
 			.name(fileRequestDto.getFileName())
-			.user(user)
 			.build();
 
 		profileRepository.save(profile);
