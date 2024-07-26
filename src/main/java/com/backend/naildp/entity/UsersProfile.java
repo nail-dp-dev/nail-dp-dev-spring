@@ -1,10 +1,17 @@
 package com.backend.naildp.entity;
 
+import com.backend.naildp.common.ProfileType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,25 +23,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Profile extends BaseEntity {
+public class UsersProfile {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "profile_id")
+	@Column(name = "users_profile_id")
 	private Long id;
 
-	@Column(nullable = false)
-	private String profileUrl;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "profile_id")
+	private Profile profile;
 
-	@Column(nullable = false)
-	private Boolean thumbnail;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
 
+	@Enumerated(value = EnumType.STRING)
 	@Column(nullable = false)
-	private String name;
-
-	public Profile(String profileUrl, String name, boolean thumbnail) {
-		this.profileUrl = profileUrl;
-		this.name = name;
-		this.thumbnail = thumbnail;
-	}
+	private ProfileType profileType;
 }
