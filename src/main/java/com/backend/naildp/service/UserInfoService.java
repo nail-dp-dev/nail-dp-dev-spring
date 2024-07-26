@@ -5,14 +5,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
@@ -36,6 +39,7 @@ public class UserInfoService {
 	private final S3Service s3Service;
 	private final UsersProfileRepository usersProfileRepository;
 
+	@Transactional(readOnly = true)
 	public UserInfoResponseDto getUserInfo(String nickname) {
 
 		User user = userRepository.findByNickname(nickname)
@@ -80,6 +84,7 @@ public class UserInfoService {
 		return response;
 	}
 
+	@Transactional
 	public void uploadProfile(String nickname, MultipartFile file) {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -92,7 +97,14 @@ public class UserInfoService {
 			.name(fileRequestDto.getFileName())
 			.build();
 
+		UsersProfile usersProfile = UsersProfile.builder()
+			.user(user)
+			.profile(profile)
+			.profileType(ProfileType.CUSTOMIZATION)
+			.build();
+
 		profileRepository.save(profile);
+		usersProfileRepository.save(usersProfile);
 	}
 
 }

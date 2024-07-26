@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class ProfileRepositoryTest {
+class UsersProfileRepositoryTest {
 
 	@Autowired
 	ProfileRepository profileRepository;

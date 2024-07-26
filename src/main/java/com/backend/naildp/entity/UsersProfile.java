@@ -4,6 +4,8 @@ import com.backend.naildp.common.ProfileType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,5 +38,7 @@ public class UsersProfile {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@Enumerated(value = EnumType.STRING)
+	@Column(nullable = false)
 	private ProfileType profileType;
 }
