@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.userInfo.ProfileRequestDto;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Profile;
@@ -26,7 +27,9 @@ import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.repository.UsersProfileRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserInfoService {
@@ -76,6 +79,7 @@ public class UserInfoService {
 			.build();
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, Object> getPoint(String nickname) {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -107,6 +111,7 @@ public class UserInfoService {
 		usersProfileRepository.save(usersProfile);
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, List<String>> getProfiles(String nickname, String choice) {
 
 		ProfileType profileType = ProfileType.valueOf(choice);
@@ -115,10 +120,30 @@ public class UserInfoService {
 		if (profileType == ProfileType.CUSTOMIZATION) {
 			profileUrls = usersProfileRepository.findProfileUrlsByNicknameAndType(nickname, profileType);
 		} else {
-			profileUrls = usersProfileRepository.findProfileUrlsByType(profileType);
+			profileUrls = profileRepository.findProfileUrlsByType(profileType);
 		}
 		Map<String, List<String>> response = new HashMap<>();
 		response.put("profileUrls", profileUrls);
 		return response;
+	}
+
+	@Transactional
+	public void changeProfile(String nickname, ProfileRequestDto profileRequestDto) {
+		UsersProfile usersProfile = usersProfileRepository.findProfileByNicknameAndThumbnailTrue(nickname)
+			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		Profile currentProfile = usersProfile.getProfile();
+
+		Profile changingProfile = profileRepository.findProfileByProfileUrl(profileRequestDto.getProfileUrl())
+			.orElseThrow(() -> new CustomException("변경할 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (currentProfile.getProfileType() == ProfileType.CUSTOMIZATION) {
+			currentProfile.updateThumbnail(false);
+		} else {
+			usersProfileRepository.delete(usersProfile);
+		}
+
+		changingProfile.updateThumbnail(true);
+
 	}
 }

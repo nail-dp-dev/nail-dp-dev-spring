@@ -6,13 +6,16 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.naildp.dto.userInfo.ProfileRequestDto;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
@@ -61,6 +64,15 @@ public class UserInfoController {
 		Map<String, List<String>> response = userInfoService.getProfiles(userDetails.getUser().getNickname(), choice);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "프로필 이미지 조회 성공", 2000));
+	}
+
+	@PatchMapping("/profile")
+	ResponseEntity<ApiResponse<?>> changeProfile(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestBody ProfileRequestDto profileRequestDto) {
+
+		userInfoService.changeProfile(userDetails.getUser().getNickname(), profileRequestDto);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "프로필 이미지 변경 성공", 2000));
 	}
 
 }
