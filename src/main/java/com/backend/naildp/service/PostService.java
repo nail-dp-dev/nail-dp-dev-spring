@@ -132,6 +132,7 @@ public class PostService {
 		Slice<Post> likedPosts = postLikes.map(PostLike::getPost);
 
 		if (likedPosts.isEmpty()) {
+			log.info("좋아요한 게시물이 없다.");
 			throw new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
 		}
 
@@ -139,7 +140,8 @@ public class PostService {
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
 		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
 
-		return new PostSummaryResponse(likedPosts, savedPosts);
+		// return new PostSummaryResponse(likedPosts, savedPosts);
+		return PostSummaryResponse.createLikedPostSummary(likedPosts, savedPosts);
 	}
 
 	private Slice<PostLike> getOpenedPostLikes(long cursorPostLikeId, String nickname, List<User> followingUsers,

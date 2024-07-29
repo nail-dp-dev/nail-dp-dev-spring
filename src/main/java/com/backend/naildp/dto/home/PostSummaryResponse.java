@@ -56,4 +56,12 @@ public class PostSummaryResponse {
 		Long oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
 		return new PostSummaryResponse(oldestPostId, latestPosts.map(HomePostResponse::recentPostForAnonymous));
 	}
+
+	public static PostSummaryResponse createLikedPostSummary(Slice<Post> likedPostSlice, List<Post> savedPosts) {
+		log.info("PostSummaryResponse 좋아요 체크한 게시물 응답 만들기 - 정적 팩토리 메서드");
+		Long oldestPostLikeId = likedPostSlice.getContent().get(likedPostSlice.getNumberOfElements() - 1).getId();
+		log.info("PostSummaryResponse 응답");
+		return new PostSummaryResponse(oldestPostLikeId,
+			likedPostSlice.map(post -> HomePostResponse.likedPostResponse(post, savedPosts)));
+	}
 }
