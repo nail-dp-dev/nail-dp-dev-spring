@@ -11,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +19,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Follow;
@@ -42,7 +42,7 @@ import jakarta.persistence.EntityManager;
 public class PostServiceTest {
 
 	@Autowired
-	PostService postService;
+	PostInfoService postInfoService;
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -79,7 +79,7 @@ public class PostServiceTest {
 		savePostsInArchive(archive, postsToFollow);
 		savePostsInArchive(archive, postsToNone);
 
-		createTestPostLikes(testUser, writer);
+		LikeAllPosts(testUser, writer);
 		System.out.println("======= BeforeEach 끝 ======");
 	}
 
@@ -93,10 +93,10 @@ public class PostServiceTest {
 		String nickname = "testUser";
 
 		//when
-		PostSummaryResponse firstPostSummaryResponse = postService.homePosts("NEW", firstCallPageSize, -1L, nickname);
+		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L, nickname);
 		Long oldestPostId = firstPostSummaryResponse.getOldestPostId();
 		System.out.println("oldestPostId = " + oldestPostId);
-		PostSummaryResponse secondPostSummaryResponse = postService.homePosts("NEW", secondCallPageSize, oldestPostId,
+		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize, oldestPostId,
 			nickname);
 
 		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
@@ -125,7 +125,7 @@ public class PostServiceTest {
 
 		//when
 		System.out.println("첫 페이지");
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", pageSize, cursorPostId, nickname);
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", pageSize, cursorPostId, nickname);
 		Slice<HomePostResponse> responses = postSummaryResponse.getPostSummaryList();
 
 		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
@@ -148,27 +148,16 @@ public class PostServiceTest {
 	void findLikedPosts() {
 		//given
 		String nickname = "testUser";
-		int postCnt = 60;
-		int pageNumber = 0;
-		int pageSize = 20;
-		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
+		int pageSize = 60;
 
 		//when
-		Page<HomePostResponse> responses = postService.findLikedPost(nickname, pageNumber);
-		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
-		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
+		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
-		assertThat(responses.getSize()).isEqualTo(pageSize);
-		assertThat(responses.getNumber()).isEqualTo(pageNumber);
-		assertThat(responses.getTotalElements()).isEqualTo(postCnt);
-		assertThat(responses.getTotalPages()).isEqualTo(totalPages);
-
-		assertThat(savedList).containsOnly(true);
-		assertThat(savedList).hasSize(pageSize);
-
-		assertThat(likedList).contains(true);
-		assertThat(likedList).hasSize(pageSize);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(pageSize);
+		assertThat(postSummaryList).extracting("like").containsOnly(true);
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
@@ -190,8 +179,13 @@ public class PostServiceTest {
 		List<Post> postList = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
 			Post post = new Post(writer, "content" + i, 0L, boundary, false);
-			Photo thumbnailPhoto = new Photo(post, "thumbnailURL" + i, "thumbnailPhoto" + i);
-			Photo subPhoto = new Photo(post, "subPhotoURL" + i, "subPhoto" + i);
+			FileRequestDto thumbnailFileRequestDto =
+				new FileRequestDto("thumbnailPhoto" + i, 1L, "thumbnailUrl" + i);
+			FileRequestDto subPhotoFileRequestDto =
+				new FileRequestDto("subPhoto" + i, 1L, "subPhotoUrl" + i);
+
+			Photo thumbnailPhoto = new Photo(post, thumbnailFileRequestDto);
+			Photo subPhoto = new Photo(post, subPhotoFileRequestDto);
 
 			post.addPhoto(thumbnailPhoto);
 			post.addPhoto(subPhoto);
@@ -203,7 +197,7 @@ public class PostServiceTest {
 		return postRepository.saveAllAndFlush(postList);
 	}
 
-	private void createTestPostLikes(User user, User writer) {
+	private void LikeAllPosts(User user, User writer) {
 		List<Post> posts = em.createQuery("select p from Post p where p.user = :user", Post.class)
 			.setParameter("user", writer)
 			.getResultList();
