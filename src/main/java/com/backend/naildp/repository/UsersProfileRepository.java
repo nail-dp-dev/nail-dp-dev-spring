@@ -19,6 +19,6 @@ public interface UsersProfileRepository extends JpaRepository<UsersProfile, Long
 	List<String> findProfileUrlsByNicknameAndType(@Param("nickname") String nickname,
 		@Param("type") ProfileType profileType);
 
-	// @Query("select p.profileUrl from Profile p where p.thumbnail = true and p.")
-	// List<String> findProfileUrlsByType(@Param("type") ProfileType profileType);
+	@Query("select p.profileUrl from Profile p where p.thumbnail = true and p.profileType = :type")
+	List<String> findProfileUrlsByType(@Param("type") ProfileType profileType);
 }

@@ -106,4 +106,19 @@ public class UserInfoService {
 		profileRepository.save(profile);
 		usersProfileRepository.save(usersProfile);
 	}
+
+	public Map<String, List<String>> getProfiles(String nickname, String choice) {
+
+		ProfileType profileType = ProfileType.valueOf(choice);
+		List<String> profileUrls;
+
+		if (profileType == ProfileType.CUSTOMIZATION) {
+			profileUrls = usersProfileRepository.findProfileUrlsByNicknameAndType(nickname, profileType);
+		} else {
+			profileUrls = usersProfileRepository.findProfileUrlsByType(profileType);
+		}
+		Map<String, List<String>> response = new HashMap<>();
+		response.put("profileUrls", profileUrls);
+		return response;
+	}
 }

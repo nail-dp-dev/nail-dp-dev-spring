@@ -1,5 +1,6 @@
 package com.backend.naildp.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,4 +53,14 @@ public class UserInfoController {
 
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "프로필 이미지 업로드 성공", 2001));
 	}
+
+	@GetMapping("/profile")
+	ResponseEntity<ApiResponse<?>> getProfiles(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestParam("choice") String choice) {
+
+		Map<String, List<String>> response = userInfoService.getProfiles(userDetails.getUser().getNickname(), choice);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "프로필 이미지 조회 성공", 2000));
+	}
+
 }
