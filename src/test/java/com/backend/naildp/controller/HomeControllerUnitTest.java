@@ -30,6 +30,7 @@ import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.service.PostInfoService;
 import com.backend.naildp.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,8 +41,11 @@ class HomeControllerUnitTest {
 	@Autowired
 	MockMvc mvc;
 
+	// @MockBean
+	// PostService postService;
+
 	@MockBean
-	PostService postService;
+	PostInfoService postInfoService;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -56,7 +60,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
@@ -83,7 +87,7 @@ class HomeControllerUnitTest {
 		paramMap.add("choice", "NEW");
 		paramMap.add("size", "20");
 		paramMap.add("cursorPostId", "10");
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		mvc.perform((get("/home").queryParams(paramMap)))
 			.andExpect(status().isOk())
@@ -104,7 +108,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		// when & then
 		mvc.perform((get("/home").param("choice", "NEW")))
@@ -126,7 +130,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		// when & then
 		mvc.perform((get("/home").param("choice", "NEW")))
@@ -148,7 +152,7 @@ class HomeControllerUnitTest {
 		apiResponse.setMessage(exception.getMessage());
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
@@ -170,7 +174,7 @@ class HomeControllerUnitTest {
 			"좋아요 체크한 게시물 조회", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(postSummaryResponse);
+		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/posts/like"))
@@ -193,7 +197,7 @@ class HomeControllerUnitTest {
 		apiResponse.setMessage(customException.getMessage());
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.findLikedPost(anyString(), eq(20), anyLong())).thenThrow(customException);
+		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenThrow(customException);
 
 		//when & then
 		mvc.perform(get("/posts/like"))

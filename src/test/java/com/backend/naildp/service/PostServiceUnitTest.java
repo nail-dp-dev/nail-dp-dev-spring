@@ -41,7 +41,7 @@ import com.backend.naildp.repository.PostRepository;
 class PostServiceUnitTest {
 
 	@InjectMocks
-	PostService postService;
+	PostInfoService postInfoService;
 
 	@Mock
 	PostRepository postRepository;
@@ -83,7 +83,7 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
 
 		//when
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE,
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE,
 			cursorPostId, NICKNAME);
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 
@@ -121,7 +121,7 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
 
 		//when
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 
 		//then
@@ -153,7 +153,7 @@ class PostServiceUnitTest {
 			.thenReturn(recentPosts);
 
 		//when & then
-		assertThatThrownBy(() -> postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME))
+		assertThatThrownBy(() -> postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME))
 			.isInstanceOf(CustomException.class)
 			.hasMessage("게시물이 없습니다.");
 
@@ -183,7 +183,7 @@ class PostServiceUnitTest {
 		when(archivePostRepository.findAllByArchiveUserNickname(eq(nickname))).thenReturn(archivePosts);
 
 		//when
-		PostSummaryResponse response = postService.findLikedPost(nickname, pageSize, -1);
+		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1);
 		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
@@ -209,7 +209,7 @@ class PostServiceUnitTest {
 			.thenThrow(new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED));
 
 		//when & then
-		assertThatThrownBy(() -> postService.findLikedPost(nickname, pageSize, -1L))
+		assertThatThrownBy(() -> postInfoService.findLikedPost(nickname, pageSize, -1L))
 			.isInstanceOf(CustomException.class)
 			.hasMessage("좋아요한 게시물이 없습니다.");
 	}
@@ -228,7 +228,7 @@ class PostServiceUnitTest {
 			.thenReturn(pagedPost);
 
 		//when
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
 
 		//then
 		verify(postRepository).findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
@@ -255,7 +255,7 @@ class PostServiceUnitTest {
 			.thenReturn(postSlice);
 
 		//when & then
-		assertThatThrownBy(() -> postService.homePosts("NEW", PAGE_SIZE, cursorId, nickname))
+		assertThatThrownBy(() -> postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname))
 			.isInstanceOf(CustomException.class)
 			.hasMessage("최신 게시물이 없습니다.")
 			.extracting("errorCode").isEqualTo(ErrorCode.FILES_NOT_REGISTERED);

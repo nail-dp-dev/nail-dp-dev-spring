@@ -42,7 +42,7 @@ import jakarta.persistence.EntityManager;
 public class PostServiceTest {
 
 	@Autowired
-	PostService postService;
+	PostInfoService postInfoService;
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -93,10 +93,10 @@ public class PostServiceTest {
 		String nickname = "testUser";
 
 		//when
-		PostSummaryResponse firstPostSummaryResponse = postService.homePosts("NEW", firstCallPageSize, -1L, nickname);
+		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L, nickname);
 		Long oldestPostId = firstPostSummaryResponse.getOldestPostId();
 		System.out.println("oldestPostId = " + oldestPostId);
-		PostSummaryResponse secondPostSummaryResponse = postService.homePosts("NEW", secondCallPageSize, oldestPostId,
+		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize, oldestPostId,
 			nickname);
 
 		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
@@ -125,7 +125,7 @@ public class PostServiceTest {
 
 		//when
 		System.out.println("첫 페이지");
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", pageSize, cursorPostId, nickname);
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", pageSize, cursorPostId, nickname);
 		Slice<HomePostResponse> responses = postSummaryResponse.getPostSummaryList();
 
 		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
@@ -151,7 +151,7 @@ public class PostServiceTest {
 		int pageSize = 60;
 
 		//when
-		PostSummaryResponse response = postService.findLikedPost(nickname, pageSize, -1L);
+		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
 		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then

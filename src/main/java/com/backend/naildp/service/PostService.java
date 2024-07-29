@@ -48,45 +48,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PostService {
 
 	private final PostRepository postRepository;
-	private final ArchivePostRepository archivePostRepository;
-	private final PostLikeRepository postLikeRepository;
 	private final UserRepository userRepository;
 	private final TagRepository tagRepository;
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
-	private final FollowRepository followRepository;
 	private final S3Service s3Service;
-
-	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
-		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
-
-		if (!StringUtils.hasText(nickname)) {
-			log.info("익명사용자 응답");
-			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
-
-			if (recentPosts.isEmpty()) {
-				throw new CustomException("최신 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-			}
-
-			return PostSummaryResponse.createForAnonymous(recentPosts);
-		}
-
-		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
-		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, pageRequest);
-
-		if (recentPosts.isEmpty()) {
-			log.info("최신 게시물이 없습니다.");
-			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-		}
-
-		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
-		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
-
-		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
-		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
-
-		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts);
-	}
 
 	@Transactional
 	public void uploadPost(String nickname, PostRequestDto postRequestDto, List<MultipartFile> files) {
@@ -121,36 +87,6 @@ public class PostService {
 
 		}
 		fileRequestDtos.stream().map(fileRequestDto -> new Photo(post, fileRequestDto)).forEach(photoRepository::save);
-	}
-
-	public PostSummaryResponse findLikedPost(String nickname, int pageSize, long cursorId) {
-		PageRequest pageRequest = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-
-		// 좋아요한 게시글 조회
-		List<User> followingUsers = followRepository.findFollowingUserByFollowerNickname(nickname);
-		Slice<PostLike> postLikes = getOpenedPostLikes(cursorId, nickname, followingUsers, pageRequest);
-		Slice<Post> likedPosts = postLikes.map(PostLike::getPost);
-
-		if (likedPosts.isEmpty()) {
-			log.info("좋아요한 게시물이 없다.");
-			throw new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-		}
-
-		// 게시글 저장 여부 체크
-		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
-		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
-
-		// return new PostSummaryResponse(likedPosts, savedPosts);
-		return PostSummaryResponse.createLikedPostSummary(likedPosts, savedPosts);
-	}
-
-	private Slice<PostLike> getOpenedPostLikes(long cursorPostLikeId, String nickname, List<User> followingUsers,
-		PageRequest pageRequest) {
-		if (isFirstPage(cursorPostLikeId)) {
-			return postLikeRepository.findPostLikesByFollowing(nickname, followingUsers, pageRequest);
-		}
-		return postLikeRepository.findPostLikesByIdAndFollowing(nickname, cursorPostLikeId, followingUsers,
-			pageRequest);
 	}
 
 	@Transactional
@@ -211,24 +147,6 @@ public class PostService {
 			.tempSave(post.getTempSave())
 			.boundary(post.getBoundary())
 			.build();
-	}
-
-	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
-		if (isFirstPage(cursorPostId)) {
-			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
-		}
-		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL, pageRequest);
-	}
-
-	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, PageRequest pageRequest) {
-		if (isFirstPage(cursorPostId)) {
-			return postRepository.findRecentPostsByFollowing(followingUser, pageRequest);
-		}
-		return postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followingUser, pageRequest);
-	}
-
-	private boolean isFirstPage(long cursorPostId) {
-		return cursorPostId == -1L;
 	}
 
 	@Transactional
