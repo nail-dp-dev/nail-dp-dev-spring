@@ -241,6 +241,26 @@ class PostServiceUnitTest {
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}
 
+	@DisplayName("익명 사용자 - 최신 게시글 조회 예외 테스트")
+	@Test
+	void recentPostsExceptionByAnonymousUser() {
+		//given
+		long cursorId = -1L;
+		String nickname = "";
+		List<Post> posts = createTestPosts(0);
+		PageRequest pageRequest = createPageRequest(0, PAGE_SIZE, "id");
+		Slice<Post> postSlice = new SliceImpl<>(posts, pageRequest, false);
+
+		when(postRepository.findPostsByBoundaryAndTempSaveFalse(eq(Boundary.ALL), eq(pageRequest)))
+			.thenReturn(postSlice);
+
+		//when & then
+		assertThatThrownBy(() -> postService.homePosts("NEW", PAGE_SIZE, cursorId, nickname))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("최신 게시물이 없습니다.")
+			.extracting("errorCode").isEqualTo(ErrorCode.FILES_NOT_REGISTERED);
+	}
+
 	private List<Post> createTestPosts(int postCnt) {
 		List<Post> posts = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {

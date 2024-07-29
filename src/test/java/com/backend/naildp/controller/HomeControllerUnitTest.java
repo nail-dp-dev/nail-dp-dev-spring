@@ -139,36 +139,16 @@ class HomeControllerUnitTest {
 			.andDo(print());
 	}
 
-	// @DisplayName("최신 게시글 조회 API 예외 테스트 - 게시글이 존재하지 않을때 4005 예외 발생")
-	// @Test
-	// void newPostsApiExceptionTest() throws Exception {
-	// 	//given
-	// 	CustomException exception = new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-	// 	ApiResponse<?> apiResponse = ApiResponse.of(exception.getErrorCode());
-	// 	apiResponse.setMessage(exception.getMessage());
-	// 	String jsonResponse = objectMapper.writeValueAsString(apiResponse);
-	//
-	// 	when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
-	//
-	// 	//when & then
-	// 	mvc.perform(get("/home").param("choice", "NEW"))
-	// 		.andExpect(status().isOk())
-	// 		.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-	// 		.andExpect(content().json(jsonResponse))
-	// 		.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-	// 		.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-	// 		.andDo(print());
-	// }
-
-	@DisplayName("최신 게시글 조회 API 테스트 - 게시글이 존재하지 않을때")
+	@DisplayName("최신 게시글 조회 API 예외 테스트 - 게시글이 존재하지 않을때 4005 예외 발생")
 	@Test
-	void newPostsApiWithoutPosts() throws Exception {
+	void newPostsApiExceptionTest() throws Exception {
 		//given
-		PostSummaryResponse emptyResponse = PostSummaryResponse.createEmptyResponse();
-		ApiResponse<PostSummaryResponse> apiResponse = ApiResponse.successResponse(emptyResponse, "최신 게시물 조회", 2000);
+		CustomException exception = new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+		ApiResponse<?> apiResponse = ApiResponse.of(exception.getErrorCode());
+		apiResponse.setMessage(exception.getMessage());
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(emptyResponse);
+		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))

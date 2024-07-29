@@ -61,18 +61,21 @@ public class PostService {
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
 
 		if (!StringUtils.hasText(nickname)) {
-			log.info("익명사용자 확인");
+			log.info("익명사용자 응답");
 			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
 
-			return recentPosts.isEmpty() ? PostSummaryResponse.createEmptyResponse() :
-				PostSummaryResponse.createForAnonymous(recentPosts);
+			if (recentPosts.isEmpty()) {
+				throw new CustomException("최신 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+			}
+
+			return PostSummaryResponse.createForAnonymous(recentPosts);
 		}
 
 		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
 		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, pageRequest);
 
 		if (recentPosts.isEmpty()) {
-			log.debug("최신 게시물이 하나도 없습니다.");
+			log.info("최신 게시물이 없습니다.");
 			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
 		}
 
