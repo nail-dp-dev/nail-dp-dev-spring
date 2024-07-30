@@ -45,6 +45,7 @@ public class PostInfoService {
 			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
 
 			if (recentPosts.isEmpty()) {
+				log.info("게시물이 존재하지 않으므로 예외 응답");
 				throw new CustomException("최신 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
 			}
 

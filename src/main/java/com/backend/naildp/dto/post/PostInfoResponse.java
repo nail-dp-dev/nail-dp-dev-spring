@@ -32,14 +32,14 @@ public class PostInfoResponse {
 	private long sharedCount;
 	private List<String> tags;
 
-	public static PostInfoResponse of(Post post, User user, Profile profile, boolean followingStatus, int followerCount,
+	public static PostInfoResponse of(Post post, User user, String profileUrl, boolean followingStatus, int followerCount,
 		List<Tag> tags) {
 
 		List<FileInfoResponse> fileInfoResponses = post.getPhotos().stream().map(FileInfoResponse::new).toList();
 
 		return PostInfoResponse.builder()
 			.nickname(user.getNickname())
-			.profileUrl(profile.getProfileUrl())
+			.profileUrl(profileUrl)
 			.followingStatus(followingStatus)
 			.postContent(post.getPostContent())
 			.likeCount(post.getPostLikes().size())
