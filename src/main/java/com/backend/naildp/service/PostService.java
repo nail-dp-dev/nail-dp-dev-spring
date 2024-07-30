@@ -246,6 +246,32 @@ public class PostService {
 	// 	return PostInfoResponse.of(post, writer, profile, followingStatus, followerCount, tags);
 	// }
 
+	private boolean isFollower(String nickname, User writer, Boundary boundary) {
+		//not equal
+		//	all & follow -> exists
+		//  none -> exception
+		//equal -> false
+		if (equalsReaderAndWriter(nickname, writer)) {
+			return false;
+		}
+
+		if (boundary == Boundary.NONE) {
+			throw new CustomException("게시물을 읽을 수 없습니다.", ErrorCode.NOT_FOUND);
+		}
+
+		return followRepository.existsByFollowerNicknameAndFollowing(nickname, writer);
+	}
+
+	private boolean equalsReaderAndWriter(String nickname, User writer) {
+		return writer.equalsNickname(nickname);
+	}
+
+	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
+		if (isFirstPage(cursorPostId)) {
+			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
+		}
+	}
+
 	private boolean isRequestEmpty(TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {
 		return tempPostRequestDto.getPostContent().isBlank()
 			&& tempPostRequestDto.getTags().isEmpty()
