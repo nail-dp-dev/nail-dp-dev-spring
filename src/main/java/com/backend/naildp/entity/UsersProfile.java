@@ -9,34 +9,29 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TagPost {
+@AllArgsConstructor
+@Builder
+public class UsersProfile {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "tag_post_id")
+	@Column(name = "users_profile_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "tag_id")
-	private Tag tag;
+	@JoinColumn(name = "profile_id")
+	private Profile profile;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "post_id")
-	private Post post;
+	@JoinColumn(name = "user_id")
+	private User user;
 
-	public TagPost(Tag tag, Post post) {
-		this.tag = tag;
-		this.post = post;
-	}
-
-	public void update(Tag tag, Post post) {
-		this.tag = tag;
-		this.post = post;
-	}
 }

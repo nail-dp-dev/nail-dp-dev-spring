@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.CookieUtil;
+import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.dto.auth.LoginRequestDto;
@@ -16,6 +17,7 @@ import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -24,6 +26,7 @@ import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.UsersProfileRepository;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +45,7 @@ public class AuthService {
 	private final ProfileRepository profileRepository;
 	private final JwtUtil jwtUtil;
 	private final JwtAuthorizationFilter jwtAuthorizationFilter;
+	private final UsersProfileRepository usersProfileRepository;
 
 	@Transactional
 	public ResponseEntity<ApiResponse<?>> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req,
@@ -59,8 +63,20 @@ public class AuthService {
 		socialLoginRepository.save(socialLogin);
 
 		if (userInfo.getProfileUrl() != null) {
-			Profile profile = new Profile(user, userInfo.getProfileUrl(), userInfo.getProfileUrl(), true);
+			Profile profile = Profile.builder()
+				.profileUrl(userInfo.getProfileUrl())
+				.name(userInfo.getProfileUrl())
+				.thumbnail(true)
+				.profileType(ProfileType.CUSTOMIZATION)
+				.build();
+
+			UsersProfile usersProfile = UsersProfile.builder()
+				.profile(profile)
+				.user(user)
+				.build();
+
 			profileRepository.save(profile);
+			usersProfileRepository.save(usersProfile);
 		}
 
 		cookieUtil.deleteCookie("userInfo", req, res);

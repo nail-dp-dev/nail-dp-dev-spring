@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -32,6 +30,7 @@ import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.service.PostInfoService;
 import com.backend.naildp.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,8 +41,11 @@ class HomeControllerUnitTest {
 	@Autowired
 	MockMvc mvc;
 
+	// @MockBean
+	// PostService postService;
+
 	@MockBean
-	PostService postService;
+	PostInfoService postInfoService;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -58,7 +60,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
@@ -85,7 +87,7 @@ class HomeControllerUnitTest {
 		paramMap.add("choice", "NEW");
 		paramMap.add("size", "20");
 		paramMap.add("cursorPostId", "10");
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		mvc.perform((get("/home").queryParams(paramMap)))
 			.andExpect(status().isOk())
@@ -106,7 +108,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		// when & then
 		mvc.perform((get("/home").param("choice", "NEW")))
@@ -128,7 +130,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		// when & then
 		mvc.perform((get("/home").param("choice", "NEW")))
@@ -150,7 +152,7 @@ class HomeControllerUnitTest {
 		apiResponse.setMessage(exception.getMessage());
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
@@ -167,14 +169,12 @@ class HomeControllerUnitTest {
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void likedPostApiTest() throws Exception {
 		//given
-		List<HomePostResponse> likedPostResponses = createLikedPostResponses();
-		PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Page<HomePostResponse> pagedLikedPostResponses = new PageImpl<>(likedPostResponses, pageRequest, 20);
-		ApiResponse<Page<HomePostResponse>> apiResponse = ApiResponse.successResponse(pagedLikedPostResponses,
+		PostSummaryResponse postSummaryResponse = new PostSummaryResponse(100L, createSlicePostResponses(true));
+		ApiResponse<PostSummaryResponse> apiResponse = ApiResponse.successResponse(postSummaryResponse,
 			"좋아요 체크한 게시물 조회", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postService.findLikedPost(anyString(), eq(0))).thenReturn(pagedLikedPostResponses);
+		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/posts/like"))
@@ -183,9 +183,31 @@ class HomeControllerUnitTest {
 			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data.content").isArray())
+			.andExpect(jsonPath("$.data.postSummaryList.last").value(false))
 			.andDo(print());
+	}
 
+	@DisplayName("좋아요한 게시물 조회 API 예외 - 조회할 좋아요한 게시물이 없을 때")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void likedPostApiException() throws Exception {
+		//given
+		CustomException customException = new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+		ApiResponse<?> apiResponse = ApiResponse.of(customException.getErrorCode());
+		apiResponse.setMessage(customException.getMessage());
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenThrow(customException);
+
+		//when & then
+		mvc.perform(get("/posts/like"))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(content().json(jsonResponse))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andExpect(jsonPath("$.data").doesNotExist())
+			.andDo(print());
 	}
 
 	private List<HomePostResponse> createLikedPostResponses() {

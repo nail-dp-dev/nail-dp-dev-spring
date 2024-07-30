@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.Archive;
@@ -24,12 +25,14 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.UsersProfileRepository;
 
 class UserInfoServiceTest {
 	@Mock
@@ -44,6 +47,8 @@ class UserInfoServiceTest {
 	private FollowRepository followRepository;
 	@InjectMocks
 	private UserInfoService userInfoService;
+	@Mock
+	private UsersProfileRepository usersProfileRepository;
 
 	private User user1;
 	private User user2;
@@ -58,12 +63,26 @@ class UserInfoServiceTest {
 
 	private int followerCount;
 
+	private UsersProfile userProfile1;
+	private UsersProfile userProfile2;
+
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
 
 		user1 = new User("alswl", "010-1234-5678", 1000L, UserRole.USER);
-		profile1 = new Profile(user1, "alswl.profileUrl.jpg", "name", true);
+		profile1 = Profile.builder()
+			.profileType(ProfileType.CUSTOMIZATION)
+			.name("name")
+			.profileUrl("alswl.profileUrl.jpg")
+			.thumbnail(true)
+			.build();
+
+		userProfile1 = UsersProfile.builder()
+			.user(user1)
+			.profile(profile1)
+			.build();
+
 		post1 = new Post(user1, "alswl postContent", 0L, Boundary.ALL, false);
 
 		user2 = new User("jw", "010-9876-5432", 0L, UserRole.USER);
@@ -84,7 +103,8 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
-		given(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1)).willReturn(Optional.of(profile1));
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
+			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -111,7 +131,8 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
-		given(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1)).willReturn(Optional.of(profile1));
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
+			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -136,7 +157,8 @@ class UserInfoServiceTest {
 			List.of(archivePost1, archivePost2));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
 			List.of(user2.getNickname(), "user3"));
-		given(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1)).willReturn(Optional.of(profile1));
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
+			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -158,7 +180,8 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(List.of(user2.getNickname()));
-		given(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1)).willReturn(Optional.of(profile1));
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
+			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -184,7 +207,8 @@ class UserInfoServiceTest {
 	void testGetUserInfo_NoProfileThumbnail() {
 		// Given
 		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(profileRepository.findProfileUrlByThumbnailIsTrueAndUser(user1)).willReturn(Optional.empty());
+		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
+			Optional.empty());
 
 		// Then
 		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("alswl"));

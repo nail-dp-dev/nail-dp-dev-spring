@@ -37,4 +37,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 	@Query("select p from Post p join fetch p.user u where p.id = :id and p.tempSave = false")
 	Optional<Post> findPostAndWriterById(@Param("id") Long postId);
+
+	Optional<Post> findPostByTempSaveIsTrueAndUser(User user);
+
 }

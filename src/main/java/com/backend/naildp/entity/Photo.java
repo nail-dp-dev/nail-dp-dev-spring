@@ -1,5 +1,7 @@
 package com.backend.naildp.entity;
 
+import com.backend.naildp.dto.post.FileRequestDto;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,7 +31,11 @@ public class Photo {
 	@Column(nullable = false)
 	private String photoUrl;
 
+	@Column(nullable = false)
 	private String name;
+
+	@Column(nullable = false)
+	private Long size;
 
 	public Photo(Post post, String photoUrl, String name) {
 		this.post = post;
@@ -37,8 +43,10 @@ public class Photo {
 		this.name = name;
 	}
 
-	public Photo(Post post, String photoUrl) {
+	public Photo(Post post, FileRequestDto fileRequestDto) {
 		this.post = post;
-		this.photoUrl = photoUrl;
+		this.photoUrl = fileRequestDto.getFileUrl();
+		this.name = fileRequestDto.getFileName();
+		this.size = fileRequestDto.getFileSize();
 	}
 }
