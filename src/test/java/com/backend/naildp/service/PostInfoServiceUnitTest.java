@@ -38,7 +38,7 @@ import com.backend.naildp.repository.PostRepository;
 
 @ExtendWith(MockitoExtension.class)
 @Import(JpaAuditingConfiguration.class)
-class PostServiceUnitTest {
+class PostInfoServiceUnitTest {
 
 	@InjectMocks
 	PostInfoService postInfoService;
