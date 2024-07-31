@@ -41,9 +41,6 @@ class HomeControllerUnitTest {
 	@Autowired
 	MockMvc mvc;
 
-	// @MockBean
-	// PostService postService;
-
 	@MockBean
 	PostInfoService postInfoService;
 
@@ -143,16 +140,15 @@ class HomeControllerUnitTest {
 			.andDo(print());
 	}
 
-	@DisplayName("최신 게시글 조회 API 예외 테스트 - 게시글이 존재하지 않을때 4005 예외 발생")
+	@DisplayName("최신 게시글 조회 API 테스트 - 게시글이 존재하지 않을때")
 	@Test
 	void newPostsApiExceptionTest() throws Exception {
 		//given
-		CustomException exception = new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-		ApiResponse<?> apiResponse = ApiResponse.of(exception.getErrorCode());
-		apiResponse.setMessage(exception.getMessage());
+		PostSummaryResponse postSummaryResponse = PostSummaryResponse.createEmptyResponse();
+		ApiResponse<?> apiResponse = ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenThrow(exception);
+		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		//when & then
 		mvc.perform(get("/home").param("choice", "NEW"))
