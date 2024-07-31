@@ -16,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
@@ -98,9 +99,12 @@ class ArchivePostRepositoryTest {
 
 		for (int i = 0; i < postCnt; i++) {
 			Post post = new Post(user, "" + i, 0L, Boundary.ALL, false);
-			Photo photo1 = new Photo(post, "thumbnailUrl-" + user.getNickname() + i,
-				"thumbnailName-" + user.getNickname() + i);
-			Photo photo2 = new Photo(post, "subUrl-" + user.getNickname() + i, "subName" + user.getNickname() + i);
+			FileRequestDto thumbnailFileRequestDto = new FileRequestDto("thumbnailName-" + user.getNickname() + i, 1L,
+				"thumbnailUrl-" + user.getNickname() + i);
+			FileRequestDto subPhotoFileRequestDto = new FileRequestDto("subName" + user.getNickname() + i, 1L,
+				"subUrl-" + user.getNickname() + i);
+			Photo photo1 = new Photo(post, thumbnailFileRequestDto);
+			Photo photo2 = new Photo(post,  subPhotoFileRequestDto);
 			post.addPhoto(photo1);
 			post.addPhoto(photo2);
 			posts.add(post);

@@ -22,6 +22,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -197,8 +198,10 @@ class PostRepositoryTest {
 
 	private void createTestTempSavePostAndPhoto(User user) {
 		Post post = new Post(user, "임시저장 게시물 - " + user.getNickname(), 0L, Boundary.ALL, true);
-		Photo photo1 = new Photo(post, "임시저장 url 1", "임시저장 photo 1-");
-		Photo photo2 = new Photo(post, "임시저장 url 2", "임시저장 photo 2-");
+		FileRequestDto fileRequestDto1 = new FileRequestDto("임시저장 photo 1-", 1L, "임시저장 url 1");
+		FileRequestDto fileRequestDto2 = new FileRequestDto("임시저장 photo 2-", 1L, "임시저장 url 2");
+		Photo photo1 = new Photo(post, fileRequestDto1);
+		Photo photo2 = new Photo(post, fileRequestDto2);
 		post.addPhoto(photo1);
 		post.addPhoto(photo2);
 		posts.add(post);
@@ -209,8 +212,10 @@ class PostRepositoryTest {
 	private void createTestPostWithPhoto(int postCnt, User user, Boundary boundary) {
 		for (int i = 0; i < postCnt; i++) {
 			Post post = new Post(user, "" + i, 0L, boundary, false);
-			Photo photo1 = new Photo(post, "url 1-" + user.getNickname() + i, "photo 1-" + user.getNickname() + i);
-			Photo photo2 = new Photo(post, "url 2-" + user.getNickname() + i, "photo 2-" + user.getNickname() + i);
+			FileRequestDto fileRequestDto1 = new FileRequestDto("photo 1-" + user.getNickname() + i, 1L, "url 1-" + user.getNickname() + i);
+			FileRequestDto fileRequestDto2 = new FileRequestDto("photo 2-" + user.getNickname() + i, 1L, "url 2-" + user.getNickname() + i);
+			Photo photo1 = new Photo(post, fileRequestDto1);
+			Photo photo2 = new Photo(post, fileRequestDto2);
 			post.addPhoto(photo1);
 			post.addPhoto(photo2);
 			posts.add(post);

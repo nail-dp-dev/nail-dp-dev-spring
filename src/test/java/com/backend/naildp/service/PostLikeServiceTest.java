@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
@@ -125,8 +126,9 @@ class PostLikeServiceTest {
 	private void createTestPostAndPhoto(User writer, int postCnt) {
 		List<Post> postList = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
+			FileRequestDto fileRequestDto = new FileRequestDto("thumbnailPhoto" + i, 1L, "thumbnailURL" + i);
 			Post post = new Post(writer, "content" + i, 0L, Boundary.ALL, false);
-			Photo photo = new Photo(post, "thumbnailURL" + i, "thumbnailPhoto" + i);
+			Photo photo = new Photo(post, fileRequestDto);
 			post.addPhoto(photo);
 
 			em.persist(photo);

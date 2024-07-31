@@ -15,8 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.auditing.AuditingHandler;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -32,6 +30,7 @@ import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
@@ -42,7 +41,7 @@ import com.backend.naildp.repository.PostRepository;
 class PostServiceUnitTest {
 
 	@InjectMocks
-	PostService postService;
+	PostInfoService postInfoService;
 
 	@Mock
 	PostRepository postRepository;
@@ -84,7 +83,7 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
 
 		//when
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE,
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE,
 			cursorPostId, NICKNAME);
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 
@@ -122,7 +121,7 @@ class PostServiceUnitTest {
 		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
 
 		//when
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
 		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
 
 		//then
@@ -154,7 +153,7 @@ class PostServiceUnitTest {
 			.thenReturn(recentPosts);
 
 		//when & then
-		assertThatThrownBy(() -> postService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME))
+		assertThatThrownBy(() -> postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME))
 			.isInstanceOf(CustomException.class)
 			.hasMessage("게시물이 없습니다.");
 
@@ -171,28 +170,48 @@ class PostServiceUnitTest {
 		String nickname = "mj";
 		int postCnt = 20;
 		int pageSize = 20;
-		PageRequest pageRequest = createPageRequest(0, pageSize, "createdDate");
+		PageRequest pageRequest = createPageRequest(0, pageSize, "id");
 
+		List<User> followingUsers = new ArrayList<>();
 		List<PostLike> postLikes = createPostLikes(postCnt);
-		PageImpl<PostLike> pagedPostLikes = new PageImpl<>(postLikes, pageRequest, pageSize);
-		Page<Post> pagedPosts = pagedPostLikes.map(PostLike::getPost);
-		List<ArchivePost> archivePosts = savePostsInArchive(pagedPosts);
+		Slice<PostLike> postLikeSlice = (SliceImpl<PostLike>)new SliceImpl<>(postLikes, pageRequest, false);
+		List<ArchivePost> archivePosts = savePostsInArchive(postLikeSlice.map(PostLike::getPost));
 
-		when(postLikeRepository.findPagedPostLikesByBoundaryOpened(any(PageRequest.class), anyString(),
-			any(Boundary.class))).thenReturn(pagedPostLikes);
-		when(archivePostRepository.findAllByArchiveUserNickname(nickname)).thenReturn(archivePosts);
+		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
+		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class)))
+			.thenReturn(postLikeSlice);
+		when(archivePostRepository.findAllByArchiveUserNickname(eq(nickname))).thenReturn(archivePosts);
 
 		//when
-		Page<HomePostResponse> likedPostResponses = postService.findLikedPost(nickname, 0);
-		Page<Boolean> savedList = likedPostResponses.map(HomePostResponse::getSaved);
-		Page<Boolean> likedList = likedPostResponses.map(HomePostResponse::getLike);
+		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
-		verify(postLikeRepository).findPagedPostLikesByBoundaryOpened(any(PageRequest.class), anyString(),
-			any(Boundary.class));
-		verify(archivePostRepository).findAllByArchiveUserNickname(nickname);
-		assertThat(savedList.getTotalElements()).isEqualTo(20);
-		assertThat(likedList.getTotalElements()).isEqualTo(20);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList).extracting("like").containsOnly(true);
+
+		verify(postLikeRepository).findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class));
+		verify(postLikeRepository, never()).findPostLikesByIdAndFollowing(anyString(), anyLong(), anyList(),
+			any(PageRequest.class));
+	}
+
+	@DisplayName("좋아요한 게시글 조회 예외 - 좋아요때게시글이 없을 때")
+	@Test
+	void noLikedPostsException() {
+		//given
+		String nickname = "mj";
+		int pageSize = 20;
+		PageRequest pageRequest = createPageRequest(0, pageSize, "id");
+		List<User> followingUsers = new ArrayList<>();
+
+		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
+		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class)))
+			.thenThrow(new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED));
+
+		//when & then
+		assertThatThrownBy(() -> postInfoService.findLikedPost(nickname, pageSize, -1L))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("좋아요한 게시물이 없습니다.");
 	}
 
 	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트")
@@ -209,7 +228,7 @@ class PostServiceUnitTest {
 			.thenReturn(pagedPost);
 
 		//when
-		PostSummaryResponse postSummaryResponse = postService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
+		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
 
 		//then
 		verify(postRepository).findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
@@ -220,6 +239,26 @@ class PostServiceUnitTest {
 				any(PageRequest.class));
 		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
+	}
+
+	@DisplayName("익명 사용자 - 최신 게시글 조회 예외 테스트")
+	@Test
+	void recentPostsExceptionByAnonymousUser() {
+		//given
+		long cursorId = -1L;
+		String nickname = "";
+		List<Post> posts = createTestPosts(0);
+		PageRequest pageRequest = createPageRequest(0, PAGE_SIZE, "id");
+		Slice<Post> postSlice = new SliceImpl<>(posts, pageRequest, false);
+
+		when(postRepository.findPostsByBoundaryAndTempSaveFalse(eq(Boundary.ALL), eq(pageRequest)))
+			.thenReturn(postSlice);
+
+		//when & then
+		assertThatThrownBy(() -> postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("최신 게시물이 없습니다.")
+			.extracting("errorCode").isEqualTo(ErrorCode.FILES_NOT_REGISTERED);
 	}
 
 	private List<Post> createTestPosts(int postCnt) {
