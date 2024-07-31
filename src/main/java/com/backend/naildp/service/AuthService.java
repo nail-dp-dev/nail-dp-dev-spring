@@ -67,7 +67,7 @@ public class AuthService {
 				.profileUrl(userInfo.getProfileUrl())
 				.name(userInfo.getProfileUrl())
 				.thumbnail(true)
-				.profileType(ProfileType.CUSTOMIZATION)
+				.profileType(ProfileType.AUTO)
 				.build();
 
 			UsersProfile usersProfile = UsersProfile.builder()

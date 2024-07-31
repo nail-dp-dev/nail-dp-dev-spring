@@ -72,7 +72,7 @@ public class UserInfoController {
 
 		userInfoService.changeProfile(userDetails.getUser().getNickname(), profileRequestDto);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "프로필 이미지 변경 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "프로필 이미지 변경 성공", 2001));
 	}
 
 }
