@@ -12,7 +12,7 @@ import com.backend.naildp.entity.Profile;
 
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
 
-	@Query("select p.profileUrl from Profile p where p.thumbnail = false and p.profileType = :type")
+	@Query("select p.profileUrl from Profile p where p.profileType = :type")
 	List<String> findProfileUrlsByType(@Param("type") ProfileType profileType);
 
 	Optional<Profile> findProfileByProfileUrl(String profileUrl);
