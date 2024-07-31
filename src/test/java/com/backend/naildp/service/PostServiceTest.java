@@ -94,7 +94,7 @@ public class PostServiceTest {
 
 		//when
 		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L, nickname);
-		Long oldestPostId = firstPostSummaryResponse.getOldestPostId();
+		Long oldestPostId = firstPostSummaryResponse.getCursorId();
 		System.out.println("oldestPostId = " + oldestPostId);
 		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize, oldestPostId,
 			nickname);

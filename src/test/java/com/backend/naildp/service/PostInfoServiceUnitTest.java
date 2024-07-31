@@ -157,7 +157,7 @@ class PostInfoServiceUnitTest {
 		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
-		assertThat(response).extracting(PostSummaryResponse::getOldestPostId).isEqualTo(-1L);
+		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
 		assertThat(postSummaryList).hasSize(0);
 		assertThat(postSummaryList.hasNext()).isFalse();
 		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
@@ -264,7 +264,7 @@ class PostInfoServiceUnitTest {
 		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
 
 		//then
-		assertThat(response).extracting(PostSummaryResponse::getOldestPostId).isEqualTo(-1L);
+		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
 		assertThat(postSummaryList).hasSize(0);
 		assertThat(postSummaryList.hasNext()).isFalse();
 		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
