@@ -186,14 +186,14 @@ class HomeControllerUnitTest {
 	@DisplayName("좋아요한 게시물 조회 API 예외 - 조회할 좋아요한 게시물이 없을 때")
 	@Test
 	@WithMockUser(username = "testUser", roles = {"USER"})
-	void likedPostApiException() throws Exception {
+	void zeroLikedPostApiTest() throws Exception {
 		//given
-		CustomException customException = new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-		ApiResponse<?> apiResponse = ApiResponse.of(customException.getErrorCode());
-		apiResponse.setMessage(customException.getMessage());
+		PostSummaryResponse emptyResponse = PostSummaryResponse.createEmptyResponse();
+		ApiResponse<PostSummaryResponse> apiResponse = ApiResponse.successResponse(emptyResponse, "좋아요 체크한 게시물 조회",
+			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenThrow(customException);
+		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(emptyResponse);
 
 		//when & then
 		mvc.perform(get("/posts/like"))
@@ -202,17 +202,7 @@ class HomeControllerUnitTest {
 			.andExpect(content().json(jsonResponse))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data").doesNotExist())
 			.andDo(print());
-	}
-
-	private List<HomePostResponse> createLikedPostResponses() {
-		List<HomePostResponse> likedPostResponses = new ArrayList<>();
-		for (long i = 1; i <= 20; i++) {
-			HomePostResponse likedPostResponse = createHomePostResponse(i);
-			likedPostResponses.add(likedPostResponse);
-		}
-		return likedPostResponses;
 	}
 
 	private Slice<HomePostResponse> createSlicePostResponses(boolean hasNext) {

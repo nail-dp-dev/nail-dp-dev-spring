@@ -75,7 +75,7 @@ public class PostInfoService {
 
 		if (likedPosts.isEmpty()) {
 			log.info("좋아요한 게시물이 없다.");
-			throw new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+			return PostSummaryResponse.createEmptyResponse();
 		}
 
 		// 게시글 저장 여부 체크

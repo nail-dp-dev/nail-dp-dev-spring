@@ -202,21 +202,29 @@ class PostInfoServiceUnitTest {
 
 	@DisplayName("좋아요한 게시글 조회 예외 - 좋아요때게시글이 없을 때")
 	@Test
-	void noLikedPostsException() {
+	void noLikedPostsTest() {
 		//given
 		String nickname = "mj";
-		int pageSize = 20;
-		PageRequest pageRequest = createPageRequest(0, pageSize, "id");
+
 		List<User> followingUsers = new ArrayList<>();
 
-		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
-		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class)))
-			.thenThrow(new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED));
+		int pageSize = 20;
+		PageRequest pageRequest = createPageRequest(0, pageSize, "createdDate");
+		Slice<PostLike> postLikeSlice = new SliceImpl<>(new ArrayList<>(), pageRequest, false);
 
-		//when & then
-		assertThatThrownBy(() -> postInfoService.findLikedPost(nickname, pageSize, -1L))
-			.isInstanceOf(CustomException.class)
-			.hasMessage("좋아요한 게시물이 없습니다.");
+		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
+		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), eq(pageRequest)))
+			.thenReturn(postLikeSlice);
+
+		//when
+		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+
+		//then
+		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
+		assertThat(postSummaryList).hasSize(0);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
 	}
 
 	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트")
