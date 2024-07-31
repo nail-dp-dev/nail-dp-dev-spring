@@ -44,12 +44,8 @@ public class PostInfoService {
 			log.info("익명사용자 응답");
 			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
 
-			if (recentPosts.isEmpty()) {
-				log.info("게시물이 존재하지 않으므로 예외 응답");
-				throw new CustomException("최신 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
-			}
-
-			return PostSummaryResponse.createForAnonymous(recentPosts);
+			return recentPosts.isEmpty() ? PostSummaryResponse.createEmptyResponse() :
+				PostSummaryResponse.createForAnonymous(recentPosts);
 		}
 
 		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
@@ -57,7 +53,7 @@ public class PostInfoService {
 
 		if (recentPosts.isEmpty()) {
 			log.info("최신 게시물이 없습니다.");
-			throw new CustomException("게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED);
+			return PostSummaryResponse.createEmptyResponse();
 		}
 
 		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
