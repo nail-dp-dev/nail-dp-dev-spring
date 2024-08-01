@@ -4,35 +4,32 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
-import com.backend.naildp.dto.home.HomePostResponse;
-import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Archive;
-import com.backend.naildp.entity.ArchivePost;
+import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
+import com.backend.naildp.entity.Tag;
+import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
@@ -42,195 +39,155 @@ import jakarta.persistence.EntityManager;
 public class PostServiceTest {
 
 	@Autowired
-	PostInfoService postInfoService;
-	@Autowired
-	UserRepository userRepository;
-	@Autowired
-	SocialLoginRepository socialLoginRepository;
+	PostService postService;
 	@Autowired
 	PostRepository postRepository;
 	@Autowired
-	PostLikeRepository postLikeRepository;
-	@Autowired
-	ArchivePostRepository archivePostRepository;
+	UserRepository userRepository;
 	@Autowired
 	FollowRepository followRepository;
 	@Autowired
 	EntityManager em;
 
-	private static final int POST_CNT = 30;
-
 	@BeforeEach
 	void setup() {
-		System.out.println("======= BeforeEach 시작 ======");
-
-		User testUser = createTestMember("testUser@naver.com", "testUser", "0100000", 1L);
+		User user = createTestMember("user@naver.com", "user", "0100000", 1L);
 		User writer = createTestMember("writer@naver.com", "writer", "0101111", 2L);
 
-		followRepository.save(new Follow(testUser, writer));
+		createPostByCntAndBoundary(writer, 10, Boundary.ALL);
 
-		Archive archive = createTestArchive(testUser, "publicArchive", Boundary.ALL);
-
-		List<Post> postsToPublic = createTestPostAndPhoto(writer, POST_CNT, Boundary.ALL);
-		List<Post> postsToFollow = createTestPostAndPhoto(writer, POST_CNT, Boundary.FOLLOW);
-		List<Post> postsToNone = createTestPostAndPhoto(writer, POST_CNT, Boundary.NONE);
-
-		savePostsInArchive(archive, postsToPublic);
-		savePostsInArchive(archive, postsToFollow);
-		savePostsInArchive(archive, postsToNone);
-
-		LikeAllPosts(testUser, writer);
-		System.out.println("======= BeforeEach 끝 ======");
+		em.flush();
+		em.clear();
 	}
 
-	@DisplayName("최신 게시글 조회 메서드 연속 호출 테스트")
+	@DisplayName("특정 게시물 상세 조회 테스트")
 	@Test
-	void callNewPostsTwice() {
+	void postInfoTest() {
 		//given
-		int firstCallPageSize = 30;
-		int secondCallPageSize = 40;
-
-		String nickname = "testUser";
-
-		//when
-		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L, nickname);
-		Long oldestPostId = firstPostSummaryResponse.getCursorId();
-		System.out.println("oldestPostId = " + oldestPostId);
-		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize, oldestPostId,
-			nickname);
-
-		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
-		Slice<HomePostResponse> secondSummaryList = secondPostSummaryResponse.getPostSummaryList();
-
-		//then
-		assertThat(firstSummaryList.hasNext()).isTrue();
-		assertThat(firstSummaryList.getSize()).isEqualTo(firstCallPageSize);
-		assertThat(firstSummaryList.getNumberOfElements()).isEqualTo(firstCallPageSize);
-
-		assertThat(secondSummaryList.hasNext()).isFalse();
-		assertThat(secondSummaryList.getSize()).isEqualTo(secondCallPageSize);
-		assertThat(secondSummaryList.getNumberOfElements()).isEqualTo(60 - firstCallPageSize);
-	}
-
-	@DisplayName("최신 게시물 불러오기 테스트")
-	@Test
-	void findNewPosts() {
-		//given
-		String nickname = "testUser";
-		int postCnt = 60;
-		int pageNumber = 0;
-		int pageSize = 20;
-		long cursorPostId = -1L;
-		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
-
-		//when
-		System.out.println("첫 페이지");
-		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", pageSize, cursorPostId, nickname);
-		Slice<HomePostResponse> responses = postSummaryResponse.getPostSummaryList();
-
-		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
-		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
-
-		//then
-		assertThat(responses.getSize()).isEqualTo(pageSize);
-		assertThat(responses.getNumber()).isEqualTo(pageNumber);
-		assertThat(responses.hasNext()).isTrue();
-
-		assertThat(savedList).containsOnly(true);
-		assertThat(savedList).hasSize(pageSize);
-
-		assertThat(likedList).contains(true);
-		assertThat(likedList).hasSize(pageSize);
-	}
-
-	@DisplayName("좋아요한 게시물 불러오기 테스트")
-	@Test
-	void findLikedPosts() {
-		//given
-		String nickname = "testUser";
-		int pageSize = 60;
-
-		//when
-		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
-		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
-
-		//then
-		assertThat(postSummaryList.hasNext()).isFalse();
-		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(pageSize);
-		assertThat(postSummaryList).extracting("like").containsOnly(true);
-	}
-
-	@Test
-	void test() {
-		//given
-		String nickname = "writer";
-		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
-			.setParameter("nickname", nickname)
+		String userNickname = "writer";
+		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
+			.setParameter("nickname", userNickname)
+			.setMaxResults(1)
 			.getSingleResult();
-		// PostRequestDto postRequestDto = new PostRequestDto("testContent", false, Boundary.ALL, new ArrayList<>());
-		// postService.uploadPost(nickname, postRequestDto, new ArrayList<>());
-		// Post post = em.createQuery("select p from Post p where p.postContent = 'testContent'", Post.class)
-		// 	.getSingleResult();
-		// for (int i = 1; i <= 10; i++) {
-		// 	em.persist(new Comment(user, post, "comment"));
-		// }
+
+		//when
+		PostInfoResponse postInfoResponse = postService.postInfo(userNickname, post.getId());
+
+		//then
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(userNickname);
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(userNickname + "Url");
+	}
+
+	@DisplayName("팔로우한 유저의 게시물 상세 조회 테스트")
+	@Test
+	void posInfoWithFollow() {
+		//given
+		User user = userRepository.findByNickname("user").orElseThrow();
+		User writer = userRepository.findByNickname("writer").orElseThrow();
+		em.persist(new Follow(user, writer));
+		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
+			.setParameter("nickname", writer.getNickname())
+			.setMaxResults(1)
+			.getSingleResult();
+
+		//when
+		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), post.getId());
+
+		//then
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(writer.getNickname());
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(writer.getNickname() + "Url");
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getFollowerCount).isEqualTo(1L);
+		assertThat(postInfoResponse.isFollowingStatus()).isTrue();
+	}
+
+	@DisplayName("좋아요한 게시물 상세 조회 테스트")
+	@Test
+	void postInfoWithLikeTest() {
+		//given
+		String writerNickname = "writer";
+		User user = userRepository.findByNickname("user").orElseThrow();
+		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
+			.setParameter("nickname", writerNickname)
+			.setMaxResults(1)
+			.getSingleResult();
+		em.persist(new PostLike(user, post));
+
 		em.flush();
 		em.clear();
 
 		//when
+		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), post.getId());
 
 		//then
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(writerNickname);
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(writerNickname + "Url");
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getLikeCount).isEqualTo(1L);
 	}
+
+
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
+		em.persist(user);
+
+		addSocialLoginInfo(email, socialId, user);
+		addProfile(user);
+
+		return user;
+	}
+
+	private void addProfile(User user) {
+		Profile profile = Profile.builder()
+			.name(user.getNickname() + "Profile")
+			.profileUrl(user.getNickname() + "Url")
+			.thumbnail(true)
+			.profileType(ProfileType.BASIC)
+			.build();
+		UsersProfile usersProfile = UsersProfile.builder().profile(profile).user(user).build();
+
+		em.persist(profile);
+		em.persist(usersProfile);
+	}
+
+	private void addSocialLoginInfo(String email, Long socialId, User user) {
 		SocialLogin socialLogin = new SocialLogin(socialId, "kakao", email, user);
-		User savedUser = userRepository.save(user);
-		socialLoginRepository.save(socialLogin);
-		return savedUser;
+
+		em.persist(socialLogin);
 	}
 
-	private Archive createTestArchive(User testUser, String archiveName, Boundary boundary) {
-		Archive archive = new Archive(testUser, archiveName, boundary);
-		em.persist(archive);
-		return archive;
-	}
-
-	private List<Post> createTestPostAndPhoto(User writer, int postCnt, Boundary boundary) {
+	private List<Post> createPostByCntAndBoundary(User writer, int postCnt, Boundary boundary) {
 		List<Post> postList = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
-			Post post = new Post(writer, "content" + i, 0L, boundary, false);
-			FileRequestDto thumbnailFileRequestDto =
-				new FileRequestDto("thumbnailPhoto" + i, 1L, "thumbnailUrl" + i);
-			FileRequestDto subPhotoFileRequestDto =
-				new FileRequestDto("subPhoto" + i, 1L, "subPhotoUrl" + i);
-
-			Photo thumbnailPhoto = new Photo(post, thumbnailFileRequestDto);
-			Photo subPhoto = new Photo(post, subPhotoFileRequestDto);
-
-			post.addPhoto(thumbnailPhoto);
-			post.addPhoto(subPhoto);
-
-			em.persist(thumbnailPhoto);
-			em.persist(subPhoto);
+			Post post = new Post(writer, "content", 0L, boundary, false);
 			postList.add(post);
+
+			FileRequestDto thumbnailFileRequestDto =
+				new FileRequestDto("thumbnailPhoto.jpg", 1L, "thumbnailUrl");
+			FileRequestDto subPhotoFileRequestDto =
+				new FileRequestDto("subPhoto.jpg", 1L, "subPhotoUrl");
+
+			addPhotoInPost(post, thumbnailFileRequestDto);
+			addPhotoInPost(post, subPhotoFileRequestDto);
+
+			createTagByPost(i, post);
 		}
 		return postRepository.saveAllAndFlush(postList);
 	}
 
-	private void LikeAllPosts(User user, User writer) {
-		List<Post> posts = em.createQuery("select p from Post p where p.user = :user", Post.class)
-			.setParameter("user", writer)
-			.getResultList();
-		List<PostLike> postLikes = posts.stream().map(post -> new PostLike(user, post)).collect(Collectors.toList());
-		postLikeRepository.saveAllAndFlush(postLikes);
+	private void addPhotoInPost(Post post, FileRequestDto fileRequestDto) {
+		Photo thumbnailPhoto = new Photo(post, fileRequestDto);
+		post.addPhoto(thumbnailPhoto);
+		em.persist(thumbnailPhoto);
 	}
 
-	private void savePostsInArchive(Archive archive, List<Post> posts) {
-		List<ArchivePost> archivePosts = posts.stream()
-			.map(post -> new ArchivePost(archive, post))
-			.collect(Collectors.toList());
-		archivePostRepository.saveAllAndFlush(archivePosts);
+	private void createTagByPost(int i, Post post) {
+		Tag tag = new Tag("tag" + i);
+		TagPost tagPost = new TagPost(tag, post);
+
+		post.addTagPost(tagPost);
+
+		em.persist(tag);
+		em.persist(tagPost);
 	}
 }

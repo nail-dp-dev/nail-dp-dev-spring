@@ -41,9 +41,11 @@ public class PostInfoResponse {
 			.nickname(user.getNickname())
 			.profileUrl(profileUrl)
 			.followingStatus(followingStatus)
+			.followerCount(followerCount)
 			.postContent(post.getPostContent())
 			.likeCount(post.getPostLikes().size())
 			.commentCount(post.getComments().size())
+			.sharedCount(post.getSharing())
 			.tags(tags.stream().map(Tag::getName).collect(Collectors.toList()))
 			.files(fileInfoResponses)
 			.build();
