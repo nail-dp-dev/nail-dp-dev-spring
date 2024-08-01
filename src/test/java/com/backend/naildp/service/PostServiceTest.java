@@ -110,10 +110,9 @@ public class PostServiceTest {
 			.setParameter("nickname", writerNickname)
 			.setMaxResults(1)
 			.getSingleResult();
-		em.persist(new PostLike(user, post));
-
-		em.flush();
-		em.clear();
+		PostLike postLike = new PostLike(user, post);
+		post.addPostLike(postLike);
+		em.persist(postLike);
 
 		//when
 		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), post.getId());

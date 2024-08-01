@@ -92,4 +92,8 @@ public class Post extends BaseEntity {
 		this.tagPosts.add(tagPost);
 	}
 
+	public void addPostLike(PostLike postLike) {
+		this.postLikes.add(postLike);
+	}
+
 }
