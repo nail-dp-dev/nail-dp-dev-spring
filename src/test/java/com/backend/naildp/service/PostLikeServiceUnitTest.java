@@ -63,6 +63,31 @@ class PostLikeServiceUnitTest {
 		verify(postLikeRepository, times(1)).save(any(PostLike.class));
 	}
 
+	@Test
+	@DisplayName("이미 게시물을 좋아요 했을 때 게시물 좋아요 요청시 저장된 PostLike 반환")
+	void saveAlreadyLikedPost() {
+		//given
+		Long postId = 1L;
+		String nickname = "nickname";
+		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, "phoneNumber", true);
+		User user = new User(loginRequestDto, UserRole.USER);
+		Post post = new Post(user, "content", 0L, Boundary.ALL, false);
+		PostLike postLike = new PostLike(user, post);
+
+		given(userRepository.findUserByNickname(anyString())).willReturn(Optional.of(user));
+		given(postRepository.findById(anyLong())).willReturn(Optional.of(post));
+		given(postLikeRepository.findPostLikeByUserNicknameAndPostId(eq(nickname), eq(postId)))
+			.willReturn(Optional.of(postLike));
+
+		//when
+		postLikeService.likeByPostId(postId, nickname);
+
+		//then
+		verify(userRepository).findUserByNickname(nickname);
+		verify(postRepository).findById(postId);
+		verify(postLikeRepository, never()).save(any(PostLike.class));
+	}
+
 	@DisplayName("게시물 좋아요 취소 테스트")
 	@Test
 	void cancelPostLikeByPostId() {
