@@ -54,7 +54,12 @@ public class AuthService {
 		if (findUser.isPresent()) {
 			throw new CustomException("이미 존재하는 사용자입니다.", ErrorCode.ALREADY_EXIST);
 		}
-		User user = new User(loginRequestDto, UserRole.USER);
+		User user = User.builder()
+			.nickname(loginRequestDto.getNickname())
+			.phoneNumber(loginRequestDto.getPhoneNumber())
+			.agreement(loginRequestDto.isAgreement())
+			.role(UserRole.USER)
+			.build();
 
 		userRepository.save(user);
 
