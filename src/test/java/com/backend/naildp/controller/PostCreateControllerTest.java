@@ -30,6 +30,9 @@ import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.PostService;
 
@@ -250,6 +253,25 @@ public class PostCreateControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("특정 게시물 상세정보 조회"))
 			.andExpect(jsonPath("$.code").value(2000))
+			.andDo(print());
+	}
+
+	@DisplayName("특정 게시글 조회 API 예외 - 게시물 접근 권한이 없을 때")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void readPostDetailsException() throws Exception {
+		//given
+		CustomException exception = new CustomException("게시물을 읽을 수 없습니다.", ErrorCode.NOT_FOUND);
+
+		//when
+		when(postService.postInfo(anyString(), anyLong())).thenThrow(exception);
+
+		//then
+		mockMvc.perform(get("/posts/{postId}", 1L)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value(exception.getMessage()))
+			.andExpect(jsonPath("$.code").value(exception.getErrorCode().getErrorCode()))
 			.andDo(print());
 	}
 
