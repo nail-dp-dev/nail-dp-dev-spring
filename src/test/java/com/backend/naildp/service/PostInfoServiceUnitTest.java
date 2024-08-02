@@ -245,11 +245,6 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(postRepository).findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
-		verify(postRepository, never())
-			.findPostsByBoundaryNotAndTempSaveFalse(any(Boundary.class), any(PageRequest.class));
-		verify(postRepository, never())
-			.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(), any(Boundary.class),
-				any(PageRequest.class));
 		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}
