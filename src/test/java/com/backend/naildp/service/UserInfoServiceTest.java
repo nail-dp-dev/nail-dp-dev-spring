@@ -78,6 +78,14 @@ class UserInfoServiceTest {
 		MockitoAnnotations.openMocks(this);
 
 		user1 = new User("alswl", "010-1234-5678", 1000L, UserRole.USER);
+		user1 = User.builder()
+			.nickname("alswl")
+			.agreement(true)
+			.thumbnailUrl("alswl.profileUrl.jpg")
+			.point(1000L)
+			.phoneNumber("010-1234-5678")
+			.role(UserRole.USER)
+			.build();
 		profile1 = Profile.builder()
 			.profileType(ProfileType.CUSTOMIZATION)
 			.name("name")
@@ -207,18 +215,6 @@ class UserInfoServiceTest {
 
 		// Then
 		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("user1"));
-	}
-
-	@Test
-	@DisplayName("사용자 정보 조회 - 설정된 프로필 썸네일이 없을 때 예외 발생")
-	void testGetUserInfo_NoProfileThumbnail() {
-		// Given
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.empty());
-
-		// Then
-		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("alswl"));
 	}
 
 	@Test

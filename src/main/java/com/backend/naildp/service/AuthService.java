@@ -77,6 +77,7 @@ public class AuthService {
 
 			profileRepository.save(profile);
 			usersProfileRepository.save(usersProfile);
+			user.thumbnailUrlUpdate(userInfo.getProfileUrl());
 		}
 
 		cookieUtil.deleteCookie("userInfo", req, res);

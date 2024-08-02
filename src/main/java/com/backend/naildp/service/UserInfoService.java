@@ -66,13 +66,10 @@ public class UserInfoService {
 				.count();
 		}
 
-		String profileUrl = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user.getNickname())
-			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
-
 		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())
 			.point(user.getPoint())
-			.profileUrl(profileUrl)
+			.profileUrl(user.getThumbnailUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
@@ -104,6 +101,7 @@ public class UserInfoService {
 		if (checkProfileType(currentProfile)) {
 			// CUSTOMIZATION, AUTO 가 아니면 usersProfile delete
 			usersProfileRepository.delete(currentUsersProfile);
+
 		}
 		currentProfile.updateThumbnail(false);
 
@@ -140,6 +138,7 @@ public class UserInfoService {
 
 		profileRepository.save(newProfile);
 		usersProfileRepository.save(newUsersProfile);
+		user.thumbnailUrlUpdate(fileRequestDto.getFileUrl());
 	}
 
 	@Transactional(readOnly = true)
@@ -186,6 +185,7 @@ public class UserInfoService {
 
 		currentProfile.updateThumbnail(false);
 		changingProfile.updateThumbnail(true);
+		user.thumbnailUrlUpdate(profileRequestDto.getProfileUrl());
 
 	}
 
