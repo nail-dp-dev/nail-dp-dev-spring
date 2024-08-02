@@ -51,6 +51,7 @@ public class PostInfoResponse {
 			.build();
 	}
 
+	@Getter
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class FileInfoResponse {

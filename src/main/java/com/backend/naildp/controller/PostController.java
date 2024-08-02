@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,7 +19,6 @@ import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
-import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -86,7 +86,7 @@ public class PostController {
 	@GetMapping("/{postId}")
 	ResponseEntity<ApiResponse<?>> postDetails(@PathVariable("postId") Long postId,
 		@AuthenticationPrincipal User user) {
-		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), postId);
+		PostInfoResponse postInfoResponse = postService.postInfo(user.getUsername(), postId);
 		return ResponseEntity.ok(ApiResponse.successResponse(postInfoResponse, "특정 게시물 상세정보 조회", 2000));
 	}
 

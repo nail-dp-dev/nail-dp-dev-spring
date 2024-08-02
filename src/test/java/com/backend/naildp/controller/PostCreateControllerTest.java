@@ -20,12 +20,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.post.EditPostResponseDto;
+import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.security.UserDetailsImpl;
@@ -219,6 +221,36 @@ public class PostCreateControllerTest {
 			.andExpect(jsonPath("$.data.tempSave").value(false))
 			.andExpect(jsonPath("$.message").value("수정 게시글 조회 완료"))
 			.andExpect(jsonPath("$.code").value(2000));
+	}
+
+	@DisplayName("특정 게시글 조회 API 테스트")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void readPostDetails() throws Exception {
+		//given
+		PostInfoResponse response = PostInfoResponse.builder()
+			.nickname("testUser")
+			.profileUrl("url")
+			.followingStatus(false)
+			.followerCount(0L)
+			.files(List.of(new PostInfoResponse.FileInfoResponse("photo.jpg", true, false)))
+			.postContent("content")
+			.likeCount(0L)
+			.commentCount(0L)
+			.sharedCount(0L)
+			.tags(List.of("tag1", "tag2"))
+			.build();
+
+		//when
+		when(postService.postInfo(anyString(), anyLong())).thenReturn(response);
+
+		//then
+		mockMvc.perform(get("/posts/{postId}", 1L)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("특정 게시물 상세정보 조회"))
+			.andExpect(jsonPath("$.code").value(2000))
+			.andDo(print());
 	}
 
 }
