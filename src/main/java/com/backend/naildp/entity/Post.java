@@ -44,6 +44,12 @@ public class Post extends BaseEntity {
 	private List<Photo> photos = new ArrayList<>();
 
 	@OneToMany(mappedBy = "post")
+	private List<Comment> comments = new ArrayList<>();
+
+	@OneToMany(mappedBy = "post")
+	private List<PostLike> postLikes = new ArrayList<>();
+
+	@OneToMany(mappedBy = "post")
 	private List<TagPost> tagPosts = new ArrayList<>();
 
 	private String postContent;
@@ -84,6 +90,10 @@ public class Post extends BaseEntity {
 
 	public void addTagPost(TagPost tagPost) {
 		this.tagPosts.add(tagPost);
+	}
+
+	public void addPostLike(PostLike postLike) {
+		this.postLikes.add(postLike);
 	}
 
 }

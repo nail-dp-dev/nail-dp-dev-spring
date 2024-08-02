@@ -38,7 +38,7 @@ import com.backend.naildp.repository.PostRepository;
 
 @ExtendWith(MockitoExtension.class)
 @Import(JpaAuditingConfiguration.class)
-class PostServiceUnitTest {
+class PostInfoServiceUnitTest {
 
 	@InjectMocks
 	PostInfoService postInfoService;
@@ -137,25 +137,30 @@ class PostServiceUnitTest {
 		assertThat(homePostResponses.hasNext()).isFalse();
 	}
 
-	@DisplayName("최신 게시물 조회 단위 테스트 - 게시물이 존재하지 않으면 예외 발생")
+	@DisplayName("최신 게시물 조회 단위 테스트 - 게시물이 존재하지 않을 때")
 	@Test
-	void newPostsException() {
+	void zeroRecentPostsTest() {
 		//given
 		long cursorPostId = -1L;
 		PageRequest pageRequest = createPageRequest(PAGE_NUMBER, PAGE_SIZE, "id");
 
 		List<User> followingUser = new ArrayList<>();
 		List<Post> posts = createTestPosts(0);
-		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, true);
+		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, false);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
 		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
 			.thenReturn(recentPosts);
 
-		//when & then
-		assertThatThrownBy(() -> postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME))
-			.isInstanceOf(CustomException.class)
-			.hasMessage("게시물이 없습니다.");
+		//when
+		PostSummaryResponse response = postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+
+		//then
+		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
+		assertThat(postSummaryList).hasSize(0);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
 
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
 		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
@@ -197,21 +202,29 @@ class PostServiceUnitTest {
 
 	@DisplayName("좋아요한 게시글 조회 예외 - 좋아요때게시글이 없을 때")
 	@Test
-	void noLikedPostsException() {
+	void noLikedPostsTest() {
 		//given
 		String nickname = "mj";
-		int pageSize = 20;
-		PageRequest pageRequest = createPageRequest(0, pageSize, "id");
+
 		List<User> followingUsers = new ArrayList<>();
 
-		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
-		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), any(PageRequest.class)))
-			.thenThrow(new CustomException("좋아요한 게시물이 없습니다.", ErrorCode.FILES_NOT_REGISTERED));
+		int pageSize = 20;
+		PageRequest pageRequest = createPageRequest(0, pageSize, "createdDate");
+		Slice<PostLike> postLikeSlice = new SliceImpl<>(new ArrayList<>(), pageRequest, false);
 
-		//when & then
-		assertThatThrownBy(() -> postInfoService.findLikedPost(nickname, pageSize, -1L))
-			.isInstanceOf(CustomException.class)
-			.hasMessage("좋아요한 게시물이 없습니다.");
+		when(followRepository.findFollowingUserByFollowerNickname(eq(nickname))).thenReturn(followingUsers);
+		when(postLikeRepository.findPostLikesByFollowing(eq(nickname), anyList(), eq(pageRequest)))
+			.thenReturn(postLikeSlice);
+
+		//when
+		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+
+		//then
+		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
+		assertThat(postSummaryList).hasSize(0);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
 	}
 
 	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트")
@@ -241,9 +254,9 @@ class PostServiceUnitTest {
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}
 
-	@DisplayName("익명 사용자 - 최신 게시글 조회 예외 테스트")
+	@DisplayName("익명 사용자 - 최신 게시글 조회 테스트 - 게시글이 없을 때")
 	@Test
-	void recentPostsExceptionByAnonymousUser() {
+	void zeroRecentPostsByAnonymousUser() {
 		//given
 		long cursorId = -1L;
 		String nickname = "";
@@ -254,11 +267,15 @@ class PostServiceUnitTest {
 		when(postRepository.findPostsByBoundaryAndTempSaveFalse(eq(Boundary.ALL), eq(pageRequest)))
 			.thenReturn(postSlice);
 
-		//when & then
-		assertThatThrownBy(() -> postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname))
-			.isInstanceOf(CustomException.class)
-			.hasMessage("최신 게시물이 없습니다.")
-			.extracting("errorCode").isEqualTo(ErrorCode.FILES_NOT_REGISTERED);
+		//when
+		PostSummaryResponse response = postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
+		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+
+		//then
+		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
+		assertThat(postSummaryList).hasSize(0);
+		assertThat(postSummaryList.hasNext()).isFalse();
+		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
 	}
 
 	private List<Post> createTestPosts(int postCnt) {
