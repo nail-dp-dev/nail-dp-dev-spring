@@ -27,14 +27,17 @@ public class HomePostResponse {
 	private Boolean saved;
 	private LocalDateTime createdDate;
 
-	public HomePostResponse(Post post, List<Post> savedPosts, List<Post> likedPosts) {
-		Photo photo = post.getPhotos().get(0);
+	public HomePostResponse(Post post, List<?> savedPosts, List<?> likedPosts) {
+		if (!post.getPhotos().isEmpty()) {
+			Photo photo = post.getPhotos().get(0);
+
+			photoId = photo.getId();
+			photoUrl = photo.getPhotoUrl();
+			isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
+			isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
+		}
 
 		postId = post.getId();
-		photoId = photo.getId();
-		photoUrl = photo.getPhotoUrl();
-		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
-		isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
 		createdDate = post.getCreatedDate();

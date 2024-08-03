@@ -35,6 +35,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 	int countPostsByUserAndTempSaveIsFalse(User user);
 
-	Optional<Post> findPostByTempSaveIsTrueAndUser(User user);
+	Optional<Post> findPostByTempSaveIsTrueAndUserNickname(String nickname);
 
+	@Query("select p from Post p where p.tempSave = false"
+		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)) "
+		+ "and p.user.nickname =:nickname order by  p.createdDate desc ")
+	Slice<Post> findUserPostsByFollow(@Param("nickname") String nickname,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("select p from Post p where p.id < :id and p.tempSave = false"
+		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)) "
+		+ "and p.user.nickname =:nickname order by  p.createdDate desc ")
+	Slice<Post> findUserPostsByIdAndFollow(@Param("id") Long id, @Param("nickname") String nickname,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
 }

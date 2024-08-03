@@ -143,7 +143,7 @@ public class PostService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Optional<Post> postOptional = postRepository.findPostByTempSaveIsTrueAndUser(user);
+		Optional<Post> postOptional = postRepository.findPostByTempSaveIsTrueAndUserNickname(nickname);
 		Post post;
 
 		if (postOptional.isPresent()) {

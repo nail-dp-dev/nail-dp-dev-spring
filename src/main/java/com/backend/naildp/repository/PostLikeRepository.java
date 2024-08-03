@@ -45,4 +45,6 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 	Slice<PostLike> findPostLikesByIdAndFollowing(@Param("nickname") String nickname, @Param("id") Long cursorId,
 		@Param("following") List<User> following, PageRequest pageRequest);
 
+	List<PostMapping> findPostLikesByUserNickname(String nickname);
+
 }

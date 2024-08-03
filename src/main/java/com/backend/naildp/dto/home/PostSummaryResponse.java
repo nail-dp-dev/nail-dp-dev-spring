@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
-import org.springframework.security.core.parameters.P;
 
 import com.backend.naildp.entity.Post;
 
@@ -23,7 +22,7 @@ public class PostSummaryResponse {
 	private Long oldestPostId;
 	private Slice<HomePostResponse> postSummaryList;
 
-	public PostSummaryResponse(Slice<Post> latestPosts, List<Post> savedPosts, List<Post> likedPosts) {
+	public PostSummaryResponse(Slice<Post> latestPosts, List<?> savedPosts, List<?> likedPosts) {
 		log.info("PostSummaryResponse 응답값 만들기");
 		oldestPostId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
 		postSummaryList = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
