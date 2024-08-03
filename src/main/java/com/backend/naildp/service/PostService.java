@@ -8,23 +8,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
+import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
+import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
 import com.backend.naildp.repository.TagRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.UsersProfileRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +47,8 @@ public class PostService {
 	private final TagRepository tagRepository;
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
+	private final FollowRepository followRepository;
+	private final UsersProfileRepository usersProfileRepository;
 	private final S3Service s3Service;
 
 	@Transactional
@@ -186,6 +195,29 @@ public class PostService {
 		updateTagsAndFiles(tempPostRequestDto.getTags(), files, post);
 	}
 
+	/**
+	 * /posts/{postId}
+	 * 특정 게시물 상세정보 읽기 API
+	 */
+	public PostInfoResponse postInfo(String nickname, Long postId) {
+		// post - writer 정보 가져오기
+		Post post = postRepository.findPostAndWriterById(postId)
+			.orElseThrow(() -> new CustomException("게시물을 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
+		User writer = post.getUser();
+		String profileUrl = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(writer.getNickname())
+			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
+
+		// 읽기 권한 확인
+		boolean followingStatus = isFollower(nickname, writer, post.getBoundary());
+		int followerCount = followRepository.countFollowersByUserNickname(writer.getNickname());
+
+		// 태그 TagPost - Tag 조회
+		List<TagPost> tagPosts = tagPostRepository.findTagPostAndTagByPost(post);
+		List<Tag> tags = tagPosts.stream().map(TagPost::getTag).collect(Collectors.toList());
+
+		return PostInfoResponse.of(post, writer, profileUrl, followingStatus, followerCount, tags);
+	}
+
 	private void deleteFileUrls(List<String> deletedFileUrls) {
 		if (deletedFileUrls == null || deletedFileUrls.isEmpty()) {
 			return;
@@ -218,6 +250,26 @@ public class PostService {
 				.map(fileRequestDto -> new Photo(post, fileRequestDto))
 				.forEach(photoRepository::save);
 		}
+	}
+
+	private boolean isFollower(String nickname, User writer, Boundary boundary) {
+		//not equal
+		//	all & follow -> exists
+		//  none -> exception
+		//equal -> false
+		if (equalsReaderAndWriter(nickname, writer)) {
+			return false;
+		}
+
+		if (boundary == Boundary.NONE) {
+			throw new CustomException("게시물을 읽을 수 없습니다.", ErrorCode.NOT_FOUND);
+		}
+
+		return followRepository.existsByFollowerNicknameAndFollowing(nickname, writer);
+	}
+
+	private boolean equalsReaderAndWriter(String nickname, User writer) {
+		return writer.equalsNickname(nickname);
 	}
 
 	private boolean isRequestEmpty(TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {

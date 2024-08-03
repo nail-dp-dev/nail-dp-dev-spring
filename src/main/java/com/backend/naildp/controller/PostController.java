@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.dto.post.EditPostResponseDto;
+import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
 import com.backend.naildp.exception.ApiResponse;
@@ -79,7 +81,13 @@ public class PostController {
 		postService.tempSavePost(userDetails.getUser().getNickname(), tempPostRequestDto, files);
 
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "게시글 임시저장이 완료되었습니다", 2001));
+	}
 
+	@GetMapping("/{postId}")
+	ResponseEntity<ApiResponse<?>> postDetails(@PathVariable("postId") Long postId,
+		@AuthenticationPrincipal User user) {
+		PostInfoResponse postInfoResponse = postService.postInfo(user.getUsername(), postId);
+		return ResponseEntity.ok(ApiResponse.successResponse(postInfoResponse, "특정 게시물 상세정보 조회", 2000));
 	}
 
 }
