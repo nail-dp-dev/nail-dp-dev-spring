@@ -28,22 +28,20 @@ public class HomePostResponse {
 	private LocalDateTime createdDate;
 
 	public HomePostResponse(Post post, List<?> savedPosts, List<?> likedPosts) {
-		if (!post.getPhotos().isEmpty()) {
-			Photo photo = post.getPhotos().get(0);
 
-			photoId = photo.getId();
-			photoUrl = photo.getPhotoUrl();
-			isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
-			isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
-		}
+		Photo photo = post.getPhotos().get(0);
 
+		photoId = photo.getId();
+		photoUrl = photo.getPhotoUrl();
+		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
+		isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
 		postId = post.getId();
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
 		createdDate = post.getCreatedDate();
 	}
 
-	public static HomePostResponse likedPostResponse(Post post, List<Post> savedPost) {
+	public static HomePostResponse likedPostResponse(Post post, List<?> savedPost) {
 		Photo photo = post.getPhotos().get(0);
 
 		return HomePostResponse.builder()
