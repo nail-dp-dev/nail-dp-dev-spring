@@ -32,6 +32,8 @@ public class PostLikeService {
 			.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
+		post.addPostLike(savedPostLike);
+
 		return savedPostLike.getId();
 	}
 

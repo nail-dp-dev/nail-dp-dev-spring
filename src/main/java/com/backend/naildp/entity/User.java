@@ -66,6 +66,10 @@ public class User extends BaseEntity {
 		this.role = role;
 	}
 
+	public boolean equalsNickname(String nickname) {
+		return this.nickname.equals(nickname);
+	}
+
 	public void thumbnailUrlUpdate(String thumbnailUrl) {
 		this.thumbnailUrl = thumbnailUrl;
 	}

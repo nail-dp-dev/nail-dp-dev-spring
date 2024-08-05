@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -124,6 +125,29 @@ class PostRepositoryTest {
 		assertThat(secondRecentPosts.getSort().isSorted()).isTrue();
 		assertThat(secondRecentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
 		assertThat(secondRecentPosts).extracting("tempSave").containsOnly(false);
+	}
+
+	@DisplayName("postId로 Post와 User 페치조인 테스트")
+	@Test
+	void findPostsAndWriter() {
+		//given
+		String nickname = "mj";
+		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
+			.setParameter("nickname", nickname)
+			.getSingleResult();
+		List<Post> posts = em.createQuery("select p from Post p join fetch p.user u where u = :user and p.tempSave = false",
+				Post.class)
+			.setParameter("user", user)
+			.getResultList();
+
+		//when
+		List<Post> findPosts = posts.stream()
+			.map(post -> postRepository.findPostAndWriterById(post.getId()).orElseThrow())
+			.collect(Collectors.toList());
+
+		//then
+		assertThat(findPosts).extracting("tempSave").containsOnly(false);
+		assertThat(findPosts).extracting("user").containsOnly(user);
 	}
 
 	@Disabled
