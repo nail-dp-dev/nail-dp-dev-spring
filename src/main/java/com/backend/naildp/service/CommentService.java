@@ -31,13 +31,15 @@ public class CommentService {
 		//1. tempSave = false 인지
 		//2. boundary 가 All 이거나 boundary 가 Follow 면서 username 이 팔로우 하고 있는지까지 확인 필요
 		if (post.isTempSaved()) {
-			throw new CustomException("접근 불가", null);
+			throw new CustomException("임시저장한 게시물에는 댓글을 등록할 수 없습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
+
 		if (post.isClosed()) {
-			throw new CustomException("접근 불가", null);
+			throw new CustomException("비공개 게시물에는 댓글을 등록할 수 없습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
+
 		if (post.isOpenedForFollower() && followRepository.existsByFollowerNicknameAndFollowing(username, user)) {
-			throw new CustomException("접근 불가", null);
+			throw new CustomException("팔로워만 댓글을 등록할 수 있습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
 
 		//comment 생성 및 저장
