@@ -38,4 +38,12 @@ public class Comment extends BaseEntity {
 		this.post = post;
 		this.commentContent = commentContent;
 	}
+
+	public void modifyContent(String commentContent) {
+		this.commentContent = commentContent;
+	}
+
+	public boolean writtenBy(String username) {
+		return user.equalsNickname(username);
+	}
 }

@@ -1,6 +1,7 @@
 package com.backend.naildp.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.entity.Comment;
@@ -14,6 +15,7 @@ import com.backend.naildp.repository.PostRepository;
 
 import lombok.RequiredArgsConstructor;
 
+@Transactional(readOnly = true)
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -22,6 +24,7 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final FollowRepository followRepository;
 
+	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
 		Post post = postRepository.findPostAndUser(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트에 댓글을 등록할 수 없습니다. 다시 시도해주세요", ErrorCode.NOT_FOUND));
@@ -47,5 +50,19 @@ public class CommentService {
 		post.addComment(comment);
 
 		return commentRepository.save(comment).getId();
+	}
+
+	@Transactional
+	public Long modifyComment(Long postId, Long commentId, CommentRegisterDto commentModifyDto, String username) {
+		Comment comment = commentRepository.findCommentAndPostAndUser(commentId)
+			.orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (!comment.writtenBy(username)) {
+			throw new CustomException("댓글은 작성자만 수정할 수 있습니다.", ErrorCode.COMMENT_AUTHORITY);
+		}
+
+		comment.modifyContent(commentModifyDto.getCommentContent());
+
+		return comment.getId();
 	}
 }
