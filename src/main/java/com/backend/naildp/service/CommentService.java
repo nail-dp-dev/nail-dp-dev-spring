@@ -65,4 +65,19 @@ public class CommentService {
 
 		return comment.getId();
 	}
+
+	@Transactional
+	public void deleteComment(Long postId, Long commentId, String username) {
+		Comment comment = commentRepository.findCommentAndPostAndUser(commentId)
+			.orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (!comment.writtenBy(username)) {
+			throw new CustomException("댓글은 작성자만 삭제할 수 있습니다.", ErrorCode.COMMENT_AUTHORITY);
+		}
+
+		Post post = comment.getPost();
+		post.deleteComment(comment);
+
+		commentRepository.delete(comment);
+	}
 }

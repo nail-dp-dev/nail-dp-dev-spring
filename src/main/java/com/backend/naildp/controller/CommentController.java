@@ -3,6 +3,7 @@ package com.backend.naildp.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +38,13 @@ public class CommentController {
 		@RequestBody CommentRegisterDto commentModifyDto,
 		@AuthenticationPrincipal User user) {
 		Long modifiedCommentId = commentService.modifyComment(postId, commentId, commentModifyDto, user.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 등록 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2001));
+	}
+
+	@DeleteMapping("/{postId}/comment/{commentId}")
+	ResponseEntity<?> deleteComment(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
+		@AuthenticationPrincipal User user) {
+		commentService.deleteComment(postId, commentId, user.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2001));
 	}
 }

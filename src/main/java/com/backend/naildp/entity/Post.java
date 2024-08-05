@@ -111,4 +111,8 @@ public class Post extends BaseEntity {
 	public boolean isOpenedForFollower() {
 		return this.boundary == Boundary.FOLLOW;
 	}
+
+	public void deleteComment(Comment comment) {
+		this.comments.remove(comment);
+	}
 }
