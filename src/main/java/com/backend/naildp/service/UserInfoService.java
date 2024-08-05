@@ -73,6 +73,7 @@ public class UserInfoService {
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
+			.followingCount(followRepository.countFollowingsByUserNickname(user.getNickname()))
 			.build();
 	}
 

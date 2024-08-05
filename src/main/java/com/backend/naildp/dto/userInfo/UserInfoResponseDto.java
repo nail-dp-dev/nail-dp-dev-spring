@@ -12,4 +12,6 @@ public class UserInfoResponseDto {
 	private Long point;
 	private String profileUrl;
 	private int followerCount;
+	private int followingCount;
+
 }
