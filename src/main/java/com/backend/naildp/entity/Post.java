@@ -96,4 +96,19 @@ public class Post extends BaseEntity {
 		this.postLikes.add(postLike);
 	}
 
+	public void addComment(Comment comment) {
+		this.comments.add(comment);
+	}
+
+	public boolean isTempSaved() {
+		return this.tempSave;
+	}
+
+	public boolean isClosed() {
+		return this.boundary == Boundary.NONE;
+	}
+
+	public boolean isOpenedForFollower() {
+		return this.boundary == Boundary.FOLLOW;
+	}
 }
