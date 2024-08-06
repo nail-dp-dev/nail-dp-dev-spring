@@ -55,7 +55,6 @@ public class AuthService {
 			throw new CustomException("이미 존재하는 사용자입니다.", ErrorCode.ALREADY_EXIST);
 		}
 		User user = User.builder()
-			.thumbnailUrl("default")
 			.nickname(loginRequestDto.getNickname())
 			.phoneNumber(loginRequestDto.getPhoneNumber())
 			.agreement(loginRequestDto.isAgreement())
