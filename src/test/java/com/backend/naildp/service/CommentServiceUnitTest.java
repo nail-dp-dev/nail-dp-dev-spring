@@ -11,17 +11,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Import;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.CommentRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -113,6 +112,44 @@ class CommentServiceUnitTest {
 		verify(postRepository).findPostAndUser(post.getId());
 		verify(followRepository).existsByFollowerNicknameAndFollowing(user.getNickname(), writer);
 		verify(commentRepository).save(any(Comment.class));
+	}
+
+	@Test
+	void 다른_작성자가_댓글_수정시_예외_발생() {
+		//given
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(writer, false, Boundary.FOLLOW);
+		Comment comment = new Comment(user, post, "comment");
+		CommentRegisterDto commentModifyDto = new CommentRegisterDto("modify comment");
+
+		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class,
+			() -> commentService.modifyComment(1L, 1L, commentModifyDto, "otherNickname"));
+
+		//then
+		assertEquals("댓글은 작성자만 수정할 수 있습니다.", exception.getMessage());
+		assertEquals(ErrorCode.COMMENT_AUTHORITY, exception.getErrorCode());
+	}
+
+	@Test
+	void 댓글_수정_성공_테스트() {
+		//given
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(writer, false, Boundary.FOLLOW);
+		Comment comment = new Comment(user, post, "comment");
+		CommentRegisterDto commentModifyDto = new CommentRegisterDto("modify comment");
+
+		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
+
+		//when
+		commentService.modifyComment(1L, 1L, commentModifyDto, user.getNickname());
+
+		//then
+		verify(commentRepository).findCommentAndPostAndUser(anyLong());
 	}
 
 	private Post createPost(User user, boolean tempSave, Boundary boundary) {
