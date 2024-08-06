@@ -1,5 +1,7 @@
 package com.backend.naildp.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
@@ -27,5 +29,11 @@ public class ArchiveService {
 			.build();
 
 		archiveRepository.save(archive);
+	}
+
+	public void getArchives(String nickname) {
+
+		List<Archive> archive = archiveRepository.findArchivesByUserNicknameOrderByCreatedDateDesc(nickname);
+
 	}
 }
