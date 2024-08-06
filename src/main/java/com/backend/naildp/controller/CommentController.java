@@ -16,6 +16,7 @@ import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.CommentService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,7 +28,7 @@ public class CommentController {
 
 	@PostMapping("/{postId}/comment")
 	ResponseEntity<?> createComment(@PathVariable("postId") Long postId,
-		@RequestBody CommentRegisterDto commentRegisterDto,
+		@Valid @RequestBody CommentRegisterDto commentRegisterDto,
 		@AuthenticationPrincipal User user) {
 		Long registeredCommentId = commentService.registerComment(postId, commentRegisterDto, user.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(registeredCommentId, "댓글 등록 성공", 2001));
@@ -35,16 +36,16 @@ public class CommentController {
 
 	@PatchMapping("/{postId}/comment/{commentId}")
 	ResponseEntity<?> modifyComment(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
-		@RequestBody CommentRegisterDto commentModifyDto,
+		@Valid @RequestBody CommentRegisterDto commentModifyDto,
 		@AuthenticationPrincipal User user) {
 		Long modifiedCommentId = commentService.modifyComment(postId, commentId, commentModifyDto, user.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2000));
 	}
 
 	@DeleteMapping("/{postId}/comment/{commentId}")
 	ResponseEntity<?> deleteComment(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
 		@AuthenticationPrincipal User user) {
 		commentService.deleteComment(postId, commentId, user.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2000));
 	}
 }
