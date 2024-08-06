@@ -152,6 +152,44 @@ class CommentServiceUnitTest {
 		verify(commentRepository).findCommentAndPostAndUser(anyLong());
 	}
 
+	@Test
+	void 다른_작성자_댓글_삭제시_예외_발생() {
+		//given
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(writer, false, Boundary.FOLLOW);
+		Comment comment = new Comment(user, post, "comment");
+
+		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class,
+			() -> commentService.deleteComment(1L, 1L, "otherNickname"));
+
+		//then
+		assertEquals("댓글은 작성자만 삭제할 수 있습니다.", exception.getMessage());
+		assertEquals(ErrorCode.COMMENT_AUTHORITY, exception.getErrorCode());
+	}
+
+	@Test
+	void 댓글_삭제_성공_테스트() {
+		//given
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(writer, false, Boundary.FOLLOW);
+		Comment comment = new Comment(user, post, "comment");
+
+		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
+		doNothing().when(commentRepository).delete(any(Comment.class));
+
+		//when
+		commentService.deleteComment(1L, 1L, user.getNickname());
+
+		//then
+		verify(commentRepository).findCommentAndPostAndUser(anyLong());
+		verify(commentRepository).delete(any(Comment.class));
+	}
+
 	private Post createPost(User user, boolean tempSave, Boundary boundary) {
 		return Post.builder()
 			.id(1L)
