@@ -16,12 +16,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Archive extends BaseEntity {
 
 	@Id
@@ -39,8 +43,9 @@ public class Archive extends BaseEntity {
 	@Column(nullable = false)
 	private String name;
 
+	@Builder.Default
 	@Column(nullable = false)
-	private Boundary boundary;
+	private Boundary boundary = Boundary.ALL;
 
 	public Archive(User user, String name, Boundary boundary) {
 		this.user = user;
