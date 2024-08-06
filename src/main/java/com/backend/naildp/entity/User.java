@@ -13,12 +13,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity(name = "Users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class User extends BaseEntity {
 
 	@Id
@@ -34,11 +38,18 @@ public class User extends BaseEntity {
 
 	@Column(nullable = false)
 	private String phoneNumber;
+
+	@Builder.Default
 	private Long point = 0L;
+
 	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
+
 	@Column(nullable = false)
 	private boolean agreement;
+
+	@Column(nullable = false)
+	private String thumbnailUrl;
 
 	public User(String nickname, String phoneNumber,
 		Long point, UserRole role) {
@@ -58,4 +69,9 @@ public class User extends BaseEntity {
 	public boolean equalsNickname(String nickname) {
 		return this.nickname.equals(nickname);
 	}
+
+	public void thumbnailUrlUpdate(String thumbnailUrl) {
+		this.thumbnailUrl = thumbnailUrl;
+	}
+
 }

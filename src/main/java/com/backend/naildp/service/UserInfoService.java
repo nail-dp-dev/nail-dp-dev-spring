@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.userInfo.ProfileRequestDto;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Profile;
@@ -26,7 +27,9 @@ import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.repository.UsersProfileRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserInfoService {
@@ -63,24 +66,25 @@ public class UserInfoService {
 				.count();
 		}
 
-		String profileUrl = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user.getNickname())
-			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
-
 		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())
 			.point(user.getPoint())
-			.profileUrl(profileUrl)
+			.profileUrl(user.getThumbnailUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
+			.followingCount(followRepository.countFollowingsByUserNickname(user.getNickname()))
 			.build();
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, Object> getPoint(String nickname) {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
 		Map<String, Object> response = new HashMap<>();
 		response.put("point", user.getPoint());
+
 		return response;
 	}
 
@@ -89,21 +93,104 @@ public class UserInfoService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
+		// 업로드하면 바로 해당 사진으로 썸네일 설정
+		UsersProfile currentUsersProfile = usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(nickname)
+			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		Profile currentProfile = currentUsersProfile.getProfile();
+
+		if (checkProfileType(currentProfile)) {
+			// CUSTOMIZATION, AUTO 가 아니면 usersProfile delete
+			usersProfileRepository.delete(currentUsersProfile);
+
+		}
+		currentProfile.updateThumbnail(false);
+
+		// 프로필 true 포함 4개 이상일 때 업로드 -> 가장 오래된 업로드 이미지 삭제
+		int profileNum = usersProfileRepository.countByUserNicknameAndProfileProfileType(nickname,
+			ProfileType.CUSTOMIZATION);
+
+		if (profileNum >= 4) {
+
+			UsersProfile oldestUsersProfile = usersProfileRepository.findFirstByUserNicknameAndProfileProfileType(
+					nickname, ProfileType.CUSTOMIZATION)
+				.orElseThrow(() -> new CustomException("삭제할 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+			Profile oldestProfile = oldestUsersProfile.getProfile();
+
+			usersProfileRepository.delete(oldestUsersProfile);
+			profileRepository.delete(oldestProfile);
+			s3Service.deleteFile(oldestProfile.getProfileUrl());
+		}
+
 		FileRequestDto fileRequestDto = s3Service.saveFile(file);
 
-		Profile profile = Profile.builder()
+		Profile newProfile = Profile.builder()
 			.profileUrl(fileRequestDto.getFileUrl())
-			.thumbnail(false)
+			.thumbnail(true)
 			.name(fileRequestDto.getFileName())
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
-		UsersProfile usersProfile = UsersProfile.builder()
+		UsersProfile newUsersProfile = UsersProfile.builder()
 			.user(user)
-			.profile(profile)
+			.profile(newProfile)
 			.build();
 
-		profileRepository.save(profile);
-		usersProfileRepository.save(usersProfile);
+		profileRepository.save(newProfile);
+		usersProfileRepository.save(newUsersProfile);
+		user.thumbnailUrlUpdate(fileRequestDto.getFileUrl());
+	}
+
+	@Transactional(readOnly = true)
+	public Map<String, List<String>> getProfiles(String nickname, String choice) {
+
+		ProfileType profileType = ProfileType.valueOf(choice);
+		List<String> profileUrls;
+
+		if (profileType == ProfileType.CUSTOMIZATION) {
+			profileUrls = usersProfileRepository.findProfileUrlsByNicknameAndCustomization(nickname);
+		} else {
+			profileUrls = profileRepository.findProfileUrlsByType(profileType);
+		}
+
+		Map<String, List<String>> response = new HashMap<>();
+		response.put("profileUrls", profileUrls);
+
+		return response;
+	}
+
+	@Transactional
+	public void changeProfile(String nickname, ProfileRequestDto profileRequestDto) {
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		UsersProfile usersProfile = usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(nickname)
+			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		Profile currentProfile = usersProfile.getProfile();
+
+		Profile changingProfile = profileRepository.findProfileByProfileUrl(profileRequestDto.getProfileUrl())
+			.orElseThrow(() -> new CustomException("변경할 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (checkProfileType(currentProfile)) {
+			usersProfileRepository.delete(usersProfile);
+		}
+		if (checkProfileType(changingProfile)) {
+			UsersProfile newUsersProfile = UsersProfile.builder()
+				.profile(changingProfile)
+				.user(user)
+				.build();
+			usersProfileRepository.save(newUsersProfile);
+		}
+
+		currentProfile.updateThumbnail(false);
+		changingProfile.updateThumbnail(true);
+		user.thumbnailUrlUpdate(profileRequestDto.getProfileUrl());
+
+	}
+
+	private boolean checkProfileType(Profile profile) {
+		return profile.getProfileType() != ProfileType.CUSTOMIZATION && profile.getProfileType() != ProfileType.AUTO;
 	}
 }

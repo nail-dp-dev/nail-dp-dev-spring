@@ -45,4 +45,9 @@ public class Profile extends BaseEntity {
 		this.name = name;
 		this.thumbnail = thumbnail;
 	}
+
+	public void updateThumbnail(Boolean thumbnail) {
+		this.thumbnail = thumbnail;
+	}
+
 }
