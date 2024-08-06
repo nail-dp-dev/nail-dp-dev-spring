@@ -27,17 +27,17 @@ public class UserPostService {
 	private final FollowRepository followRepository;
 	private final PostLikeRepository postLikeRepository;
 
-	public PostSummaryResponse getUserPosts(String myNickname, String postNickname, int size, long cursorPostId) {
+	public PostSummaryResponse getUserPosts(String nickname, int size, long cursorPostId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
 		Slice<Post> postList;
 
-		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(myNickname);
-		followingNickname.add(myNickname);
+		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
+		followingNickname.add(nickname);
 
 		if (cursorPostId == -1) {
-			postList = postRepository.findUserPostsByFollow(myNickname, followingNickname, pageRequest);
+			postList = postRepository.findUserPostsByFollow(nickname, followingNickname, pageRequest);
 		} else {
-			postList = postRepository.findUserPostsByIdAndFollow(cursorPostId, myNickname, followingNickname,
+			postList = postRepository.findUserPostsByIdAndFollow(cursorPostId, nickname, followingNickname,
 				pageRequest);
 		}
 
@@ -45,23 +45,23 @@ public class UserPostService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
-		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(myNickname);
+		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
+		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
 
 		return new PostSummaryResponse(postList, savedPosts, likedPosts);
 	}
 
-	public PostSummaryResponse getLikedUserPosts(String myNickname, String postNickname, int size, long cursorPostId) {
+	public PostSummaryResponse getLikedUserPosts(String nickname, int size, long cursorPostId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
 		Slice<Post> postList;
 
-		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(myNickname);
-		followingNickname.add(myNickname);
+		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
+		followingNickname.add(nickname);
 
 		if (cursorPostId == -1) {
-			postList = postRepository.findLikedUserPostsByFollow(myNickname, followingNickname, pageRequest);
+			postList = postRepository.findLikedUserPostsByFollow(nickname, followingNickname, pageRequest);
 		} else {
-			postList = postRepository.findLikedUserPostsByIdAndFollow(cursorPostId, myNickname, followingNickname,
+			postList = postRepository.findLikedUserPostsByIdAndFollow(cursorPostId, nickname, followingNickname,
 				pageRequest);
 		}
 
@@ -69,7 +69,7 @@ public class UserPostService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
+		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
 
 		return PostSummaryResponse.createLikedPostSummary(postList, savedPosts);
 	}
