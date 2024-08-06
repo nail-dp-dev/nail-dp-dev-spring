@@ -27,7 +27,7 @@ public class UserPostController {
 	ResponseEntity<ApiResponse<?>> getUserPosts(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("nickname") String nickname,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId) {
+		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorPostId) {
 
 		PostSummaryResponse postSummaryResponse = userPostService.getUserPosts(userDetails.getUser().getNickname(),
 			size, cursorPostId);
@@ -39,7 +39,7 @@ public class UserPostController {
 	ResponseEntity<ApiResponse<?>> getLikedUserPosts(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("nickname") String nickname,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId) {
+		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorPostId) {
 
 		PostSummaryResponse postSummaryResponse = userPostService.getLikedUserPosts(userDetails.getUser().getNickname(),
 			size, cursorPostId);
