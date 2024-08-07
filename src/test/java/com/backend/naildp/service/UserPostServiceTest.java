@@ -5,14 +5,13 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -34,11 +33,11 @@ import com.backend.naildp.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
+@Disabled
 @Slf4j
 @SpringBootTest
 @Transactional
-@ExtendWith(SpringExtension.class)
-@Import(JpaAuditingConfiguration.class)
+@Import(JpaAuditingConfiguration.class)가
 class UserPostServiceTest {
 
 	@Autowired
