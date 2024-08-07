@@ -15,8 +15,10 @@ import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
+import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
@@ -24,6 +26,7 @@ import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
+import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
 import com.backend.naildp.repository.TagRepository;
@@ -55,11 +58,11 @@ public class PostService {
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		if (files == null || files.isEmpty()) {
-			throw new CustomException("Not Input File", ErrorCode.INPUT_NULL);
+			throw new CustomException("Not Input File", ErrorCode.FILE_EXCEPTION);
 		}
 
 		if (files.size() > 10) {
-			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INVALID_FORM);
 		}
 
 		Post post = Post.builder()
@@ -95,14 +98,14 @@ public class PostService {
 		validateUser(post, nickname);
 
 		if (getSize(files) + getSize(post.getPhotos()) - getSize(postRequestDto.getDeletedFileUrls()) > 10) {
-			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INVALID_FORM);
 
 		}
 
 		// 게시물에는 file 필수 -> deleted url 개수 = 저장된 url 개수 같으면, 새로운 file을 꼭 받아야함.
 		if (getSize(post.getPhotos()) == getSize(postRequestDto.getDeletedFileUrls()) && (files == null
 			|| files.isEmpty())) {
-			throw new CustomException("파일을 첨부해주세요.", ErrorCode.INPUT_NULL);
+			throw new CustomException("파일을 첨부해주세요.", ErrorCode.INVALID_FORM);
 		}
 		post.update(postRequestDto);
 
@@ -149,7 +152,7 @@ public class PostService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Optional<Post> postOptional = postRepository.findPostByTempSaveIsTrueAndUser(user);
+		Optional<Post> postOptional = postRepository.findPostByTempSaveIsTrueAndUserNickname(nickname);
 		Post post;
 
 		if (postOptional.isPresent()) {
@@ -157,12 +160,12 @@ public class PostService {
 			post = postOptional.get();
 
 			if (getSize(files) + getSize(post.getPhotos()) - getSize(tempPostRequestDto.getDeletedFileUrls()) > 10) {
-				throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+				throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INVALID_FORM);
 			}
 
 			if (isRequestEmpty(tempPostRequestDto, files)) {
 				if (getSize(post.getPhotos()) == getSize(tempPostRequestDto.getDeletedFileUrls())) {
-					throw new CustomException("임시저장 할 내용이 없습니다.", ErrorCode.INPUT_NULL);
+					throw new CustomException("임시저장 할 내용이 없습니다.", ErrorCode.INVALID_FORM);
 				}
 			}
 
@@ -173,11 +176,11 @@ public class PostService {
 		} else {
 
 			if (getSize(files) > 10) {
-				throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INPUT_NULL);
+				throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INVALID_FORM);
 			}
 
 			if (isRequestEmpty(tempPostRequestDto, files)) {
-				throw new CustomException("임시저장 할 내용이 없습니다.", ErrorCode.INPUT_NULL);
+				throw new CustomException("임시저장 할 내용이 없습니다.", ErrorCode.INVALID_FORM);
 			}
 
 			post = Post.builder()

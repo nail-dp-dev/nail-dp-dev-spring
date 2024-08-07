@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.common.Boundary;
-import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
 
@@ -45,5 +44,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user in :following))")
 	Slice<PostLike> findPostLikesByIdAndFollowing(@Param("nickname") String nickname, @Param("id") Long cursorId,
 		@Param("following") List<User> following, PageRequest pageRequest);
+
+	List<PostMapping> findPostLikesByUserNickname(String nickname);
 
 }

@@ -44,7 +44,7 @@ public class PostController {
 		@RequestPart(value = "photos", required = true) List<MultipartFile> files) {
 
 		if (files == null) {
-			throw new CustomException("Not Input File", ErrorCode.INPUT_NULL);
+			throw new CustomException("Not Input File", ErrorCode.FILE_EXCEPTION);
 		}
 		postService.uploadPost(userDetails.getUser().getNickname(), postRequestDto, files);
 

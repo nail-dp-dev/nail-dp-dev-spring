@@ -48,8 +48,9 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private boolean agreement;
 
+	@Builder.Default
 	@Column(nullable = false)
-	private String thumbnailUrl;
+	private String thumbnailUrl = "default";
 
 	public User(String nickname, String phoneNumber,
 		Long point, UserRole role) {

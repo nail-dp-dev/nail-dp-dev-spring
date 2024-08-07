@@ -38,6 +38,41 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 	@Query("select p from Post p join fetch p.user u where p.id = :id and p.tempSave = false")
 	Optional<Post> findPostAndWriterById(@Param("id") Long postId);
 
-	Optional<Post> findPostByTempSaveIsTrueAndUser(User user);
+	Optional<Post> findPostByTempSaveIsTrueAndUserNickname(String nickname);
 
+	@Query("select p from Post p where p.tempSave = false"
+		+ " and (p.boundary = 'ALL'"
+		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
+		+ " or(p.boundary = 'NONE' and p.user.nickname in :nickname)) "
+		+ " and p.user.nickname =:nickname order by  p.createdDate desc ")
+	Slice<Post> findUserPostsByFollow(@Param("nickname") String nickname,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("select p from Post p where p.id < :id and p.tempSave = false"
+		+ " and (p.boundary = 'ALL'"
+		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
+		+ " or(p.boundary = 'NONE' and p.user.nickname in :nickname)) "
+		+ " and p.user.nickname =:nickname order by  p.createdDate desc ")
+	Slice<Post> findUserPostsByIdAndFollow(@Param("id") Long id, @Param("nickname") String nickname,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("SELECT p FROM Post p JOIN p.postLikes pl WHERE pl.user.nickname = :nickname "
+		+ "AND (p.boundary = 'ALL' "
+		+ "OR (p.boundary = 'FOLLOW' AND p.user.nickname IN :followingNickname) "
+		+ "OR (p.boundary = 'NONE' AND p.user.nickname = :nickname)) "
+		+ "ORDER BY p.createdDate DESC")
+	Slice<Post> findLikedUserPostsByFollow(@Param("nickname") String nickname,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("SELECT p FROM Post p JOIN p.postLikes pl WHERE p.id < :id AND pl.user.nickname = :nickname "
+		+ "AND (p.boundary = 'ALL' "
+		+ "OR (p.boundary = 'FOLLOW' AND p.user.nickname IN :followingNickname) "
+		+ "OR (p.boundary = 'NONE' AND p.user.nickname = :nickname)) "
+		+ "ORDER BY p.createdDate DESC")
+	Slice<Post> findLikedUserPostsByIdAndFollow(@Param("id") Long id, @Param("nickname") String nickname,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
 }
