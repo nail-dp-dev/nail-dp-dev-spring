@@ -50,7 +50,7 @@ public class CommentController {
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2000));
 	}
 
-	@GetMapping("/postId}/comment")
+	@GetMapping("/{postId}/comment")
 	ResponseEntity<?> findComments(@PathVariable("postId") Long postId,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
