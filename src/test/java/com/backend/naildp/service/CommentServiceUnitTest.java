@@ -3,6 +3,8 @@ package com.backend.naildp.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
@@ -11,11 +13,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
+import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
+import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
@@ -188,6 +196,29 @@ class CommentServiceUnitTest {
 		//then
 		verify(commentRepository).findCommentAndPostAndUser(anyLong());
 		verify(commentRepository).delete(any(Comment.class));
+	}
+
+	@Test
+	void 댓글이_0개일때_조회_테스트() {
+		//given
+		int size = 20;
+		long postId = 1L;
+		long cursorId = -1L;
+
+		List<Comment> emptyComments = new ArrayList<>();
+		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "likeCount", "createdDate"));
+		Slice<Comment> emptyCommentSlice = new SliceImpl<>(emptyComments, pageRequest, false);
+
+		when(commentRepository.findCommentsByPostId(anyLong(), any(PageRequest.class))).thenReturn(emptyCommentSlice);
+
+		//when
+		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId);
+		Slice<CommentInfoResponse> contents = response.getContents();
+
+		//then
+		assertEquals(-1L, response.getCursorId());
+		assertFalse(contents.hasNext());
+		assertEquals(0, contents.getNumberOfElements());
 	}
 
 	private Post createPost(User user, boolean tempSave, Boundary boundary) {

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.comment.CommentRegisterDto;
+import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.CommentService;
 
@@ -54,7 +55,7 @@ public class CommentController {
 	ResponseEntity<?> findComments(@PathVariable("postId") Long postId,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
-		commentService.findComments(postId, size, cursorId);
-		return null;
+		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId);
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "댓글 조회 성공", 2000));
 	}
 }

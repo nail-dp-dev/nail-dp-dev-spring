@@ -1,21 +1,36 @@
 package com.backend.naildp.controller;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
+import com.backend.naildp.dto.comment.CommentSummaryResponse;
+import com.backend.naildp.entity.Comment;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.CommentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -158,5 +173,67 @@ class CommentControllerUnitTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
 			.andExpect(jsonPath("$.code").value(apiResponse.getCode()));
+	}
+
+	@DisplayName("댓글이 없는 게시물에서 댓글 조회 테스트")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void findNoComments() throws Exception {
+		//given
+		CommentSummaryResponse response = new CommentSummaryResponse(-1L, new SliceImpl<>(new ArrayList<>()));
+		ApiResponse<CommentSummaryResponse> apiResponse = ApiResponse.successResponse(response, "댓글 조회 성공", 2000);
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+		when(commentService.findComments(anyLong(), anyInt(), eq(-1L))).thenReturn(response);
+
+		//when
+		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment", 1L));
+
+		//then
+		resultActions
+			.andExpect(status().isOk())
+			.andExpect(content().json(jsonResponse))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andDo(print());
+	}
+
+	@DisplayName("댓글 조회 API 테스트")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void findCommentsTest() throws Exception {
+		//given
+		List<CommentInfoResponse> commentInfoResponseList = new ArrayList<>();
+		for (long i = 1; i <= 2; i++) {
+			CommentInfoResponse commentInfoResponse = CommentInfoResponse.builder()
+				.commentId(i)
+				.commentContent("comment")
+				.profileUrl("profileUrl")
+				.commentUserNickname("nickname")
+				.commentDate(LocalDateTime.now())
+				.likeCount(i)
+				.build();
+			commentInfoResponseList.add(commentInfoResponse);
+		}
+		PageRequest pageRequest = PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "likeCount", "createdDate"));
+		Slice<CommentInfoResponse> commentInfoResponseSlice = new SliceImpl<>(commentInfoResponseList, pageRequest,
+			true);
+
+		CommentSummaryResponse response = new CommentSummaryResponse(1L, commentInfoResponseSlice);
+		ApiResponse<CommentSummaryResponse> apiResponse = ApiResponse.successResponse(response, "댓글 조회 성공", 2000);
+		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+
+		when(commentService.findComments(anyLong(), anyInt(), eq(-1L))).thenReturn(response);
+
+		//when
+		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment", 1L).param("size", "2"));
+
+		//then
+		resultActions
+			.andExpect(status().isOk())
+			.andExpect(content().json(jsonResponse))
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andDo(print());
 	}
 }

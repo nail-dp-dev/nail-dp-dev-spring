@@ -26,7 +26,7 @@ public class CommentInfoResponse {
 		return CommentInfoResponse.builder()
 			.commentId(comment.getId())
 			.commentContent(comment.getCommentContent())
-			.profileUrl("")
+			.profileUrl(comment.getUser().getThumbnailUrl())
 			.commentUserNickname(comment.getUser().getNickname())
 			.commentDate(comment.getCreatedDate())
 			.build();
