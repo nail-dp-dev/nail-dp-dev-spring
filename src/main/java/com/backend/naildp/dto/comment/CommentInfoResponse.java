@@ -21,6 +21,7 @@ public class CommentInfoResponse {
 	private String commentUserNickname;
 	private LocalDateTime commentDate;
 	private long likeCount;
+	private long replyCount;
 
 	public static CommentInfoResponse of(Comment comment) {
 		return CommentInfoResponse.builder()
@@ -29,6 +30,8 @@ public class CommentInfoResponse {
 			.profileUrl(comment.getUser().getThumbnailUrl())
 			.commentUserNickname(comment.getUser().getNickname())
 			.commentDate(comment.getCreatedDate())
+			.likeCount(comment.getLikeCount())
+			.replyCount(0)
 			.build();
 	}
 }
