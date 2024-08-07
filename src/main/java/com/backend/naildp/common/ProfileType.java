@@ -2,6 +2,6 @@ package com.backend.naildp.common;
 
 public enum ProfileType {
 
-	BASIC, ICON, CUSTOMIZATION
+	BASIC, ICON, CUSTOMIZATION, AUTO
 
 }
