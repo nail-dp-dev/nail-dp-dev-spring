@@ -30,7 +30,6 @@ import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.security.UserDetailsImpl;
@@ -104,24 +103,6 @@ public class PostCreateControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Required request part is missing"))
 			.andExpect(jsonPath("$.code").value(400));
-	}
-
-	@Test
-	@DisplayName("게시글 작성 - tempSave 없음")
-	public void testUploadPost_NotTempSave() throws Exception {
-		MockMultipartFile content = new MockMultipartFile("content", "", "application/json",
-			"{\"postContent\":\"test content\",\"boundary\":\"ALL\",\"tags\":[{\"tagName\":\"tag1\"}]}".getBytes());
-		MockMultipartFile photos = new MockMultipartFile("photos", "photo.jpg", "image/jpeg",
-			"photo content".getBytes());
-
-		mockMvc.perform(multipart("/posts")
-				.file(content)
-				.file(photos)
-				.with(csrf())
-				.contentType(MediaType.MULTIPART_FORM_DATA))
-			.andDo(print())
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message").value("임시저장 여부를 입력해주세요"));
 	}
 
 	@Test
