@@ -88,7 +88,7 @@ public class S3Service {
 	// 단일 파일 저장
 	public FileRequestDto saveFile(MultipartFile file) {
 		if (file == null || file.isEmpty()) { //.isEmpty()도 되는지 확인해보기
-			throw new CustomException("Not Input files", ErrorCode.INPUT_NULL);
+			throw new CustomException("Not Input files", ErrorCode.FILE_EXCEPTION);
 		}
 		String randomFilename = generateRandomFilename(file);
 

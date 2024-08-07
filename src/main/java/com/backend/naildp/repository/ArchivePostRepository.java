@@ -18,4 +18,6 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 
 	@Query("select ap from ArchivePost ap join fetch ap.archive a join fetch ap.post p where a.user.nickname = :nickname and p.tempSave = false")
 	List<ArchivePost> findAllArchivePostsByUserNicknameAndTempSaveIsFalse(@Param("nickname") String nickname);
+
+	List<PostMapping> findArchivePostsByArchiveUserNickname(String nickname);
 }

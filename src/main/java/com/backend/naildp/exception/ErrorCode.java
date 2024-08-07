@@ -15,7 +15,7 @@ public enum ErrorCode {
 	// 400 Bad Request
 	TEMPORARY_SERVER_ERROR(400),
 
-	INPUT_NULL(4000),
+	INVALID_FORM(4000),
 
 	ALREADY_EXIST(4001),
 

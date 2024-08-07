@@ -27,20 +27,21 @@ public class HomePostResponse {
 	private Boolean saved;
 	private LocalDateTime createdDate;
 
-	public HomePostResponse(Post post, List<Post> savedPosts, List<Post> likedPosts) {
+	public HomePostResponse(Post post, List<?> savedPosts, List<?> likedPosts) {
+
 		Photo photo = post.getPhotos().get(0);
 
-		postId = post.getId();
 		photoId = photo.getId();
 		photoUrl = photo.getPhotoUrl();
 		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
 		isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
+		postId = post.getId();
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
 		createdDate = post.getCreatedDate();
 	}
 
-	public static HomePostResponse likedPostResponse(Post post, List<Post> savedPost) {
+	public static HomePostResponse likedPostResponse(Post post, List<?> savedPost) {
 		Photo photo = post.getPhotos().get(0);
 
 		return HomePostResponse.builder()
