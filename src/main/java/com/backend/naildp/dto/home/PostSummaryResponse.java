@@ -24,6 +24,7 @@ public class PostSummaryResponse {
 
 	public PostSummaryResponse(Slice<Post> latestPosts, List<?> savedPosts, List<?> likedPosts) {
 		log.info("PostSummaryResponse 응답값 만들기");
+		cursorId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
 		postSummaryList = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
 	}
 

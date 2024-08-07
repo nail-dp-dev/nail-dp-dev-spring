@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @Transactional
-@Import(JpaAuditingConfiguration.class)가
+@Import(JpaAuditingConfiguration.class)
 class UserPostServiceTest {
 
 	@Autowired
