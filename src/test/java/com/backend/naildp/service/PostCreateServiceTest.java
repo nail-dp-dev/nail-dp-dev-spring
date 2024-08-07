@@ -68,7 +68,7 @@ class PostCreateServiceTest {
 	void testUploadPost() {
 		// given
 		String nickname = "testUser";
-		PostRequestDto postRequestDto = new PostRequestDto("postContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("postContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			Collections.emptyList());
 
@@ -136,7 +136,7 @@ class PostCreateServiceTest {
 		List<FileRequestDto> fileRequestDtos = List.of(
 			fileRequestDto1, fileRequestDto2);
 
-		PostRequestDto postRequestDto = new PostRequestDto("editContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("editContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			List.of("fileUrl1", "fileUrl2"));
 
@@ -192,7 +192,7 @@ class PostCreateServiceTest {
 		// given
 		String nickname = "testUser";
 		Long postId = 10L;
-		PostRequestDto postRequestDto = new PostRequestDto("editContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("editContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			List.of("fileUrl1", "fileUrl2"));
 
@@ -228,7 +228,7 @@ class PostCreateServiceTest {
 		String nickname = "testUser";
 		Long postId = 10L;
 
-		PostRequestDto postRequestDto = new PostRequestDto("postContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("postContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			Collections.emptyList());
 

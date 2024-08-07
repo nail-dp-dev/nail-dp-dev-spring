@@ -12,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -89,8 +88,13 @@ public class FollowRepositoryTest {
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
-		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
-		User user = new User(loginRequestDto, UserRole.USER);
+		User user = User.builder()
+			.nickname(nickname)
+			.role(UserRole.USER)
+			.phoneNumber(phoneNumber)
+			.agreement(true)
+			.build();
+
 		SocialLogin socialLogin = new SocialLogin(socialLoginId, "kakao", email, user);
 		em.persist(user);
 		em.persist(socialLogin);
