@@ -1,7 +1,10 @@
 package com.backend.naildp.repository;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,4 +18,17 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
 	@Query("select c from Comment c join fetch c.post join fetch c.user where c.id = :id")
 	Optional<Comment> findCommentAndPostAndUser(@Param("id") Long id);
+
+	@Query("select c from Comment c join fetch c.user where c.post.id = :postId")
+	Slice<Comment> findCommentsByPostId(@Param("postId") Long postId, PageRequest pageRequest);
+
+	@Query("select c from Comment c join fetch c.user where c.post.id = :postId"
+		+ " and ((c.likeCount <= :likeCount and c.id < :commentId) or c.likeCount < :likeCount)")
+	Slice<Comment> findCommentsByPostIdAndIdBefore(@Param("postId") Long postId,
+		@Param("commentId") Long commentId,
+		@Param("likeCount") Long likeCount,
+		PageRequest pageRequest);
+
+	@Query("select c.likeCount from Comment c where c.id = :commentId")
+	long countLikesById(@Param("commentId") Long commentId);
 }

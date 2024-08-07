@@ -1,9 +1,14 @@
 package com.backend.naildp.service;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.comment.CommentRegisterDto;
+import com.backend.naildp.dto.comment.CommentInfoResponse;
+import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
@@ -79,5 +84,29 @@ public class CommentService {
 		post.deleteComment(comment);
 
 		commentRepository.delete(comment);
+	}
+
+	public CommentSummaryResponse findComments(Long postId, int size, long cursorId) {
+		//좋아요수, 대댓글수, 작성시간 기준으로 정렬
+		//v1은 좋아요수, 작성시간 기준
+		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "likeCount", "createdDate"));
+
+		Slice<Comment> commentSlice;
+		if (cursorId == -1L) {
+			commentSlice = commentRepository.findCommentsByPostId(postId, pageRequest);
+		} else {
+			long likeCount = commentRepository.countLikesById(cursorId);
+			commentSlice = commentRepository.findCommentsByPostIdAndIdBefore(postId, cursorId, likeCount, pageRequest);
+		}
+
+		if (commentSlice.isEmpty()) {
+			return CommentSummaryResponse.createEmptyResponse();
+		}
+
+		//comment, user, commentLike
+		Slice<CommentInfoResponse> commentInfoResponseSlice = commentSlice.map(CommentInfoResponse::of);
+		Long cursorCommentId = commentSlice.getContent().get(commentSlice.getNumberOfElements() - 1).getId();
+
+		return new CommentSummaryResponse(cursorCommentId, commentInfoResponseSlice);
 	}
 }

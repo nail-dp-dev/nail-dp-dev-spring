@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.comment.CommentRegisterDto;
@@ -47,5 +48,13 @@ public class CommentController {
 		@AuthenticationPrincipal User user) {
 		commentService.deleteComment(postId, commentId, user.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2000));
+	}
+
+	@GetMapping("/postId}/comment")
+	ResponseEntity<?> findComments(@PathVariable("postId") Long postId,
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
+		commentService.findComments(postId, size, cursorId);
+		return null;
 	}
 }
