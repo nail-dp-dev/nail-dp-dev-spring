@@ -22,7 +22,7 @@ public class PostSummaryResponse {
 	private Long cursorId;
 	private Slice<HomePostResponse> postSummaryList;
 
-	public PostSummaryResponse(Slice<Post> latestPosts, List<Post> savedPosts, List<Post> likedPosts) {
+	public PostSummaryResponse(Slice<Post> latestPosts, List<?> savedPosts, List<?> likedPosts) {
 		log.info("PostSummaryResponse 응답값 만들기");
 		cursorId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
 		postSummaryList = latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts));
@@ -56,7 +56,7 @@ public class PostSummaryResponse {
 		return new PostSummaryResponse(oldestPostId, latestPosts.map(HomePostResponse::recentPostForAnonymous));
 	}
 
-	public static PostSummaryResponse createLikedPostSummary(Slice<Post> likedPostSlice, List<Post> savedPosts) {
+	public static PostSummaryResponse createLikedPostSummary(Slice<Post> likedPostSlice, List<?> savedPosts) {
 		log.info("PostSummaryResponse 좋아요 체크한 게시물 응답 만들기 - 정적 팩토리 메서드");
 		Long oldestPostLikeId = likedPostSlice.getContent().get(likedPostSlice.getNumberOfElements() - 1).getId();
 		log.info("PostSummaryResponse 응답");
