@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class HomeController {
 
-	// private final PostService postService;
 	private final PostInfoService postInfoService;
 
 	@GetMapping("/home")

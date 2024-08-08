@@ -40,15 +40,19 @@ public class Post extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<Photo> photos = new ArrayList<>();
 
+	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<Comment> comments = new ArrayList<>();
 
+	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<PostLike> postLikes = new ArrayList<>();
 
+	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<TagPost> tagPosts = new ArrayList<>();
 
@@ -96,4 +100,23 @@ public class Post extends BaseEntity {
 		this.postLikes.add(postLike);
 	}
 
+	public void addComment(Comment comment) {
+		this.comments.add(comment);
+	}
+
+	public boolean isTempSaved() {
+		return this.tempSave;
+	}
+
+	public boolean isClosed() {
+		return this.boundary == Boundary.NONE;
+	}
+
+	public boolean isOpenedForFollower() {
+		return this.boundary == Boundary.FOLLOW;
+	}
+
+	public void deleteComment(Comment comment) {
+		this.comments.remove(comment);
+	}
 }
