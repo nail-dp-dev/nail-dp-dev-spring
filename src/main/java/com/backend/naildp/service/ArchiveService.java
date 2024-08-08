@@ -3,7 +3,9 @@ package com.backend.naildp.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
 import com.backend.naildp.entity.Archive;
@@ -22,9 +24,17 @@ public class ArchiveService {
 	private final UserRepository userRepository;
 	private final ArchiveRepository archiveRepository;
 
+	@Transactional
 	public void createArchive(String nickname, ArchiveRequestDto archiveRequestDto) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
 			ErrorCode.NOT_FOUND));
+
+		if (user.getRole() == UserRole.USER) {
+			int archiveCount = archiveRepository.countArchivesByUserNickname(nickname);
+			if (archiveCount >= 4) {
+				throw new CustomException("더이상 아카이브를 생성할 수 없습니다.", ErrorCode.INVALID_FORM);
+			}
+		}
 
 		Archive archive = Archive.of(user, archiveRequestDto.getArchiveName(), archiveRequestDto.getBoundary());
 
@@ -32,6 +42,7 @@ public class ArchiveService {
 
 	}
 
+	@Transactional(readOnly = true)
 	public ArchiveResponseDto getArchives(String nickname) {
 
 		List<ArchiveMapping> archives = archiveRepository.findArchiveInfosByUserNickname(nickname);

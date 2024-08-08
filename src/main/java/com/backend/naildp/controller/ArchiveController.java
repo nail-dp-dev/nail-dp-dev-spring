@@ -35,7 +35,7 @@ public class ArchiveController {
 
 		ArchiveResponseDto response = archiveService.getArchives(userDetails.getUser().getNickname());
 
-		return ResponseEntity.ok(ApiResponse.successResponse(response, "아카이브 조회 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "아카이브 조회 성공", 2000));
 	}
 
 }

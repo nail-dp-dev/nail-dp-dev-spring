@@ -9,11 +9,14 @@ import org.springframework.data.repository.query.Param;
 import com.backend.naildp.entity.Archive;
 
 public interface ArchiveRepository extends JpaRepository<Archive, Long> {
-	@Query("select a.id, a.name, a.boundary, a.archiveImgUrl, COUNT(ap) as postCount "
-		+ "from Archive a left join a.archivePosts ap "
-		+ "where a.user.nickname = :nickname "
-		+ "group by a.id "
-		+ "order by a.createdDate DESC")
+	@Query(
+		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
+			+ "from Archive a left join a.archivePosts ap "
+			+ "where a.user.nickname = :nickname "
+			+ "group by a.id "
+			+ "order by a.createdDate DESC")
 	List<ArchiveMapping> findArchiveInfosByUserNickname(@Param("nickname") String nickname);
+
+	int countArchivesByUserNickname(String nickname);
 }
 

@@ -9,6 +9,8 @@ import com.backend.naildp.common.Boundary;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -43,6 +45,7 @@ public class Archive extends BaseEntity {
 	@Column(nullable = false)
 	private String name;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Boundary boundary;
 

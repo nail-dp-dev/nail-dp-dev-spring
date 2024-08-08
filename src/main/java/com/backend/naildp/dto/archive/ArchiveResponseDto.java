@@ -16,13 +16,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ArchiveResponseDto {
-	private List<ArchiveInfoResponse> archiveInfoResponses;
+	private List<ArchiveInfoResponse> archiveList;
 
 	public static ArchiveResponseDto of(List<ArchiveMapping> archives) {
 		List<ArchiveInfoResponse> archiveInfoResponses = archives.stream().map(ArchiveInfoResponse::new).toList();
 
 		return ArchiveResponseDto.builder()
-			.archiveInfoResponses(archiveInfoResponses)
+			.archiveList(archiveInfoResponses)
 			.build();
 	}
 
@@ -41,9 +41,11 @@ public class ArchiveResponseDto {
 			this.archiveId = archive.getId();
 			this.boundary = archive.getBoundary();
 			this.postCount = archive.getPostCount();
-			this.archiveImgUrl = archive.getArchiveImgUrl();
-			this.isPhoto = FileExtensionChecker.isPhotoExtension(archive.getArchiveImgUrl());
-			this.isVideo = FileExtensionChecker.isVideoExtension(archive.getArchiveImgUrl());
+			if (archiveImgUrl != null) {
+				this.archiveImgUrl = archive.getArchiveImgUrl();
+				this.isPhoto = FileExtensionChecker.isPhotoExtension(archive.getArchiveImgUrl());
+				this.isVideo = FileExtensionChecker.isVideoExtension(archive.getArchiveImgUrl());
+			}
 		}
 	}
 }
