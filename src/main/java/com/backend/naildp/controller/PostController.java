@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -85,8 +86,8 @@ public class PostController {
 
 	@GetMapping("/{postId}")
 	ResponseEntity<ApiResponse<?>> postDetails(@PathVariable("postId") Long postId,
-		@AuthenticationPrincipal User user) {
-		PostInfoResponse postInfoResponse = postService.postInfo(user.getUsername(), postId);
+		@AuthenticationPrincipal UserDetails userDetails) {
+		PostInfoResponse postInfoResponse = postService.postInfo(userDetails.getUsername(), postId);
 		return ResponseEntity.ok(ApiResponse.successResponse(postInfoResponse, "특정 게시물 상세정보 조회", 2000));
 	}
 

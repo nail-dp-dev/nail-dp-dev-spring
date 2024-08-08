@@ -32,6 +32,7 @@ import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.CommentRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceUnitTest {
@@ -47,6 +48,9 @@ class CommentServiceUnitTest {
 
 	@Mock
 	FollowRepository followRepository;
+
+	@Mock
+	UserRepository userRepository;
 
 	@Test
 	void 임시저장_게시물에_댓글_등록_실패_테스트() {
@@ -102,23 +106,24 @@ class CommentServiceUnitTest {
 	@Test
 	void 댓글_등록_테스트() {
 		//given
-		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
-		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
-		Post post = createPost(writer, false, Boundary.FOLLOW);
-		Comment comment = new Comment(user, post, "댓글 등록 성공");
+		User commenter = new User(new LoginRequestDto("commenter", "phoneNumber", true), UserRole.USER);
+		User postWriter = new User(new LoginRequestDto("postWriter", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(postWriter, false, Boundary.FOLLOW);
+		Comment comment = new Comment(commenter, post, "댓글 등록 성공");
 
 		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
-		given(followRepository.existsByFollowerNicknameAndFollowing(eq(user.getNickname()), eq(writer)))
+		given(followRepository.existsByFollowerNicknameAndFollowing(eq(commenter.getNickname()), eq(postWriter)))
 			.willReturn(true);
+		given(userRepository.findByNickname(eq(commenter.getNickname()))).willReturn(Optional.of(commenter));
 		given(commentRepository.save(any())).willReturn(comment);
 
 		//when
 		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("댓글 등록 성공");
-		commentService.registerComment(1L, commentRegisterDto, user.getNickname());
+		commentService.registerComment(1L, commentRegisterDto, commenter.getNickname());
 
 		//then
 		verify(postRepository).findPostAndUser(1L);
-		verify(followRepository).existsByFollowerNicknameAndFollowing(user.getNickname(), writer);
+		verify(followRepository).existsByFollowerNicknameAndFollowing(commenter.getNickname(), postWriter);
 		verify(commentRepository).save(any(Comment.class));
 	}
 

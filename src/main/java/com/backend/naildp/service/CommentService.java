@@ -17,6 +17,7 @@ import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.CommentRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +29,7 @@ public class CommentService {
 	private final PostRepository postRepository;
 	private final CommentRepository commentRepository;
 	private final FollowRepository followRepository;
+	private final UserRepository userRepository;
 
 	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
@@ -51,7 +53,9 @@ public class CommentService {
 		}
 
 		//comment 생성 및 저장
-		Comment comment = new Comment(user, post, commentRegisterDto.getCommentContent());
+		User commenter = userRepository.findByNickname(username)
+			.orElseThrow(() -> new CustomException("다시 시도해주세요.", ErrorCode.NOT_FOUND));
+		Comment comment = new Comment(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
 
 		return commentRepository.save(comment).getId();
