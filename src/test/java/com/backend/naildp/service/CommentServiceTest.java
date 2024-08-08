@@ -35,9 +35,9 @@ class CommentServiceTest {
 
 	@BeforeEach
 	void setup() {
-		User user = User.builder().nickname("user").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
-		em.persist(user);
-		User commenter = User.builder().nickname("user").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		User postWriter = User.builder().nickname("postWriter").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		em.persist(postWriter);
+		User commenter = User.builder().nickname("commenter").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
 		em.persist(commenter);
 		User noCommentUser = User.builder()
 			.nickname("noCommentUser")
@@ -47,7 +47,7 @@ class CommentServiceTest {
 			.build();
 		em.persist(noCommentUser);
 
-		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+		Post post = Post.builder().user(postWriter).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
 		em.persist(post);
 		Post noCommentPost = Post.builder()
 			.user(noCommentUser)
@@ -68,7 +68,7 @@ class CommentServiceTest {
 		//given
 		int pageSize = COMMENT_CNT - 1;
 		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", "user")
+			.setParameter("nickname", "postWriter")
 			.getSingleResult();
 
 		//when
@@ -87,7 +87,7 @@ class CommentServiceTest {
 		//given
 		int pageSize = COMMENT_CNT + 1;
 		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", "user")
+			.setParameter("nickname", "postWriter")
 			.getSingleResult();
 
 		//when
