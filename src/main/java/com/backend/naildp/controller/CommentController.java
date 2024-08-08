@@ -2,7 +2,7 @@ package com.backend.naildp.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,23 +31,25 @@ public class CommentController {
 	@PostMapping("/{postId}/comment")
 	ResponseEntity<?> createComment(@PathVariable("postId") Long postId,
 		@Valid @RequestBody CommentRegisterDto commentRegisterDto,
-		@AuthenticationPrincipal User user) {
-		Long registeredCommentId = commentService.registerComment(postId, commentRegisterDto, user.getUsername());
+		@AuthenticationPrincipal UserDetails userDetails) {
+		Long registeredCommentId = commentService.registerComment(postId, commentRegisterDto,
+			userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(registeredCommentId, "댓글 등록 성공", 2001));
 	}
 
 	@PatchMapping("/{postId}/comment/{commentId}")
 	ResponseEntity<?> modifyComment(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
 		@Valid @RequestBody CommentRegisterDto commentModifyDto,
-		@AuthenticationPrincipal User user) {
-		Long modifiedCommentId = commentService.modifyComment(postId, commentId, commentModifyDto, user.getUsername());
+		@AuthenticationPrincipal UserDetails userDetails) {
+		Long modifiedCommentId = commentService.modifyComment(postId, commentId, commentModifyDto,
+			userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2000));
 	}
 
 	@DeleteMapping("/{postId}/comment/{commentId}")
 	ResponseEntity<?> deleteComment(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
-		@AuthenticationPrincipal User user) {
-		commentService.deleteComment(postId, commentId, user.getUsername());
+		@AuthenticationPrincipal UserDetails userDetails) {
+		commentService.deleteComment(postId, commentId, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2000));
 	}
 
