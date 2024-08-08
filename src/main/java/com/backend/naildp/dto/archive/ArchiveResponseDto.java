@@ -1,5 +1,11 @@
 package com.backend.naildp.dto.archive;
 
+import java.util.List;
+
+import com.backend.naildp.common.Boundary;
+import com.backend.naildp.common.FileExtensionChecker;
+import com.backend.naildp.repository.ArchiveMapping;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,13 +16,34 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ArchiveResponseDto {
-	private Long archiveId;
-	private String boundary;
-	private String archiveImageUrl;
-	private String postCount;
+	private List<ArchiveInfoResponse> archiveInfoResponses;
 
-	public static ArchiveResponseDto of (){
-		return
+	public static ArchiveResponseDto of(List<ArchiveMapping> archives) {
+		List<ArchiveInfoResponse> archiveInfoResponses = archives.stream().map(ArchiveInfoResponse::new).toList();
+
+		return ArchiveResponseDto.builder()
+			.archiveInfoResponses(archiveInfoResponses)
+			.build();
 	}
 
+	@Getter
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ArchiveInfoResponse {
+		private Long archiveId;
+		private Boundary boundary;
+		private String archiveImgUrl;
+		private Long postCount;
+		private Boolean isPhoto;
+		private Boolean isVideo;
+
+		public ArchiveInfoResponse(ArchiveMapping archive) {
+			this.archiveId = archive.getId();
+			this.boundary = archive.getBoundary();
+			this.postCount = archive.getPostCount();
+			this.archiveImgUrl = archive.getArchiveImgUrl();
+			this.isPhoto = FileExtensionChecker.isPhotoExtension(archive.getArchiveImgUrl());
+			this.isVideo = FileExtensionChecker.isVideoExtension(archive.getArchiveImgUrl());
+		}
+	}
 }

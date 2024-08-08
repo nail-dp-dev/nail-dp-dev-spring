@@ -5,10 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
+import com.backend.naildp.dto.archive.ArchiveResponseDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.ArchiveMapping;
 import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.UserRepository;
 
@@ -23,17 +25,17 @@ public class ArchiveService {
 	public void createArchive(String nickname, ArchiveRequestDto archiveRequestDto) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
 			ErrorCode.NOT_FOUND));
-		Archive archive = Archive.builder()
-			.user(user)
-			.name(archiveRequestDto.getArchiveName())
-			.build();
+
+		Archive archive = Archive.of(user, archiveRequestDto.getArchiveName(), archiveRequestDto.getBoundary());
 
 		archiveRepository.save(archive);
+
 	}
 
-	public void getArchives(String nickname) {
+	public ArchiveResponseDto getArchives(String nickname) {
 
-		List<Archive> archive = archiveRepository.findArchivesByUserNicknameOrderByCreatedDateDesc(nickname);
+		List<ArchiveMapping> archives = archiveRepository.findArchiveInfosByUserNickname(nickname);
 
+		return ArchiveResponseDto.of(archives);
 	}
 }

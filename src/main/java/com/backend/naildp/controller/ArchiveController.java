@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
+import com.backend.naildp.dto.archive.ArchiveResponseDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.ArchiveService;
@@ -32,9 +33,9 @@ public class ArchiveController {
 	@GetMapping("/archive")
 	ResponseEntity<ApiResponse<?>> getArchives(@AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-		archiveService.getArchives(userDetails.getUser().getNickname());
+		ArchiveResponseDto response = archiveService.getArchives(userDetails.getUser().getNickname());
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 조회 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "아카이브 조회 성공", 2001));
 	}
 
 }

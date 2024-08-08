@@ -43,11 +43,18 @@ public class Archive extends BaseEntity {
 	@Column(nullable = false)
 	private String name;
 
-	@Builder.Default
 	@Column(nullable = false)
-	private Boundary boundary = Boundary.ALL;
+	private Boundary boundary;
 
-	private String
+	private String archiveImgUrl;
+
+	public static Archive of(User user, String name, Boundary boundary) {
+		return Archive.builder()
+			.user(user)
+			.name(name)
+			.boundary(boundary)
+			.build();
+	}
 
 	public Archive(User user, String name, Boundary boundary) {
 		this.user = user;
