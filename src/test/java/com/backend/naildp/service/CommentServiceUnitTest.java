@@ -117,7 +117,7 @@ class CommentServiceUnitTest {
 		commentService.registerComment(1L, commentRegisterDto, user.getNickname());
 
 		//then
-		verify(postRepository).findPostAndUser(post.getId());
+		verify(postRepository).findPostAndUser(1L);
 		verify(followRepository).existsByFollowerNicknameAndFollowing(user.getNickname(), writer);
 		verify(commentRepository).save(any(Comment.class));
 	}
@@ -223,7 +223,6 @@ class CommentServiceUnitTest {
 
 	private Post createPost(User user, boolean tempSave, Boundary boundary) {
 		return Post.builder()
-			.id(1L)
 			.user(user)
 			.postContent("content")
 			.tempSave(tempSave)

@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -77,7 +76,7 @@ class PostCreateServiceTest {
 			new MockMultipartFile("file2", new byte[] {4, 5, 6})
 		);
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		List<FileRequestDto> fileRequestDtos = List.of(
 			new FileRequestDto("file1", 12345L, "fileUrl1"),
@@ -85,7 +84,6 @@ class PostCreateServiceTest {
 		);
 
 		Post post = Post.builder()
-			.photos(List.of())
 			.user(user)
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
@@ -116,6 +114,15 @@ class PostCreateServiceTest {
 		verify(photoRepository, times(2)).save(any(Photo.class));
 	}
 
+	private User createUser(String nickname) {
+		return User.builder()
+			.nickname(nickname)
+			.phoneNumber("010-1234-5678")
+			.agreement(true)
+			.role(UserRole.USER)
+			.build();
+	}
+
 	@Test
 	@DisplayName("게시물 수정 테스트")
 	void testEditPost() {
@@ -128,7 +135,7 @@ class PostCreateServiceTest {
 			new MockMultipartFile("newFile2", new byte[] {4, 5, 6})
 		);
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
 		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
@@ -141,8 +148,6 @@ class PostCreateServiceTest {
 			List.of("fileUrl1", "fileUrl2"));
 
 		Post post = Post.builder()
-			.id(postId)
-			.photos(List.of())
 			.user(user)
 			.postContent("content")
 			.boundary(Boundary.FOLLOW)
@@ -196,11 +201,9 @@ class PostCreateServiceTest {
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			List.of("fileUrl1", "fileUrl2"));
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		Post post = Post.builder()
-			.id(postId)
-			.photos(new ArrayList<>())
 			.user(user)
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
@@ -232,19 +235,16 @@ class PostCreateServiceTest {
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			Collections.emptyList());
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
 		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
 
 		Post post = Post.builder()
-			.id(postId)
 			.user(user)
-			.photos(new ArrayList<>())
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
 			.tempSave(false)
-			.tagPosts(new ArrayList<>())
 			.build();
 
 		Photo photo1 = new Photo(post, fileRequestDto1);

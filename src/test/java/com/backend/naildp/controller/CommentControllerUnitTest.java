@@ -1,7 +1,7 @@
 package com.backend.naildp.controller;
 
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -30,7 +30,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
-import com.backend.naildp.entity.Comment;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.CommentService;
 import com.fasterxml.jackson.databind.ObjectMapper;

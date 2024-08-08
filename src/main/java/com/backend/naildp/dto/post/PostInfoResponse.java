@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.User;
 
@@ -32,7 +31,8 @@ public class PostInfoResponse {
 	private long sharedCount;
 	private List<String> tags;
 
-	public static PostInfoResponse of(Post post, User user, String profileUrl, boolean followingStatus, int followerCount,
+	public static PostInfoResponse of(Post post, User user, String profileUrl, boolean followingStatus,
+		int followerCount,
 		List<Tag> tags) {
 
 		List<FileInfoResponse> fileInfoResponses = post.getPhotos().stream().map(FileInfoResponse::new).toList();

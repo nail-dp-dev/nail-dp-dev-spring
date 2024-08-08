@@ -13,7 +13,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,8 +20,6 @@ import lombok.NoArgsConstructor;
 @Entity(name = "Users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class User extends BaseEntity {
 
 	@Id
@@ -30,16 +27,12 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private UUID id;
 
-	// @OneToMany(mappedBy = "users", fetch = FetchType.LAZY)
-	// private List<SocialLogin> socialLoginList;
-
 	@Column(nullable = false)
 	private String nickname;
 
 	@Column(nullable = false)
 	private String phoneNumber;
 
-	@Builder.Default
 	private Long point = 0L;
 
 	@Enumerated(value = EnumType.STRING)
@@ -48,16 +41,15 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private boolean agreement;
 
-	@Builder.Default
 	@Column(nullable = false)
 	private String thumbnailUrl = "default";
 
-	public User(String nickname, String phoneNumber,
-		Long point, UserRole role) {
+	@Builder
+	public User(String nickname, String phoneNumber, UserRole role, boolean agreement) {
 		this.nickname = nickname;
 		this.phoneNumber = phoneNumber;
-		this.point = point;
 		this.role = role;
+		this.agreement = agreement;
 	}
 
 	public User(LoginRequestDto loginRequestDto, UserRole role) {

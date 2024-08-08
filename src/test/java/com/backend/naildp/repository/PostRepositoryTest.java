@@ -4,11 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +133,8 @@ class PostRepositoryTest {
 		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
 			.setParameter("nickname", nickname)
 			.getSingleResult();
-		List<Post> posts = em.createQuery("select p from Post p join fetch p.user u where u = :user and p.tempSave = false",
+		List<Post> posts = em.createQuery(
+				"select p from Post p join fetch p.user u where u = :user and p.tempSave = false",
 				Post.class)
 			.setParameter("user", user)
 			.getResultList();
@@ -148,76 +147,6 @@ class PostRepositoryTest {
 		//then
 		assertThat(findPosts).extracting("tempSave").containsOnly(false);
 		assertThat(findPosts).extracting("user").containsOnly(user);
-	}
-
-	@Disabled
-	@DisplayName("커서 기반 페이징으로 Post 조회")
-	@Test
-	void cursorPagingPosts() {
-		//given
-		int size = 20;
-		int secondSize = 35;
-		List<Post> findPosts = em.createQuery(
-				"select p from Post p where p.tempSave = false order by p.createdDate desc", Post.class)
-			.getResultList();
-
-		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdDate"));
-		PageRequest secondPageRequest = PageRequest.of(0, secondSize, Sort.by(Sort.Direction.DESC, "createdDate"));
-		Long firstPostId = findPosts.get(0).getId();
-		Long nextPostId = findPosts.get(19).getId();
-		System.out.println("firstPostId = " + firstPostId);
-		System.out.println("nextPostId = " + nextPostId);
-		em.clear();
-
-		//when
-		Slice<Post> slicedPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(
-			firstPostId, Boundary.NONE, pageRequest);
-		Slice<Post> nextSlicedPosts = postRepository.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(
-			nextPostId, Boundary.NONE, secondPageRequest);
-
-		//then
-		assertThat(slicedPosts).hasSize(size);
-		assertThat(slicedPosts.hasNext()).isTrue();
-		assertThat(slicedPosts.getNumber()).isEqualTo(0);
-		assertThat(slicedPosts.getNumberOfElements()).isEqualTo(size);
-
-		assertThat(nextSlicedPosts).hasSize(10);
-		assertThat(nextSlicedPosts.hasNext()).isFalse();
-		assertThat(nextSlicedPosts.getNumber()).isEqualTo(0);
-		assertThat(nextSlicedPosts.getNumberOfElements()).isEqualTo(10);
-
-	}
-
-	@Disabled
-	@DisplayName("최신순으로 페이징한 Post 조회 테스트")
-	@Test
-	void pagingPosts() {
-		//given
-		int pageSizeBelowTotalPostCnt = TOTAL_POST_CNT - 1;
-		int pageSizeAboveTotalPostCnt = TOTAL_POST_CNT + 1;
-		int postCnt = TOTAL_POST_CNT;
-
-		PageRequest pageRequestBelowPostCnt = PageRequest.of(0, pageSizeBelowTotalPostCnt,
-			Sort.by(Sort.Direction.DESC, "createdDate"));
-		PageRequest pageRequestAbovePostCnt = PageRequest.of(0, pageSizeAboveTotalPostCnt,
-			Sort.by(Sort.Direction.DESC, "createdDate"));
-
-		//when
-		Slice<Post> slicedPostsBelowPostCnt = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE,
-			pageRequestBelowPostCnt);
-		Slice<Post> slicedPostsAbovePostCnt = postRepository.findPostsByBoundaryNotAndTempSaveFalse(Boundary.NONE,
-			pageRequestAbovePostCnt);
-
-		//then
-		assertThat(slicedPostsBelowPostCnt).hasSize(pageSizeBelowTotalPostCnt);
-		assertThat(slicedPostsBelowPostCnt.hasNext()).isTrue();
-		assertThat(slicedPostsBelowPostCnt.getNumber()).isEqualTo(0);
-		assertThat(slicedPostsBelowPostCnt.getNumberOfElements()).isEqualTo(pageSizeBelowTotalPostCnt);
-
-		assertThat(slicedPostsAbovePostCnt).hasSize(postCnt);
-		assertThat(slicedPostsAbovePostCnt.hasNext()).isFalse();
-		assertThat(slicedPostsAbovePostCnt.getNumber()).isEqualTo(0);
-		assertThat(slicedPostsAbovePostCnt.getNumberOfElements()).isEqualTo(postCnt);
 	}
 
 	private void createTestTempSavePostAndPhoto(User user) {
@@ -236,8 +165,10 @@ class PostRepositoryTest {
 	private void createTestPostWithPhoto(int postCnt, User user, Boundary boundary) {
 		for (int i = 0; i < postCnt; i++) {
 			Post post = new Post(user, "" + i, 0L, boundary, false);
-			FileRequestDto fileRequestDto1 = new FileRequestDto("photo 1-" + user.getNickname() + i, 1L, "url 1-" + user.getNickname() + i);
-			FileRequestDto fileRequestDto2 = new FileRequestDto("photo 2-" + user.getNickname() + i, 1L, "url 2-" + user.getNickname() + i);
+			FileRequestDto fileRequestDto1 = new FileRequestDto("photo 1-" + user.getNickname() + i, 1L,
+				"url 1-" + user.getNickname() + i);
+			FileRequestDto fileRequestDto2 = new FileRequestDto("photo 2-" + user.getNickname() + i, 1L,
+				"url 2-" + user.getNickname() + i);
 			Photo photo1 = new Photo(post, fileRequestDto1);
 			Photo photo2 = new Photo(post, fileRequestDto2);
 			post.addPhoto(photo1);

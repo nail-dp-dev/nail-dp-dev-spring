@@ -1,6 +1,5 @@
 package com.backend.naildp.repository;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;

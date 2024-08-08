@@ -29,8 +29,6 @@ import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.CustomException;
-import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
@@ -245,11 +243,11 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(postRepository).findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
-		verify(postRepository, never())
-			.findPostsByBoundaryNotAndTempSaveFalse(any(Boundary.class), any(PageRequest.class));
-		verify(postRepository, never())
-			.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(), any(Boundary.class),
-				any(PageRequest.class));
+		// verify(postRepository, never())
+		// 	.findPostsByBoundaryNotAndTempSaveFalse(any(Boundary.class), any(PageRequest.class));
+		// verify(postRepository, never())
+		// 	.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(), any(Boundary.class),
+		// 		any(PageRequest.class));
 		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}

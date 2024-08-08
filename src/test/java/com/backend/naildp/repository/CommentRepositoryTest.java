@@ -34,7 +34,12 @@ class CommentRepositoryTest {
 	void 댓글_좋아요_개수_세기() {
 		//given
 		User user = User.builder().nickname("nickname").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
-		User commentLiker = User.builder().nickname("commentLiker").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		User commentLiker = User.builder()
+			.nickname("commentLiker")
+			.phoneNumber("pn")
+			.agreement(true)
+			.role(UserRole.USER)
+			.build();
 		Post post = Post.builder().user(user).postContent("content").boundary(Boundary.ALL).tempSave(false).build();
 		Comment comment = new Comment(user, post, "comment");
 
