@@ -110,7 +110,7 @@ class AuthServiceTest {
 	@DisplayName("회원가입 실패")
 	public void testSignup_fail() {
 		// given
-		User existingUser = new User("alswl123", "010-1234-5678", 1L, UserRole.USER);
+		User existingUser = createUser();
 		given(userRepository.findByNickname(loginRequestDto.getNickname())).willReturn(Optional.of(existingUser));
 
 		// when
@@ -126,6 +126,15 @@ class AuthServiceTest {
 		verify(cookieUtil, never()).deleteCookie(anyString(), any(HttpServletRequest.class),
 			any(HttpServletResponse.class));
 		verify(jwtUtil, never()).addJwtToCookie(anyString(), any(HttpServletResponse.class));
+	}
+
+	private User createUser() {
+		return User.builder()
+			.nickname("alswl123")
+			.phoneNumber("010-1234-5678")
+			.role(UserRole.USER)
+			.agreement(true)
+			.build();
 	}
 
 	@Test
@@ -150,7 +159,7 @@ class AuthServiceTest {
 		// given
 		NicknameRequestDto requestDto = new NicknameRequestDto();
 		requestDto.setNickname("alswl123");
-		User user = new User("alswl123", "010-1234-5678", 1L, UserRole.USER);
+		User user = createUser();
 		given(userRepository.findByNickname(requestDto.getNickname())).willReturn(Optional.of(user));
 
 		// when
@@ -185,7 +194,7 @@ class AuthServiceTest {
 		// given
 		PhoneNumberRequestDto requestDto = new PhoneNumberRequestDto();
 		requestDto.setPhoneNumber("010-1234-5678");
-		User user = new User("alswl123", "010-1234-5678", 1L, UserRole.USER);
+		User user = createUser();
 		given(userRepository.findByPhoneNumber(requestDto.getPhoneNumber())).willReturn(Optional.of(user));
 
 		// when

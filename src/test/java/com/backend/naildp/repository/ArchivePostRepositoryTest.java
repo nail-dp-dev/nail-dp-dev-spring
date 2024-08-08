@@ -104,7 +104,7 @@ class ArchivePostRepositoryTest {
 			FileRequestDto subPhotoFileRequestDto = new FileRequestDto("subName" + user.getNickname() + i, 1L,
 				"subUrl-" + user.getNickname() + i);
 			Photo photo1 = new Photo(post, thumbnailFileRequestDto);
-			Photo photo2 = new Photo(post,  subPhotoFileRequestDto);
+			Photo photo2 = new Photo(post, subPhotoFileRequestDto);
 			post.addPhoto(photo1);
 			post.addPhoto(photo2);
 			posts.add(post);

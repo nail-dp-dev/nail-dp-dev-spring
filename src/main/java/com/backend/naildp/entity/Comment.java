@@ -3,7 +3,6 @@ package com.backend.naildp.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Formula;
 
 import jakarta.persistence.Column;

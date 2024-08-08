@@ -6,8 +6,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentInfoResponse;
+import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Post;

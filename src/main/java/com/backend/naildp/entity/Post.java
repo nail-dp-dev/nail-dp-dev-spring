@@ -19,7 +19,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,8 +26,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Post extends BaseEntity {
 
 	@Id
@@ -40,25 +37,20 @@ public class Post extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private User user;
 
-	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<Photo> photos = new ArrayList<>();
 
-	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<Comment> comments = new ArrayList<>();
 
-	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<PostLike> postLikes = new ArrayList<>();
 
-	@Builder.Default
 	@OneToMany(mappedBy = "post")
 	private List<TagPost> tagPosts = new ArrayList<>();
 
 	private String postContent;
 
-	@Builder.Default
 	private Long sharing = 0L;
 
 	@Enumerated(value = EnumType.STRING)
@@ -68,10 +60,10 @@ public class Post extends BaseEntity {
 	@Column(nullable = false)
 	private Boolean tempSave;
 
+	@Builder
 	public Post(User user, String postContent, Long sharing, Boundary boundary, Boolean tempSave) {
 		this.user = user;
 		this.postContent = postContent;
-		this.sharing = sharing;
 		this.boundary = boundary;
 		this.tempSave = tempSave;
 	}

@@ -77,15 +77,13 @@ class UserInfoServiceTest {
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
 
-		user1 = new User("alswl", "010-1234-5678", 1000L, UserRole.USER);
 		user1 = User.builder()
 			.nickname("alswl")
 			.agreement(true)
-			.thumbnailUrl("alswl.profileUrl.jpg")
-			.point(1000L)
 			.phoneNumber("010-1234-5678")
 			.role(UserRole.USER)
 			.build();
+		user1.thumbnailUrlUpdate("alswl.profileUrl.jpg");
 		profile1 = Profile.builder()
 			.profileType(ProfileType.CUSTOMIZATION)
 			.name("name")
@@ -100,7 +98,12 @@ class UserInfoServiceTest {
 
 		post1 = new Post(user1, "alswl postContent", 0L, Boundary.ALL, false);
 
-		user2 = new User("jw", "010-9876-5432", 0L, UserRole.USER);
+		user2 = User.builder()
+			.nickname("jw")
+			.phoneNumber("010-9876-5432")
+			.agreement(true)
+			.role(UserRole.USER)
+			.build();
 		post2 = new Post(user2, "jw postContent", 0L, Boundary.ALL, false);
 		post3 = new Post(user2, "jw postContent", 0L, Boundary.ALL, true);
 
