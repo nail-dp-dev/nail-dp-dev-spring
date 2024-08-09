@@ -53,4 +53,7 @@ public class Archive extends BaseEntity {
 		this.boundary = boundary;
 	}
 
+	public void updateImgUrl(String archiveImgUrl) {
+		this.archiveImgUrl = archiveImgUrl;
+	}
 }

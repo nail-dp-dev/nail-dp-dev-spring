@@ -1,6 +1,7 @@
 package com.backend.naildp.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,5 +19,7 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
 	List<ArchiveMapping> findArchiveInfosByUserNickname(@Param("nickname") String nickname);
 
 	int countArchivesByUserNickname(String nickname);
+
+	Optional<Archive> findArchiveById(Long archiveId);
 }
 

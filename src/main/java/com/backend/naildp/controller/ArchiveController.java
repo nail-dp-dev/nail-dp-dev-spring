@@ -42,7 +42,7 @@ public class ArchiveController {
 
 	@PostMapping("/archive/{postId}")
 	ResponseEntity<ApiResponse<?>> saveArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@PathVariable Long postId, @RequestBody ArchiveIdRequestDto requestDto) {
+		@PathVariable("postId") Long postId, @RequestBody ArchiveIdRequestDto requestDto) {
 
 		archiveService.saveArchive(userDetails.getUser().getNickname(), postId, requestDto);
 

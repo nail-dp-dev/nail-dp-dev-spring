@@ -20,4 +20,6 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	List<ArchivePost> findAllArchivePostsByUserNicknameAndTempSaveIsFalse(@Param("nickname") String nickname);
 
 	List<PostMapping> findArchivePostsByArchiveUserNickname(String nickname);
+
+	boolean existsByArchiveIdAndPostId(Long archiveId, Long postId);
 }
