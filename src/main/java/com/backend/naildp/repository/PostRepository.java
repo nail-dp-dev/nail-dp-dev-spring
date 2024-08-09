@@ -17,8 +17,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 	Slice<Post> findPostsByBoundaryAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
 
-	Slice<Post> findPostsByBoundaryNotAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
-
 	@Query("select p from Post p where p.tempSave = false"
 		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user in :following))")
 	Slice<Post> findRecentPostsByFollowing(@Param("following") List<User> following, PageRequest pageRequest);
@@ -28,15 +26,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 	Slice<Post> findRecentPostsByIdAndFollowing(@Param("id") Long oldestPostId,
 		@Param("following") List<User> following, PageRequest pageRequest);
 
-	Slice<Post> findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(Long id, Boundary boundary,
-		PageRequest pageRequest);
-
 	Slice<Post> findPostsByIdBeforeAndBoundaryAndTempSaveFalse(Long id, Boundary boundary, PageRequest pageRequest);
 
 	int countPostsByUserAndTempSaveIsFalse(User user);
 
 	@Query("select p from Post p join fetch p.user u where p.id = :id and p.tempSave = false")
 	Optional<Post> findPostAndWriterById(@Param("id") Long postId);
+
+	@Query("select p from Post p join fetch p.user u where p.id = :id")
+	Optional<Post> findPostAndUser(@Param("id") Long postId);
+
+	Optional<Post> findPostByTempSaveIsTrueAndUser(User user);
 
 	Optional<Post> findPostByTempSaveIsTrueAndUserNickname(String nickname);
 

@@ -19,7 +19,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,8 +26,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Post extends BaseEntity {
 
 	@Id
@@ -54,7 +51,6 @@ public class Post extends BaseEntity {
 
 	private String postContent;
 
-	@Builder.Default
 	private Long sharing = 0L;
 
 	@Enumerated(value = EnumType.STRING)
@@ -64,10 +60,10 @@ public class Post extends BaseEntity {
 	@Column(nullable = false)
 	private Boolean tempSave;
 
+	@Builder
 	public Post(User user, String postContent, Long sharing, Boundary boundary, Boolean tempSave) {
 		this.user = user;
 		this.postContent = postContent;
-		this.sharing = sharing;
 		this.boundary = boundary;
 		this.tempSave = tempSave;
 	}
@@ -96,4 +92,23 @@ public class Post extends BaseEntity {
 		this.postLikes.add(postLike);
 	}
 
+	public void addComment(Comment comment) {
+		this.comments.add(comment);
+	}
+
+	public boolean isTempSaved() {
+		return this.tempSave;
+	}
+
+	public boolean isClosed() {
+		return this.boundary == Boundary.NONE;
+	}
+
+	public boolean isOpenedForFollower() {
+		return this.boundary == Boundary.FOLLOW;
+	}
+
+	public void deleteComment(Comment comment) {
+		this.comments.remove(comment);
+	}
 }

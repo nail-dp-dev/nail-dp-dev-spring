@@ -95,7 +95,8 @@ public class PostServiceTest {
 
 		//then
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(writer.getNickname());
-		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(writer.getNickname() + "Url");
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl)
+			.isEqualTo(writer.getNickname() + "Url");
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getFollowerCount).isEqualTo(1L);
 		assertThat(postInfoResponse.isFollowingStatus()).isTrue();
 	}
@@ -122,8 +123,6 @@ public class PostServiceTest {
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(writerNickname + "Url");
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getLikeCount).isEqualTo(1L);
 	}
-
-
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);

@@ -28,7 +28,9 @@ public enum ErrorCode {
 
 	FILES_NOT_REGISTERED(4005),
 
-	USER_MISMATCH(4006);
+	USER_MISMATCH(4006),
+
+	COMMENT_AUTHORITY(4007);
 	// EXPIRED_JWT("401_1", "JWT 시간이 만료되었습니다."),
 	// AUTHENTICATION_FAILURE_JWT("401_2", "올바른 JWT 정보가 아닙니다.");
 	private final int errorCode;

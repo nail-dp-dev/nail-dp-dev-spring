@@ -56,7 +56,12 @@ public class PostCreateControllerTest {
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
 
-		user = new User("testUser", "010-1234-5678", 0L, UserRole.USER);
+		user = User.builder()
+			.nickname("testUser")
+			.phoneNumber("010-1234-5678")
+			.role(UserRole.USER)
+			.agreement(true)
+			.build();
 
 		given(userDetails.getUser()).willReturn(user);
 

@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +17,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Profile extends BaseEntity {
 
 	@Id
@@ -40,10 +37,12 @@ public class Profile extends BaseEntity {
 	@Column(nullable = false)
 	private ProfileType profileType;
 
-	public Profile(String profileUrl, String name, boolean thumbnail) {
+	@Builder
+	public Profile(String profileUrl, String name, boolean thumbnail, ProfileType profileType) {
 		this.profileUrl = profileUrl;
 		this.name = name;
 		this.thumbnail = thumbnail;
+		this.profileType = profileType;
 	}
 
 	public void updateThumbnail(Boolean thumbnail) {

@@ -93,10 +93,12 @@ public class PostInfoServiceTest {
 		String nickname = "testUser";
 
 		//when
-		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L, nickname);
+		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L,
+			nickname);
 		Long oldestPostId = firstPostSummaryResponse.getCursorId();
 		System.out.println("oldestPostId = " + oldestPostId);
-		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize, oldestPostId,
+		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize,
+			oldestPostId,
 			nickname);
 
 		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();

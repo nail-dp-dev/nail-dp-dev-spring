@@ -16,8 +16,6 @@ import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.CustomException;
-import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
