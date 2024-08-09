@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
 import com.backend.naildp.entity.Archive;
@@ -13,6 +14,7 @@ import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchiveMapping;
+import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.UserRepository;
 
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class ArchiveService {
 	private final UserRepository userRepository;
 	private final ArchiveRepository archiveRepository;
+	private final ArchivePostRepository archivePostRepository;
 
 	@Transactional
 	public void createArchive(String nickname, ArchiveRequestDto archiveRequestDto) {
@@ -36,7 +39,7 @@ public class ArchiveService {
 			}
 		}
 
-		Archive archive = Archive.of(user, archiveRequestDto.getArchiveName(), archiveRequestDto.getBoundary());
+		Archive archive = new Archive(user, archiveRequestDto.getArchiveName(), archiveRequestDto.getBoundary());
 
 		archiveRepository.save(archive);
 
@@ -48,5 +51,9 @@ public class ArchiveService {
 		List<ArchiveMapping> archives = archiveRepository.findArchiveInfosByUserNickname(nickname);
 
 		return ArchiveResponseDto.of(archives);
+	}
+
+	public void saveArchive(String nickname, Long postId, ArchiveIdRequestDto requestDto) {
+
 	}
 }

@@ -18,7 +18,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,8 +25,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Archive extends BaseEntity {
 
 	@Id
@@ -51,17 +48,11 @@ public class Archive extends BaseEntity {
 
 	private String archiveImgUrl;
 
-	public static Archive of(User user, String name, Boundary boundary) {
-		return Archive.builder()
-			.user(user)
-			.name(name)
-			.boundary(boundary)
-			.build();
-	}
-
+	@Builder
 	public Archive(User user, String name, Boundary boundary) {
 		this.user = user;
 		this.name = name;
 		this.boundary = boundary;
 	}
+
 }
