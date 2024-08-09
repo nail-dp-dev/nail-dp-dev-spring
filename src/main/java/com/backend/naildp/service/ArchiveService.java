@@ -10,12 +10,14 @@ import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
 import com.backend.naildp.entity.Archive;
+import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchiveMapping;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.ArchiveRepository;
+import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class ArchiveService {
 	private final UserRepository userRepository;
 	private final ArchiveRepository archiveRepository;
 	private final ArchivePostRepository archivePostRepository;
+	private final PostRepository postRepository;
 
 	@Transactional
 	public void createArchive(String nickname, ArchiveRequestDto archiveRequestDto) {
@@ -54,6 +57,9 @@ public class ArchiveService {
 	}
 
 	public void saveArchive(String nickname, Long postId, ArchiveIdRequestDto requestDto) {
+
+		Post post = postRepository.findById(postId)
+			.orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 	}
 }
