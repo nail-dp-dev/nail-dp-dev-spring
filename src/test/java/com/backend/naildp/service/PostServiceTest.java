@@ -8,6 +8,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
@@ -28,6 +31,7 @@ import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.entity.UsersProfile;
+import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -122,6 +126,44 @@ public class PostServiceTest {
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(writerNickname);
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(writerNickname + "Url");
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getLikeCount).isEqualTo(1L);
+	}
+
+	@DisplayName("게시물 공개 범위 설정 시 예외 테스트 - 작성자와 요청자가 일치하지 않을 때")
+	@Test
+	void changeBoundaryExceptionBecauseOfNotWrittenUser() {
+		//given
+		String userNickname = "writer";
+		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
+			.setParameter("nickname", userNickname)
+			.setMaxResults(1)
+			.getSingleResult();
+		PostBoundaryRequest postBoundaryRequest = new PostBoundaryRequest(Boundary.NONE);
+		String wrongUserNickname = "wrongUser";
+
+		//when & then
+		assertThatThrownBy(
+			() -> postService.changeBoundary(post.getId(), postBoundaryRequest, wrongUserNickname))
+			.isInstanceOf(CustomException.class)
+			.extracting(Throwable::getMessage).isEqualTo("게시글 범위 설정은 작성자만 할 수 있습니다.");
+	}
+
+	@DisplayName("게시물 공개 범위 설정 테스트")
+	@ParameterizedTest
+	@EnumSource(Boundary.class)
+	void changeBoundary(Boundary boundary) {
+		//given
+		String userNickname = "writer";
+		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
+			.setParameter("nickname", userNickname)
+			.setMaxResults(1)
+			.getSingleResult();
+		PostBoundaryRequest postBoundaryRequest = new PostBoundaryRequest(boundary);
+
+		//when
+		postService.changeBoundary(post.getId(), postBoundaryRequest, userNickname);
+
+		//then
+		assertThat(post.getBoundary()).isEqualTo(boundary);
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
