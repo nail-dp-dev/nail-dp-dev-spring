@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
 
@@ -110,5 +111,13 @@ public class Post extends BaseEntity {
 
 	public void deleteComment(Comment comment) {
 		this.comments.remove(comment);
+	}
+
+	public boolean notWrittenBy(String username) {
+		return !user.equalsNickname(username);
+	}
+
+	public void changeBoundary(PostBoundaryRequest postBoundaryRequest) {
+		this.boundary = postBoundaryRequest.getCloser();
 	}
 }
