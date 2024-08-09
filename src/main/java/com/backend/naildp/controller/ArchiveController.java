@@ -46,6 +46,15 @@ public class ArchiveController {
 
 		archiveService.saveArchive(userDetails.getUser().getNickname(), postId, requestDto);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시물 저장 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브에 게시물 저장 성공", 2001));
+	}
+
+	@PostMapping("/archive/copy")
+	ResponseEntity<ApiResponse<?>> copyArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestBody ArchiveIdRequestDto requestDto) {
+
+		archiveService.copyArchive(userDetails.getUser().getNickname(), requestDto);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 복제 성공", 2001));
 	}
 }

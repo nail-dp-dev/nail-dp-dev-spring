@@ -22,4 +22,6 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	List<PostMapping> findArchivePostsByArchiveUserNickname(String nickname);
 
 	boolean existsByArchiveIdAndPostId(Long archiveId, Long postId);
+
+	List<PostMapping> findArchivePostsByArchiveId(Long archiveId);
 }

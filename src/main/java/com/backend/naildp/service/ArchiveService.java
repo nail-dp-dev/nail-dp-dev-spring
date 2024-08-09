@@ -19,6 +19,7 @@ import com.backend.naildp.repository.ArchiveMapping;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.FollowRepository;
+import com.backend.naildp.repository.PostMapping;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
 
@@ -66,6 +67,9 @@ public class ArchiveService {
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
+		Archive archive = archiveRepository.findArchiveById(requestDto.getArchiveId())
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
 		User postUser = post.getUser();
 		String photo = post.getPhotos().get(0).getPhotoUrl();
 
@@ -85,13 +89,36 @@ public class ArchiveService {
 			throw new CustomException("팔로워만 게시물을 저장할 수 있습니다.", ErrorCode.SAVE_AUTHORITY);
 		}
 
-		Archive archive = archiveRepository.findArchiveById(requestDto.getArchiveId())
-			.orElseThrow(() -> new CustomException("해당 아카이브가 존재하지 않습니다.", ErrorCode.NOT_FOUND));
-
 		ArchivePost archivePost = new ArchivePost(archive, post);
 		archivePostRepository.save(archivePost);
 
 		archive.updateImgUrl(photo);
 
 	}
+
+	public void copyArchive(String nickname, ArchiveIdRequestDto requestDto) {
+		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
+			ErrorCode.NOT_FOUND));
+
+		Archive originalArchive = archiveRepository.findArchiveById(requestDto.getArchiveId())
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		List<PostMapping> postList = archivePostRepository.findArchivePostsByArchiveId(requestDto.getArchiveId());
+
+		Archive copyArchive = Archive.builder()
+			.archiveImgUrl(originalArchive.getArchiveImgUrl())
+			.name(originalArchive.getName() + "Copy")
+			.boundary(originalArchive.getBoundary())
+			.user(user)
+			.build();
+
+		archiveRepository.save(copyArchive);
+
+		if (!postList.isEmpty()) {
+			postList.stream()
+				.map(post -> new ArchivePost(copyArchive, post.getPost()))
+				.forEach(archivePostRepository::save);
+		}
+	}
+
 }
