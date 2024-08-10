@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
+import com.backend.naildp.dto.archive.PostIdRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.ArchiveService;
@@ -40,11 +41,11 @@ public class ArchiveController {
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "아카이브 조회 성공", 2000));
 	}
 
-	@PostMapping("/archive/{postId}")
+	@PostMapping("/archive/{archiveId}")
 	ResponseEntity<ApiResponse<?>> saveArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@PathVariable("postId") Long postId, @RequestBody ArchiveIdRequestDto requestDto) {
+		@PathVariable("archiveId") Long archiveId, @RequestBody PostIdRequestDto requestDto) {
 
-		archiveService.saveArchive(userDetails.getUser().getNickname(), postId, requestDto);
+		archiveService.saveArchive(userDetails.getUser().getNickname(), archiveId, requestDto.getPostId());
 
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브에 게시물 저장 성공", 2001));
 	}

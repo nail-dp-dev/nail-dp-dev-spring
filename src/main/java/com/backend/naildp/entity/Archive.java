@@ -65,4 +65,8 @@ public class Archive extends BaseEntity {
 	public void updateImgUrl(String archiveImgUrl) {
 		this.archiveImgUrl = archiveImgUrl;
 	}
+
+	public boolean equalsNickname(String nickname) {
+		return this.user.getNickname().equals(nickname);
+	}
 }

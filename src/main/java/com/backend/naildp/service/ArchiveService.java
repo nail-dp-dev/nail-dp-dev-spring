@@ -63,17 +63,21 @@ public class ArchiveService {
 	}
 
 	@Transactional
-	public void saveArchive(String nickname, Long postId, ArchiveIdRequestDto requestDto) {
+	public void saveArchive(String nickname, Long archiveId, Long postId) {
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Archive archive = archiveRepository.findArchiveById(requestDto.getArchiveId())
+		Archive archive = archiveRepository.findArchiveById(archiveId)
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		User postUser = post.getUser();
 		String photo = post.getPhotos().get(0).getPhotoUrl();
 
-		if (archivePostRepository.existsByArchiveIdAndPostId(requestDto.getArchiveId(), postId)) {
+		if (!archive.equalsNickname(nickname)) {
+			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+
+		if (archivePostRepository.existsByArchiveIdAndPostId(archiveId, postId)) {
 			throw new CustomException("이미 저장한 게시물입니다.", ErrorCode.ALREADY_EXIST);
 		}
 
@@ -91,7 +95,7 @@ public class ArchiveService {
 
 		ArchivePost archivePost = new ArchivePost(archive, post);
 		archivePostRepository.save(archivePost);
-
+		//최근게시물 사진으로 썸네일 업데이트
 		archive.updateImgUrl(photo);
 
 	}
@@ -102,6 +106,10 @@ public class ArchiveService {
 
 		Archive originalArchive = archiveRepository.findArchiveById(requestDto.getArchiveId())
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (!originalArchive.equalsNickname(nickname)) {
+			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
 
 		List<PostMapping> postList = archivePostRepository.findArchivePostsByArchiveId(requestDto.getArchiveId());
 
