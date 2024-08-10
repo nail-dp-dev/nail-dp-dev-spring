@@ -61,7 +61,7 @@ public class PostLikeService {
 			throw new CustomException("임시저장한 게시물은 좋아요를 볼 수 없습니다.", ErrorCode.NOT_FOUND);
 		}
 
-		if (post.isClosed() && !postWriter.equalsNickname(username)) {
+		if (post.isClosed() && post.notWrittenBy(username)) {
 			throw new CustomException("비공개 게시물은 좋아요를 볼 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
