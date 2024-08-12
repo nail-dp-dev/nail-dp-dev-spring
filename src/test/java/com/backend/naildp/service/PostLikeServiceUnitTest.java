@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.*;
 
 import java.util.Optional;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -116,7 +115,7 @@ class PostLikeServiceUnitTest {
 	@Test
 	void countPostLikeExceptionWithTempSavePost() {
 		//given
-		User user = createUser();
+		User user = createUser("nickname");
 		Post tempSavePost = createPost(user, true, Boundary.ALL);
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(tempSavePost));
@@ -135,7 +134,7 @@ class PostLikeServiceUnitTest {
 	void countPostLikeExceptionWithPrivatePostAndOtherUser() {
 		//given
 		String wrongNickname = "wrongNickname";
-		User user = createUser();
+		User user = createUser("nickname");
 		Post privatePost = createPost(user, false, Boundary.NONE);
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(privatePost));
@@ -149,15 +148,15 @@ class PostLikeServiceUnitTest {
 		assertEquals(ErrorCode.INVALID_BOUNDARY, exception.getErrorCode());
 	}
 
-	@DisplayName("팔로워가 아닌 사용자가 팔로우 공개 게시물 좋아요 숫자 조회시 예외 발생")
+	@DisplayName("팔로워가 아닌 일반 사용자가 팔로우 공개 게시물 좋아요 숫자 조회시 예외 발생")
 	@Test
 	void countPostLikeExceptionWithFollowOpenedPostAndNotFollower() {
 		//given
 		String notFollowerNickname = "notFollowerNickname";
-		User user = createUser();
-		Post privatePost = createPost(user, false, Boundary.FOLLOW);
+		User user = createUser("nickname");
+		Post followPost = createPost(user, false, Boundary.FOLLOW);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(privatePost));
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
 		when(followRepository.existsByFollowerNicknameAndFollowing(eq(notFollowerNickname), eq(user))).thenReturn(
 			false);
 
@@ -166,15 +165,35 @@ class PostLikeServiceUnitTest {
 			() -> postLikeService.countPostLike(1L, notFollowerNickname));
 
 		//then
-		assertEquals("팔로워 공개 게시물입니다. 팔로워만 좋아요할 수 있습니다.", exception.getMessage());
+		assertEquals("팔로워 공개 게시물입니다. 팔로워와 작성자만 좋아요할 수 있습니다.", exception.getMessage());
 		assertEquals(ErrorCode.INVALID_BOUNDARY, exception.getErrorCode());
+	}
+
+	@DisplayName("게시물 작성자가 팔로우 공개 게시물 좋아요 숫자 조회 테스트")
+	@Test
+	void countPostLikeExceptionWithFollowOpenedPostAndWriter() {
+		//given
+		String postWriterNickname = "writer";
+		User postWriter = createUser(postWriterNickname);
+		Post followPost = createPost(postWriter, false, Boundary.FOLLOW);
+		PostLike postLike = new PostLike(postWriter, followPost);
+		followPost.addPostLike(postLike);
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		when(followRepository.existsByFollowerNicknameAndFollowing(eq(postWriterNickname), eq(postWriter))).thenReturn(false);
+
+		//when
+		PostLikeCountResponse response = postLikeService.countPostLike(1L, postWriterNickname);
+
+		//then
+		assertThat(response.getLikeCount()).isEqualTo(1);
 	}
 
 	@DisplayName("전체 공개 게시물 좋아요 숫자 조회 테스트")
 	@Test
 	void countLikeAboutPublicPost() {
 		//given
-		User user = createUser();
+		User user = createUser("nickname");
 		Post publicPost = createPost(user, false, Boundary.ALL);
 		long likeCnt = 30;
 		for (long i = 0; i < likeCnt; i++) {
@@ -195,7 +214,7 @@ class PostLikeServiceUnitTest {
 	@Test
 	void countPostLike() {
 		//given
-		User user = createUser();
+		User user = createUser("nickname");
 		Post postOpenedForFollower = createPost(user, false, Boundary.FOLLOW);
 		long likeCnt = 30;
 		for (long i = 0; i < likeCnt; i++) {
@@ -213,8 +232,8 @@ class PostLikeServiceUnitTest {
 		assertThat(response.getLikeCount()).isEqualTo(likeCnt);
 	}
 
-	private User createUser() {
-		return User.builder().nickname("nickname").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+	private User createUser(String nickname) {
+		return User.builder().nickname(nickname).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
 	}
 
 	private Post createPost(User user, boolean tempSave, Boundary boundary) {

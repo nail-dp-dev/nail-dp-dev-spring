@@ -48,10 +48,9 @@ public class PostLikeService {
 		postLikeRepository.deletePostLikeById(postLike.getId());
 	}
 
-
 	public PostLikeCountResponse countPostLike(Long postId, String username) {
 		Post post = postRepository.findPostAndUser(postId)
-			.orElseThrow(() -> new CustomException("게시물을 열람할 수 없습니다.", ErrorCode.USER_MISMATCH));
+			.orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 		User postWriter = post.getUser();
 
 		//post 에 댓글 달 수 있는지 확인
@@ -65,8 +64,9 @@ public class PostLikeService {
 			throw new CustomException("비공개 게시물은 좋아요를 볼 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username, postWriter)) {
-			throw new CustomException("팔로워 공개 게시물입니다. 팔로워만 좋아요할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username, postWriter)
+			&& post.notWrittenBy(username)) {
+			throw new CustomException("팔로워 공개 게시물입니다. 팔로워와 작성자만 좋아요할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
 		return new PostLikeCountResponse(post.getPostLikes().size());
