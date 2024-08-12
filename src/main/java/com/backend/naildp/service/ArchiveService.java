@@ -86,15 +86,15 @@ public class ArchiveService {
 		}
 
 		if (post.isTempSaved()) {
-			throw new CustomException("임시저장 게시물은 저장할 수 없습니다.", ErrorCode.SAVE_AUTHORITY);
+			throw new CustomException("임시저장 게시물은 저장할 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
 		if (post.isClosed()) {
-			throw new CustomException("비공개 게시물은 저장할 수 없습니다.", ErrorCode.SAVE_AUTHORITY);
+			throw new CustomException("비공개 게시물은 저장할 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
 		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname, postUser)) {
-			throw new CustomException("팔로워만 게시물을 저장할 수 있습니다.", ErrorCode.SAVE_AUTHORITY);
+			throw new CustomException("팔로워만 게시물을 저장할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
 		ArchivePost archivePost = new ArchivePost(archive, post);
@@ -140,7 +140,7 @@ public class ArchiveService {
 		Slice<ArchiveMapping> archiveList;
 		// 팔로잉 nickname 썸네일사진, 아카이브 썸네일, archive count 아카이브 ID
 		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
-		followingNickname.add(nickname);
+
 		if (cursorId == -1) {
 			archiveList = archiveRepository.findArchivesByFollowing(followingNickname, pageRequest);
 		} else {
