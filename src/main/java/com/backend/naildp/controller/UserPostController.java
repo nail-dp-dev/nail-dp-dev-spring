@@ -30,6 +30,7 @@ public class UserPostController {
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorPostId) {
 
 		PostSummaryResponse postSummaryResponse = userPostService.getUserPosts(userDetails.getUser().getNickname(),
+			nickname,
 			size, cursorPostId);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "유저 전체 게시물 조회 성공", 2000));
@@ -42,6 +43,7 @@ public class UserPostController {
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorPostId) {
 
 		PostSummaryResponse postSummaryResponse = userPostService.getLikedUserPosts(userDetails.getUser().getNickname(),
+			nickname,
 			size, cursorPostId);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "유저 좋아요 게시물 조회 성공", 2000));
