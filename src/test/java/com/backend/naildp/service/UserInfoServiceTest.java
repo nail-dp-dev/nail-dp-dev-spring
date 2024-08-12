@@ -91,23 +91,17 @@ class UserInfoServiceTest {
 			.thumbnail(true)
 			.build();
 
-		usersProfile1 = UsersProfile.builder()
-			.user(user1)
-			.profile(profile1)
-			.build();
+		usersProfile1 = UsersProfile.builder().user(user1).profile(profile1).build();
 
 		post1 = new Post(user1, "alswl postContent", 0L, Boundary.ALL, false);
 
-		user2 = User.builder()
-			.nickname("jw")
-			.phoneNumber("010-9876-5432")
-			.agreement(true)
-			.role(UserRole.USER)
-			.build();
+		user2 = User.builder().nickname("jw").phoneNumber("010-9876-5432").agreement(true).role(UserRole.USER).build();
 		post2 = new Post(user2, "jw postContent", 0L, Boundary.ALL, false);
 		post3 = new Post(user2, "jw postContent", 0L, Boundary.ALL, true);
 
 		archive1 = new Archive(user1, "alswl archive", Boundary.ALL);
+
+		user1.updatePoint(1000L);
 	}
 
 	@DisplayName("사용자 정보 조회 - 저장한 포스트의 공개범위가 전체일 떄")
@@ -250,10 +244,8 @@ class UserInfoServiceTest {
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
 		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
 			Optional.of(usersProfile1));
-		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(),
-			any())).willReturn(4);
-		given(usersProfileRepository.findFirstByUserNicknameAndProfileProfileType(anyString(),
-			any())).willReturn(
+		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(4);
+		given(usersProfileRepository.findFirstByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(
 			Optional.of(usersProfile1));
 		given(s3Service.saveFile(any(MultipartFile.class))).willReturn(new FileRequestDto("file1", 12345L, "fileUrl1"));
 
@@ -272,8 +264,7 @@ class UserInfoServiceTest {
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
 		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
 			Optional.of(usersProfile1));
-		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(),
-			any())).willReturn(3);
+		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(3);
 		given(s3Service.saveFile(any(MultipartFile.class))).willReturn(new FileRequestDto("file1", 12345L, "fileUrl1"));
 
 		userInfoService.uploadProfile("testNickname", mock(MultipartFile.class));
@@ -330,9 +321,7 @@ class UserInfoServiceTest {
 	@Test
 	@DisplayName("프로필 변경 성공 - CUSTOM -> CUSTOM")
 	void testChangeProfile1() {
-		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder()
-			.profileUrl("changingProfileURl")
-			.build();
+		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder().profileUrl("changingProfileURl").build();
 
 		Profile currentProfile = Profile.builder()
 			.profileUrl("currentProfileURl")
@@ -341,10 +330,7 @@ class UserInfoServiceTest {
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
-		UsersProfile usersProfile = UsersProfile.builder()
-			.user(user1)
-			.profile(currentProfile)
-			.build();
+		UsersProfile usersProfile = UsersProfile.builder().user(user1).profile(currentProfile).build();
 
 		Profile changingProfile = Profile.builder()
 			.thumbnail(false)
@@ -369,9 +355,7 @@ class UserInfoServiceTest {
 	@Test
 	@DisplayName("프로필 변경 성공 - BASIC -> CUSTOM")
 	void testChangeProfile2() {
-		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder()
-			.profileUrl("changingProfileURl")
-			.build();
+		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder().profileUrl("changingProfileURl").build();
 
 		Profile currentProfile = Profile.builder()
 			.profileUrl("currentProfileURl")
@@ -380,10 +364,7 @@ class UserInfoServiceTest {
 			.profileType(ProfileType.BASIC)
 			.build();
 
-		UsersProfile usersProfile = UsersProfile.builder()
-			.user(user1)
-			.profile(currentProfile)
-			.build();
+		UsersProfile usersProfile = UsersProfile.builder().user(user1).profile(currentProfile).build();
 
 		Profile changingProfile = Profile.builder()
 			.thumbnail(false)
@@ -408,9 +389,7 @@ class UserInfoServiceTest {
 	@Test
 	@DisplayName("프로필 변경 성공 - CUSTOM -> BASIC")
 	void testChangeProfile3() {
-		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder()
-			.profileUrl("changingProfileURl")
-			.build();
+		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder().profileUrl("changingProfileURl").build();
 
 		Profile currentProfile = Profile.builder()
 			.profileUrl("currentProfileURl")
@@ -419,10 +398,7 @@ class UserInfoServiceTest {
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
-		UsersProfile usersProfile = UsersProfile.builder()
-			.user(user1)
-			.profile(currentProfile)
-			.build();
+		UsersProfile usersProfile = UsersProfile.builder().user(user1).profile(currentProfile).build();
 
 		Profile changingProfile = Profile.builder()
 			.thumbnail(false)
