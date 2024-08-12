@@ -67,4 +67,8 @@ public class User extends BaseEntity {
 		this.thumbnailUrl = thumbnailUrl;
 	}
 
+	public void updatePoint(Long point) {
+		this.point = point;
+	}
+
 }
