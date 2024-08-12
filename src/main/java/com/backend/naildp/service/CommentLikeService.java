@@ -51,6 +51,13 @@ public class CommentLikeService {
 			throw new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
+		Optional<CommentLike> commentLikeOptional = commentLikeRepository.findCommentLikeByCommentIdAndUserNickname(
+			commentId, username);
+
+		if (commentLikeOptional.isPresent()) {
+			return commentLikeOptional.get().getId();
+		}
+
 		Comment findComment = commentRepository.findById(commentId)
 			.orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
