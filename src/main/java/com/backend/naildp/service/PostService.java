@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
@@ -213,6 +214,20 @@ public class PostService {
 		List<Tag> tags = tagPosts.stream().map(TagPost::getTag).collect(Collectors.toList());
 
 		return PostInfoResponse.of(post, writer, profileUrl, followingStatus, followerCount, tags);
+	}
+
+	@Transactional
+	public void changeBoundary(Long postId, PostBoundaryRequest postBoundaryRequest, String username) {
+		//요청한 사용자가 게시글 작성자인지 확인 필요
+		Post post = postRepository.findPostAndUser(postId)
+			.orElseThrow(() -> new CustomException("게시글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (post.notWrittenBy(username)) {
+			throw new CustomException("게시글 범위 설정은 작성자만 할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+
+		//변경
+		post.changeBoundary(postBoundaryRequest);
 	}
 
 	private void deleteFileUrls(List<String> deletedFileUrls) {
