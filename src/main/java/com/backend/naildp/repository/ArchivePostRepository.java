@@ -3,6 +3,7 @@ package com.backend.naildp.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,4 +25,7 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	boolean existsByArchiveIdAndPostId(Long archiveId, Long postId);
 
 	List<PostMapping> findArchivePostsByArchiveId(Long archiveId);
+
+	@Modifying
+	void deleteAllByArchiveId(Long archiveId);
 }

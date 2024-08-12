@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
-import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
+import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
@@ -40,7 +40,7 @@ public class ArchiveService {
 	private final FollowRepository followRepository;
 
 	@Transactional
-	public void createArchive(String nickname, ArchiveRequestDto archiveRequestDto) {
+	public void createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
 			ErrorCode.NOT_FOUND));
 
@@ -51,7 +51,8 @@ public class ArchiveService {
 			}
 		}
 
-		Archive archive = new Archive(user, archiveRequestDto.getArchiveName(), archiveRequestDto.getBoundary());
+		Archive archive = new Archive(user, createArchiveRequestDto.getArchiveName(),
+			createArchiveRequestDto.getBoundary());
 
 		archiveRepository.save(archive);
 
@@ -76,7 +77,7 @@ public class ArchiveService {
 		User postUser = post.getUser();
 		String photo = post.getPhotos().get(0).getPhotoUrl();
 
-		if (!archive.equalsNickname(nickname)) {
+		if (archive.notEqualsNickname(nickname)) {
 			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
 		}
 
@@ -103,6 +104,7 @@ public class ArchiveService {
 
 	}
 
+	@Transactional
 	public void copyArchive(String nickname, ArchiveIdRequestDto requestDto) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
 			ErrorCode.NOT_FOUND));
@@ -110,7 +112,7 @@ public class ArchiveService {
 		Archive originalArchive = archiveRepository.findArchiveById(requestDto.getArchiveId())
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		if (!originalArchive.equalsNickname(nickname)) {
+		if (originalArchive.notEqualsNickname(nickname)) {
 			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
 		}
 
@@ -132,6 +134,7 @@ public class ArchiveService {
 		}
 	}
 
+	@Transactional(readOnly = true)
 	public PostSummaryResponse getFollowingArchives(String nickname, int size, Long cursorId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
 		Slice<ArchiveMapping> archiveList;
@@ -149,5 +152,18 @@ public class ArchiveService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 		return PostSummaryResponse.createFollowArchiveSummary(archiveList);
+	}
+
+	@Transactional
+	public void deleteArchive(String nickname, Long archiveId) {
+
+		Archive archive = archiveRepository.findArchiveById(archiveId)
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (archive.notEqualsNickname(nickname)) {
+			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+		archivePostRepository.deleteAllByArchiveId(archive.getId());
+		archiveRepository.delete(archive);
 	}
 }

@@ -5,7 +5,7 @@ import com.backend.naildp.common.Boundary;
 import lombok.Getter;
 
 @Getter
-public class ArchiveRequestDto {
+public class CreateArchiveRequestDto {
 	private String archiveName;
 	private Boundary boundary;
 }

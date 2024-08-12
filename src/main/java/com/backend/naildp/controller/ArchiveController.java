@@ -2,6 +2,7 @@ package com.backend.naildp.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
-import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
+import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.PostIdRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
@@ -28,9 +29,9 @@ public class ArchiveController {
 
 	@PostMapping("/archive")
 	ResponseEntity<ApiResponse<?>> createArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestBody ArchiveRequestDto archiveRequestDto) {
+		@RequestBody CreateArchiveRequestDto requestDto) {
 
-		archiveService.createArchive(userDetails.getUser().getNickname(), archiveRequestDto);
+		archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "새 아카이브 생성 성공", 2001));
 	}
@@ -70,5 +71,14 @@ public class ArchiveController {
 			userDetails.getUser().getNickname(), size, cursorId);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "팔로잉 아카이브 리스트 조회 성공", 2000));
+	}
+
+	@DeleteMapping("/archive")
+	ResponseEntity<ApiResponse<?>> deleteArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestBody ArchiveIdRequestDto requestDto) {
+
+		archiveService.deleteArchive(userDetails.getUser().getNickname(), requestDto.getArchiveId());
+
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 삭제 성공", 2001));
 	}
 }
