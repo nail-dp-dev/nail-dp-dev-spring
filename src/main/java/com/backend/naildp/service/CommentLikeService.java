@@ -45,7 +45,7 @@ public class CommentLikeService {
 			throw new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		if (post.isOpenedForFollower() && followRepository.existsByFollowerNicknameAndFollowing(username, postWriter)
+		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username, postWriter)
 			&& post.notWrittenBy(username)) {
 			throw new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
