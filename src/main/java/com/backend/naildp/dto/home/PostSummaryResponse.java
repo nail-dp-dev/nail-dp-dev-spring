@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
+import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.Post;
 
 import lombok.AllArgsConstructor;
@@ -20,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PostSummaryResponse {
 
 	private Long cursorId;
-	private Slice<HomePostResponse> postSummaryList;
+	private Slice<?> postSummaryList;
 
 	public PostSummaryResponse(Slice<Post> latestPosts, List<?> savedPosts, List<?> likedPosts) {
 		log.info("PostSummaryResponse 응답값 만들기");
@@ -62,5 +63,11 @@ public class PostSummaryResponse {
 		log.info("PostSummaryResponse 응답");
 		return new PostSummaryResponse(oldestPostLikeId,
 			likedPostSlice.map(post -> HomePostResponse.likedPostResponse(post, savedPosts)));
+	}
+
+	public PostSummaryResponse(Slice<Archive> followingArchives) {
+		log.info("PostSummaryResponse 응답값 만들기 - followingArchives");
+		cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
+		postSummaryList = followingArchives.map(HomePostResponse::recentPostForAnonymous);
 	}
 }

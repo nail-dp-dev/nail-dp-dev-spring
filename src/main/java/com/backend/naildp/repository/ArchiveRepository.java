@@ -3,6 +3,8 @@ package com.backend.naildp.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,5 +23,24 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
 	int countArchivesByUserNickname(String nickname);
 
 	Optional<Archive> findArchiveById(Long archiveId);
+
+	@Query("select a.id as id, a.name as name, a.archiveImgUrl as archiveImgUrl, COUNT(u) as archiveCount "
+		+ "from Archive a " + "join a.user u "
+		+ "where u.nickname IN :followingNickname "
+		+ "and a.createdDate = (select MAX(a2.createdDate) from Archive a2 where a2.user = u and a2.boundary <> 'NONE') "
+		+ "GROUP BY u.id, a.id, a.name, a.archiveImgUrl " + "ORDER BY a.createdDate DESC")
+	Slice<ArchiveMapping> findArchivesByFollowing(@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("select a.id as id, a.name as name, a.archiveImgUrl as archiveImgUrl, COUNT(u) as archiveCount "
+		+ "from Archive a " + "join a.user u "
+		+ "where u.nickname IN :followingNickname "
+		+ "and a.id < :id "
+		+ "and a.createdDate = (select MAX(a2.createdDate) from Archive a2 where a2.user = u and a2.boundary <> 'NONE') "
+		+ "GROUP BY u.id, a.id, a.name, a.archiveImgUrl " + "ORDER BY a.createdDate DESC")
+	Slice<ArchiveMapping> findArchivesByIdAndFollowing(@Param("followingNickname") List<String> followingNickname,
+		@Param("id") Long id,
+		PageRequest pageRequest);
 }
 
+// 팔로잉 nickname 썸네일사진, 아카이브 썸네일, archive count 아카이브 ID

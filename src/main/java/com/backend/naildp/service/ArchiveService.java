@@ -2,6 +2,8 @@ package com.backend.naildp.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +11,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchiveRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
+import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Post;
@@ -129,4 +132,22 @@ public class ArchiveService {
 		}
 	}
 
+	public PostSummaryResponse getFollowingArchives(String nickname, int size, Long cursorId) {
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<ArchiveMapping> archiveList;
+		// 팔로잉 nickname 썸네일사진, 아카이브 썸네일, archive count 아카이브 ID
+		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
+
+		if (cursorId == -1) {
+			archiveList = archiveRepository.findArchivesByFollowing(followingNickname, pageRequest);
+		} else {
+			archiveList = archiveRepository.findArchivesByIdAndFollowing(followingNickname, cursorId, pageRequest);
+
+		}
+
+		if (archiveList.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+		return PostSummaryResponse.
+	}
 }
