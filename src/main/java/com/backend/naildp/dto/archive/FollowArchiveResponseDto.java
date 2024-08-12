@@ -1,5 +1,6 @@
 package com.backend.naildp.dto.archive;
 
+import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.repository.ArchiveMapping;
 
 import lombok.AllArgsConstructor;
@@ -17,8 +18,21 @@ public class FollowArchiveResponseDto {
 	private String nickname;
 	private String archiveImgUrl;
 	private String profileUrl;
+	private Boolean isPhoto;
+	private Boolean isVideo;
 
 	public static FollowArchiveResponseDto followArchiveResponseDto(ArchiveMapping archiveMapping) {
+		if (archiveMapping.getArchiveImgUrl() != null) {
+			return FollowArchiveResponseDto.builder()
+				.archiveCount(archiveMapping.getArchiveCount())
+				.nickname(archiveMapping.getNickname())
+				.archiveImgUrl(archiveMapping.getArchiveImgUrl())
+				.isPhoto(FileExtensionChecker.isPhotoExtension(archiveMapping.getArchiveImgUrl()))
+				.isVideo(FileExtensionChecker.isVideoExtension(archiveMapping.getArchiveImgUrl()))
+				.profileUrl(archiveMapping.getThumbnailUrl())
+				.archiveId(archiveMapping.getId())
+				.build();
+		}
 		return FollowArchiveResponseDto.builder()
 			.archiveCount(archiveMapping.getArchiveCount())
 			.nickname(archiveMapping.getNickname())
