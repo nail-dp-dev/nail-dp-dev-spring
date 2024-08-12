@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.entity.Comment;
+import com.backend.naildp.entity.CommentLike;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
@@ -145,6 +146,28 @@ public class CommentLikeServiceTest {
 
 		//then
 		assertThat(comment.getCommentLikes()).hasSize(1);
+	}
+
+	@DisplayName("댓글 좋아요 취소 테스트")
+	@Test
+	void cancelCommentLike() {
+		//given
+		Post post = postRepository.findPostAndUser(publicPostId).orElseThrow();
+		User writer = post.getUser();
+		Comment comment = findOneFromPost(post);
+		em.persist(new CommentLike(writer, comment));
+
+		em.flush();
+		em.clear();
+
+		//when
+		commentLikeService.cancelCommentLike(post.getId(), comment.getId(), writer.getNickname());
+
+		//then
+		Long commentLikeCnt = em.createQuery("select count(cl) from CommentLike cl where cl.comment = :comment", Long.class)
+			.setParameter("comment", comment)
+			.getSingleResult();
+		assertEquals(0, commentLikeCnt);
 	}
 
 	private Post createPost(User postWriter, String postContent, Boundary boundary) {

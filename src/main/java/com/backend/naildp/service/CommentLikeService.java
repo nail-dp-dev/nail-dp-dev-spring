@@ -2,6 +2,7 @@ package com.backend.naildp.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,6 +80,7 @@ public class CommentLikeService {
 			throw new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		commentLikeRepository.deleteByCommentIdAndUserNickname(commentId, username);
+		commentLikeRepository.findCommentLikeByCommentIdAndUserNickname(commentId, username)
+			.ifPresent(commentLikeRepository::delete);
 	}
 }
