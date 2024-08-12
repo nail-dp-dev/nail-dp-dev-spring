@@ -1,7 +1,6 @@
 package com.backend.naildp.repository;
 
 import com.backend.naildp.common.Boundary;
-import com.backend.naildp.entity.User;
 
 public interface ArchiveMapping {
 	Long getId();
@@ -16,8 +15,8 @@ public interface ArchiveMapping {
 
 	Long getArchiveCount();
 
-	User getNickname();
+	String getNickname();
 
-	User getThumbnailUrl();
+	String getThumbnailUrl();
 
 }

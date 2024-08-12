@@ -137,7 +137,7 @@ public class ArchiveService {
 		Slice<ArchiveMapping> archiveList;
 		// 팔로잉 nickname 썸네일사진, 아카이브 썸네일, archive count 아카이브 ID
 		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
-
+		followingNickname.add(nickname);
 		if (cursorId == -1) {
 			archiveList = archiveRepository.findArchivesByFollowing(followingNickname, pageRequest);
 		} else {
@@ -148,6 +148,6 @@ public class ArchiveService {
 		if (archiveList.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
-		return PostSummaryResponse.
+		return PostSummaryResponse.createFollowArchiveSummary(archiveList);
 	}
 }

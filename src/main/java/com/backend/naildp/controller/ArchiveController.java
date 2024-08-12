@@ -69,6 +69,6 @@ public class ArchiveController {
 		PostSummaryResponse postSummaryResponse = archiveService.getFollowingArchives(
 			userDetails.getUser().getNickname(), size, cursorId);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로잉 아카이브 리스트 조회 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "팔로잉 아카이브 리스트 조회 성공", 2000));
 	}
 }

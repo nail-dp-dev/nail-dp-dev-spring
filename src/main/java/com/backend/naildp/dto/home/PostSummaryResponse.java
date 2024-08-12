@@ -6,8 +6,9 @@ import java.util.List;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
-import com.backend.naildp.entity.Archive;
+import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.repository.ArchiveMapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -65,9 +66,9 @@ public class PostSummaryResponse {
 			likedPostSlice.map(post -> HomePostResponse.likedPostResponse(post, savedPosts)));
 	}
 
-	public PostSummaryResponse(Slice<Archive> followingArchives) {
-		log.info("PostSummaryResponse 응답값 만들기 - followingArchives");
-		cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
-		postSummaryList = followingArchives.map(HomePostResponse::recentPostForAnonymous);
+	public static PostSummaryResponse createFollowArchiveSummary(Slice<ArchiveMapping> followingArchives) {
+		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
+		return new PostSummaryResponse(cursorId,
+			followingArchives.map(FollowArchiveResponseDto::followArchiveResponseDto));
 	}
 }
