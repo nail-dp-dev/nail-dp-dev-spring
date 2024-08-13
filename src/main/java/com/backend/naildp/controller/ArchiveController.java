@@ -93,4 +93,16 @@ public class ArchiveController {
 
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "특정 아카이브 내 게시물 조회 성공", 2000));
 	}
+
+	@GetMapping("/archive/{archiveId}/like")
+	ResponseEntity<ApiResponse<?>> getLikedArchivePosts(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("archiveId") Long archiveId,
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
+
+		PostSummaryResponse postSummaryResponse = archiveService.getLikedArchivePosts(
+			userDetails.getUser().getNickname(), archiveId, size, cursorId);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "특정 아카이브 내 게시물 좋아요 조회 성공", 2000));
+	}
 }

@@ -170,7 +170,7 @@ public class ArchiveService {
 		archiveRepository.delete(archive);
 	}
 
-	public PostSummaryResponse getArchivePosts(String myNickname, Long archiveId, int size,
+	public PostSummaryResponse getArchivePosts(String nickname, Long archiveId, int size,
 		long cursorId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
 		Slice<Post> postList;
@@ -178,22 +178,22 @@ public class ArchiveService {
 		Archive archive = archiveRepository.findArchiveById(archiveId)
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		if (archive.isClosed() && archive.notEqualsNickname(myNickname)) {
+		if (archive.isClosed() && archive.notEqualsNickname(nickname)) {
 			throw new CustomException("비공개 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		if (archive.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(myNickname,
+		if (archive.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname,
 			archive.getUser())) {
-			throw new CustomException("팔로워만 아카이브를 볼 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+			throw new CustomException("팔로워 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(myNickname);
-		followingNickname.add(myNickname);
+		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
+		followingNickname.add(nickname);
 
 		if (cursorId == -1) {
-			postList = postRepository.findArchivePostsByFollow(myNickname, archiveId, followingNickname, pageRequest);
+			postList = postRepository.findArchivePostsByFollow(nickname, archiveId, followingNickname, pageRequest);
 		} else {
-			postList = postRepository.findArchivePostsByIdAndFollow(cursorId, myNickname, archiveId,
+			postList = postRepository.findArchivePostsByIdAndFollow(cursorId, nickname, archiveId,
 				followingNickname,
 				pageRequest);
 		}
@@ -202,9 +202,47 @@ public class ArchiveService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
-		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(myNickname);
+		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
+		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
 
 		return new PostSummaryResponse(postList, savedPosts, likedPosts);
+	}
+
+	public PostSummaryResponse getLikedArchivePosts(String nickname, Long archiveId, int size, long cursorId) {
+
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<Post> postList;
+
+		Archive archive = archiveRepository.findArchiveById(archiveId)
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (archive.isClosed() && archive.notEqualsNickname(nickname)) {
+			throw new CustomException("비공개 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		if (archive.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname,
+			archive.getUser())) {
+			throw new CustomException("팔로워 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
+		followingNickname.add(nickname);
+
+		if (cursorId == -1) {
+			postList = postRepository.findLikedArchivePostsByFollow(nickname, archiveId, followingNickname,
+				pageRequest);
+		} else {
+			postList = postRepository.findLikedArchivePostsByIdAndFollow(cursorId, nickname, archiveId,
+				followingNickname,
+				pageRequest);
+		}
+
+		if (postList.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
+
+		return PostSummaryResponse.createLikedPostSummary(postList, savedPosts);
 	}
 }
