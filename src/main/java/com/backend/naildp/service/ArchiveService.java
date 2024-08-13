@@ -22,6 +22,7 @@ import com.backend.naildp.repository.ArchiveMapping;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.FollowRepository;
+import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostMapping;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -38,6 +39,7 @@ public class ArchiveService {
 	private final ArchivePostRepository archivePostRepository;
 	private final PostRepository postRepository;
 	private final FollowRepository followRepository;
+	private final PostLikeRepository postLikeRepository;
 
 	@Transactional
 	public void createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
@@ -166,5 +168,43 @@ public class ArchiveService {
 		}
 		archivePostRepository.deleteAllByArchiveId(archive.getId());
 		archiveRepository.delete(archive);
+	}
+
+	public PostSummaryResponse getArchivePosts(String myNickname, Long archiveId, int size,
+		long cursorId) {
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<Post> postList;
+
+		Archive archive = archiveRepository.findArchiveById(archiveId)
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (archive.isClosed() && archive.notEqualsNickname(myNickname)) {
+			throw new CustomException("비공개 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		if (archive.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(myNickname,
+			archive.getUser())) {
+			throw new CustomException("팔로워만 아카이브를 볼 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(myNickname);
+		followingNickname.add(myNickname);
+
+		if (cursorId == -1) {
+			postList = postRepository.findArchivePostsByFollow(myNickname, archiveId, followingNickname, pageRequest);
+		} else {
+			postList = postRepository.findArchivePostsByIdAndFollow(cursorId, myNickname, archiveId,
+				followingNickname,
+				pageRequest);
+		}
+
+		if (postList.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
+		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(myNickname);
+
+		return new PostSummaryResponse(postList, savedPosts, likedPosts);
 	}
 }

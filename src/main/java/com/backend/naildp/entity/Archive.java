@@ -69,4 +69,12 @@ public class Archive extends BaseEntity {
 	public boolean notEqualsNickname(String nickname) {
 		return !this.user.getNickname().equals(nickname);
 	}
+
+	public boolean isClosed() {
+		return this.boundary == Boundary.NONE;
+	}
+
+	public boolean isOpenedForFollower() {
+		return this.boundary == Boundary.FOLLOW;
+	}
 }
