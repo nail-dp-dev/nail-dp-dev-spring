@@ -11,4 +11,6 @@ import com.backend.naildp.entity.CommentLike;
 public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> {
 
 	Optional<CommentLike> findCommentLikeByCommentIdAndUserNickname(Long commentId, String nickname);
+
+	Long countAllByCommentId(Long commentId);
 }
