@@ -33,4 +33,8 @@ public class PostLike extends BaseEntity {
 		this.user = user;
 		this.post = post;
 	}
+
+	public boolean isLikedBy(String nickname) {
+		return user.equalsNickname(nickname);
+	}
 }

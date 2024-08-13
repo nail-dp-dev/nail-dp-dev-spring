@@ -202,8 +202,6 @@ public class PostService {
 		Post post = postRepository.findPostAndWriterById(postId)
 			.orElseThrow(() -> new CustomException("게시물을 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 		User writer = post.getUser();
-		String profileUrl = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(writer.getNickname())
-			.orElseThrow(() -> new CustomException("설정된 프로필 썸네일이 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 읽기 권한 확인
 		boolean followingStatus = isFollower(nickname, writer, post.getBoundary());
@@ -213,7 +211,7 @@ public class PostService {
 		List<TagPost> tagPosts = tagPostRepository.findTagPostAndTagByPost(post);
 		List<Tag> tags = tagPosts.stream().map(TagPost::getTag).collect(Collectors.toList());
 
-		return PostInfoResponse.of(post, writer, profileUrl, followingStatus, followerCount, tags);
+		return PostInfoResponse.of(post, nickname, followingStatus, followerCount, tags);
 	}
 
 	@Transactional
