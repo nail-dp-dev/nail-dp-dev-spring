@@ -21,9 +21,10 @@ public class CommentInfoResponse {
 	private String commentUserNickname;
 	private LocalDateTime commentDate;
 	private long likeCount;
+	private boolean isLiked;
 	private long replyCount;
 
-	public static CommentInfoResponse of(Comment comment) {
+	public static CommentInfoResponse of(Comment comment, String nickname) {
 		return CommentInfoResponse.builder()
 			.commentId(comment.getId())
 			.commentContent(comment.getCommentContent())
@@ -31,6 +32,7 @@ public class CommentInfoResponse {
 			.commentUserNickname(comment.getUser().getNickname())
 			.commentDate(comment.getCreatedDate())
 			.likeCount(comment.getLikeCount())
+			.isLiked(comment.getCommentLikes().stream().anyMatch(commentLike -> commentLike.isLikedBy(nickname)))
 			.replyCount(0)
 			.build();
 	}

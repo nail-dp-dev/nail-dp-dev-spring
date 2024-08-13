@@ -33,4 +33,8 @@ public class CommentLike {
 		this.user = user;
 		this.comment = comment;
 	}
+
+	public boolean isLikedBy(String nickname) {
+		return user.equalsNickname(nickname);
+	}
 }

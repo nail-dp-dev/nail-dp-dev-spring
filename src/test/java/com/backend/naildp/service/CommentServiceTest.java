@@ -66,13 +66,14 @@ class CommentServiceTest {
 	@Test
 	void 댓글_첫번째_페이지_조회_테스트() {
 		//given
+		String userNickname = "postWriter";
 		int pageSize = COMMENT_CNT - 1;
 		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
 			.setParameter("nickname", "postWriter")
 			.getSingleResult();
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID);
+		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID, userNickname);
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then
@@ -85,13 +86,14 @@ class CommentServiceTest {
 	@Test
 	void 댓글_조회_테스트_댓글수보다_페이지가_클때() {
 		//given
+		String userNickname = "postWriter";
 		int pageSize = COMMENT_CNT + 1;
 		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
 			.setParameter("nickname", "postWriter")
 			.getSingleResult();
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID);
+		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID, userNickname);
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then
@@ -103,13 +105,14 @@ class CommentServiceTest {
 
 	@Test
 	void 댓글_조회_테스트_댓글이_없을때() {
+		String userNickname = "postWriter";
 		int pageSize = 20;
 		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
 			.setParameter("nickname", "noCommentUser")
 			.getSingleResult();
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID);
+		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID, userNickname);
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then
