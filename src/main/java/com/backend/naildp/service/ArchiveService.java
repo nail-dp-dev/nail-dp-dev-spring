@@ -91,7 +91,7 @@ public class ArchiveService {
 			throw new CustomException("임시저장 게시물은 저장할 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		if (post.isClosed()) {
+		if (post.isClosed() && post.notWrittenBy(nickname)) {
 			throw new CustomException("비공개 게시물은 저장할 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
