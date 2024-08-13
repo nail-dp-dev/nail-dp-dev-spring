@@ -3,6 +3,8 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
 import com.backend.naildp.entity.Follow;
@@ -168,6 +171,29 @@ public class CommentLikeServiceTest {
 			.setParameter("comment", comment)
 			.getSingleResult();
 		assertEquals(0, commentLikeCnt);
+	}
+
+	@DisplayName("댓글 좋아요 개수 조회 테스트")
+	@Test
+	void countCommentLikes() {
+		//given
+		Post post = postRepository.findPostAndUser(publicPostId).orElseThrow();
+		List<User> users = em.createQuery("select u from Users u", User.class).getResultList();
+		Comment comment = findOneFromPost(post);
+		for (User user : users) {
+			em.persist(new CommentLike(user, comment));
+		}
+		int commentLikeCnt = users.size();
+
+		em.flush();
+		em.clear();
+
+		//when
+		PostLikeCountResponse likeCountResponse = commentLikeService.countCommentLikes(post.getId(), comment.getId(),
+			post.getUser().getNickname());
+
+		//then
+		assertThat(likeCountResponse.getLikeCount()).isEqualTo(commentLikeCnt);
 	}
 
 	private Post createPost(User postWriter, String postContent, Boundary boundary) {
