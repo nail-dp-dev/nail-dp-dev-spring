@@ -42,6 +42,6 @@ public class CommentLikeController {
 		@AuthenticationPrincipal UserDetails userDetails) {
 		PostLikeCountResponse likeCountResponse = commentLikeService.countCommentLikes(postId, commentId,
 			userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(likeCountResponse, "댓글 좋아요 취소 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(likeCountResponse, "댓글 좋아요 개수 조회 성공", 2000));
 	}
 }
