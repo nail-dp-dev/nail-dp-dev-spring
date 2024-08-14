@@ -168,6 +168,18 @@ public class FollowRepositoryTest {
 		assertThat(followingStatusWithNotFollowingUser).isFalse();
 	}
 
+	@Test
+	void selfFollow() {
+		User user = createTestMember("user@", "user", "010", cnt);
+		createTestFollow(user, user);
+
+		List<User> followingUserByFollowerNickname = followRepository.findFollowingUserByFollowerNickname(
+			user.getNickname());
+
+		assertThat(followingUserByFollowerNickname).hasSize(1);
+		assertThat(followingUserByFollowerNickname.get(0)).isEqualTo(user);
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
 		User user = User.builder()
 			.nickname(nickname)
