@@ -50,4 +50,8 @@ public class FollowService {
 	public void unfollowUser(String userNickname, String authenticationUsername) {
 		followRepository.deleteByFollowerNicknameAndFollowingNickname(authenticationUsername, userNickname);
 	}
+
+	public int countFollower(String nickname) {
+		return followRepository.countFollowersByUserNickname(nickname);
+	}
 }
