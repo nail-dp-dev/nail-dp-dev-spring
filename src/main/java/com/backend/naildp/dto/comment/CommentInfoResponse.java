@@ -1,8 +1,11 @@
 package com.backend.naildp.dto.comment;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.backend.naildp.entity.Comment;
+import com.backend.naildp.entity.CommentLike;
+import com.backend.naildp.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,14 +28,17 @@ public class CommentInfoResponse {
 	private long replyCount;
 
 	public static CommentInfoResponse of(Comment comment, String nickname) {
+		List<CommentLike> commentLikes = comment.getCommentLikes();
+		User commentUser = comment.getUser();
+
 		return CommentInfoResponse.builder()
 			.commentId(comment.getId())
 			.commentContent(comment.getCommentContent())
-			.profileUrl(comment.getUser().getThumbnailUrl())
-			.commentUserNickname(comment.getUser().getNickname())
+			.profileUrl(commentUser.getThumbnailUrl())
+			.commentUserNickname(commentUser.getNickname())
 			.commentDate(comment.getCreatedDate())
 			.likeCount(comment.getLikeCount())
-			.isLiked(comment.getCommentLikes().stream().anyMatch(commentLike -> commentLike.isLikedBy(nickname)))
+			.isLiked(commentLikes.stream().anyMatch(commentLike -> commentLike.isLikedBy(nickname)))
 			.replyCount(0)
 			.build();
 	}
