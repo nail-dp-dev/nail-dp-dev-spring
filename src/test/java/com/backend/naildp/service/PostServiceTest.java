@@ -56,9 +56,12 @@ public class PostServiceTest {
 	@BeforeEach
 	void setup() {
 		User user = createTestMember("user@naver.com", "user", "0100000", 1L);
+		user.thumbnailUrlUpdate("userURL");
 		User writer = createTestMember("writer@naver.com", "writer", "0101111", 2L);
+		writer.thumbnailUrlUpdate("writerUrl");
 
 		createPostByCntAndBoundary(writer, 10, Boundary.ALL);
+
 
 		em.flush();
 		em.clear();
@@ -73,6 +76,14 @@ public class PostServiceTest {
 			.setParameter("nickname", userNickname)
 			.setMaxResults(1)
 			.getSingleResult();
+		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
+			.setParameter("nickname", "user")
+			.getSingleResult();
+		PostLike postLike = new PostLike(user, post);
+		em.persist(postLike);
+
+		em.flush();
+		em.clear();
 
 		//when
 		PostInfoResponse postInfoResponse = postService.postInfo(userNickname, post.getId());

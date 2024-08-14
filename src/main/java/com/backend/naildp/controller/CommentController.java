@@ -56,8 +56,9 @@ public class CommentController {
 	@GetMapping("/{postId}/comment")
 	ResponseEntity<?> findComments(@PathVariable("postId") Long postId,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
-		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId);
+		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "댓글 조회 성공", 2000));
 	}
 }
