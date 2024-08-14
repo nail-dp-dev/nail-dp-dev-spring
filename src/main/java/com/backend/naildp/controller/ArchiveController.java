@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -104,5 +105,25 @@ public class ArchiveController {
 			userDetails.getUser().getNickname(), archiveId, size, cursorId);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "특정 아카이브 내 게시물 좋아요 조회 성공", 2000));
+	}
+
+	@PatchMapping("/archive/{archiveId}/name")
+	ResponseEntity<ApiResponse<?>> changeArchiveName(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("archiveId") Long archiveId,
+		@RequestBody CreateArchiveRequestDto requestDto) {
+
+		archiveService.changeArchiveName(userDetails.getUser().getNickname(), archiveId, requestDto.getArchiveName());
+
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 이름 변경 성공", 2001));
+	}
+
+	@PatchMapping("/archive/{archiveId}/boundary")
+	ResponseEntity<ApiResponse<?>> changeArchiveBoundary(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("archiveId") Long archiveId,
+		@RequestBody CreateArchiveRequestDto requestDto) {
+
+		archiveService.changeArchiveBoundary(userDetails.getUser().getNickname(), archiveId, requestDto.getBoundary());
+
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 이름 변경 성공", 2001));
 	}
 }

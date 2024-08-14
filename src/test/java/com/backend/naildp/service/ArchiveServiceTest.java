@@ -316,4 +316,42 @@ class ArchiveServiceTest {
 		then(archiveRepository).should(times(1)).delete(any(Archive.class));
 	}
 
+	@Test
+	@DisplayName("아카이브 이름 변경")
+	void changeArchiveName() {
+		// Given
+		String nickname = "user1";
+		Long archiveId = 1L;
+		String newName = "New Archive Name";
+
+		Archive archive = mock(Archive.class);
+		given(archiveRepository.findArchiveById(archiveId)).willReturn(Optional.of(archive));
+		given(archive.notEqualsNickname(nickname)).willReturn(false);
+
+		// When
+		archiveService.changeArchiveName(nickname, archiveId, newName);
+
+		// Then
+		verify(archive).updateName(newName);
+	}
+
+	@Test
+	@DisplayName("아카이브 범위 변경")
+	void changeArchiveBoundary() {
+		// Given
+		String nickname = "user1";
+		Long archiveId = 1L;
+		Boundary boundary = Boundary.FOLLOW;
+
+		Archive archive = mock(Archive.class);
+		given(archiveRepository.findArchiveById(archiveId)).willReturn(Optional.of(archive));
+		given(archive.notEqualsNickname(nickname)).willReturn(false);
+
+		// When
+		archiveService.changeArchiveBoundary(nickname, archiveId, boundary);
+
+		// Then
+		verify(archive).updateBoundary(boundary);
+	}
+
 }

@@ -77,4 +77,13 @@ public class Archive extends BaseEntity {
 	public boolean isOpenedForFollower() {
 		return this.boundary == Boundary.FOLLOW;
 	}
+
+	public void updateName(String name) {
+		this.name = name;
+	}
+
+	public void updateBoundary(Boundary boundary) {
+		this.boundary = boundary;
+	}
+
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchiveResponseDto;
@@ -143,7 +144,7 @@ public class ArchiveService {
 		// 팔로잉 nickname 썸네일사진, 아카이브 썸네일, archive count 아카이브 ID
 		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
 
-		followingNickname.add(nickname);
+		// followingNickname.add(nickname);
 		if (cursorId == -1) {
 			archiveList = archiveRepository.findArchivesByFollowing(followingNickname, pageRequest);
 		} else {
@@ -244,5 +245,25 @@ public class ArchiveService {
 		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
 
 		return PostSummaryResponse.createLikedPostSummary(postList, savedPosts);
+	}
+
+	public void changeArchiveName(String nickname, Long archiveId, String archiveName) {
+		Archive archive = archiveRepository.findArchiveById(archiveId)
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (archive.notEqualsNickname(nickname)) {
+			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+		archive.updateName(archiveName);
+	}
+
+	public void changeArchiveBoundary(String nickname, Long archiveId, Boundary boundary) {
+		Archive archive = archiveRepository.findArchiveById(archiveId)
+			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (archive.notEqualsNickname(nickname)) {
+			throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+		archive.updateBoundary(boundary);
 	}
 }
