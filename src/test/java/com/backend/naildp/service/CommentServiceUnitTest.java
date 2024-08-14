@@ -217,7 +217,7 @@ class CommentServiceUnitTest {
 		when(commentRepository.findCommentsByPostId(anyLong(), any(PageRequest.class))).thenReturn(emptyCommentSlice);
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId);
+		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId, "userNickname");
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then

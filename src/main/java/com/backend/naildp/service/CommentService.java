@@ -90,7 +90,7 @@ public class CommentService {
 		commentRepository.delete(comment);
 	}
 
-	public CommentSummaryResponse findComments(Long postId, int size, long cursorId) {
+	public CommentSummaryResponse findComments(Long postId, int size, long cursorId, String nickname) {
 		//좋아요수, 대댓글수, 작성시간 기준으로 정렬
 		//v1은 좋아요수, 작성시간 기준
 		PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "likeCount", "createdDate"));
@@ -108,7 +108,8 @@ public class CommentService {
 		}
 
 		//comment, user, commentLike
-		Slice<CommentInfoResponse> commentInfoResponseSlice = commentSlice.map(CommentInfoResponse::of);
+		Slice<CommentInfoResponse> commentInfoResponseSlice = commentSlice.map(
+			comment -> CommentInfoResponse.of(comment, nickname));
 		Long cursorCommentId = commentSlice.getContent().get(commentSlice.getNumberOfElements() - 1).getId();
 
 		return new CommentSummaryResponse(cursorCommentId, commentInfoResponseSlice);
