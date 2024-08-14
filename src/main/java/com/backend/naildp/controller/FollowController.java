@@ -3,6 +3,7 @@ package com.backend.naildp.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,5 +26,12 @@ public class FollowController {
 		@AuthenticationPrincipal UserDetails userDetails) {
 		followService.followUser(nickname, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 성공", 2001));
+	}
+
+	@DeleteMapping("/{nickname}/follow")
+	ResponseEntity<?> unfollow(@PathVariable("nickname") String nickname,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		followService.unfollowUser(nickname, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 취소 성공", 2001));
 	}
 }

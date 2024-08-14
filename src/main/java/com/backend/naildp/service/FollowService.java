@@ -45,4 +45,9 @@ public class FollowService {
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 		return followRepository.saveAndFlush(new Follow(followerUser, followingUser)).getId();
 	}
+
+	@Transactional
+	public void unfollowUser(String userNickname, String authenticationUsername) {
+		followRepository.deleteByFollowerNicknameAndFollowingNickname(authenticationUsername, userNickname);
+	}
 }

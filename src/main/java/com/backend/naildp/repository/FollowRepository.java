@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,4 +28,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 	boolean existsByFollowerNicknameAndFollowing(String nickname, User writer);
 
 	Optional<Follow> findFollowByFollowerNicknameAndFollowingNickname(String followerNickname, String followingNickname);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	void deleteByFollowerNicknameAndFollowingNickname(String followerNickname, String followingNickname);
 }
