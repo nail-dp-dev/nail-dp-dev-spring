@@ -3,6 +3,7 @@ package com.backend.naildp.repository;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @DataJpaTest
+@Import(JpaAuditingConfiguration.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class FollowRepositoryTest {
 
@@ -168,16 +172,25 @@ public class FollowRepositoryTest {
 		assertThat(followingStatusWithNotFollowingUser).isFalse();
 	}
 
+	@DisplayName("팔로워 닉네임과 팔로잉 닉네임으로 팔로워 찾기")
 	@Test
-	void selfFollow() {
-		User user = createTestMember("user@", "user", "010", cnt);
-		createTestFollow(user, user);
+	void findFollowByNicknames() {
+		//given
+		User followerUser = createTestMember("follower@", "follower", "010", cnt);
+		User notFollowingUser = createTestMember("notFollowingUser@", "notFollowingUser", "010", cnt);
+		User followingUser = createTestMember("following@", "following", "010", cnt);
+		createTestFollow(followerUser, followingUser);
 
-		List<User> followingUserByFollowerNickname = followRepository.findFollowingUserByFollowerNickname(
-			user.getNickname());
+		//when
+		Optional<Follow> followedOptional = followRepository.findFollowByFollowerNicknameAndFollowingNickname(
+			followerUser.getNickname(), followingUser.getNickname());
+		Optional<Follow> unfollowedOptional = followRepository.findFollowByFollowerNicknameAndFollowingNickname(
+			followerUser.getNickname(),
+			notFollowingUser.getNickname());
 
-		assertThat(followingUserByFollowerNickname).hasSize(1);
-		assertThat(followingUserByFollowerNickname.get(0)).isEqualTo(user);
+		//then
+		assertThat(followedOptional.isPresent()).isTrue();
+		assertThat(unfollowedOptional.isPresent()).isFalse();
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
