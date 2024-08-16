@@ -171,6 +171,7 @@ public class ArchiveService {
 		archiveRepository.delete(archive);
 	}
 
+	@Transactional(readOnly = true)
 	public PostSummaryResponse getArchivePosts(String nickname, Long archiveId, int size,
 		long cursorId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
@@ -209,6 +210,7 @@ public class ArchiveService {
 		return new PostSummaryResponse(postList, savedPosts, likedPosts);
 	}
 
+	@Transactional(readOnly = true)
 	public PostSummaryResponse getLikedArchivePosts(String nickname, Long archiveId, int size, long cursorId) {
 
 		PageRequest pageRequest = PageRequest.of(0, size);
@@ -247,6 +249,7 @@ public class ArchiveService {
 		return PostSummaryResponse.createLikedPostSummary(postList, savedPosts);
 	}
 
+	@Transactional
 	public void changeArchiveName(String nickname, Long archiveId, String archiveName) {
 		Archive archive = archiveRepository.findArchiveById(archiveId)
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -257,6 +260,7 @@ public class ArchiveService {
 		archive.updateName(archiveName);
 	}
 
+	@Transactional
 	public void changeArchiveBoundary(String nickname, Long archiveId, Boundary boundary) {
 		Archive archive = archiveRepository.findArchiveById(archiveId)
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
