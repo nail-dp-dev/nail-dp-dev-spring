@@ -183,7 +183,7 @@ class CommentControllerUnitTest {
 		ApiResponse<CommentSummaryResponse> apiResponse = ApiResponse.successResponse(response, "댓글 조회 성공", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(commentService.findComments(anyLong(), anyInt(), eq(-1L))).thenReturn(response);
+		when(commentService.findComments(anyLong(), anyInt(), eq(-1L), anyString())).thenReturn(response);
 
 		//when
 		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment", 1L));
@@ -222,7 +222,7 @@ class CommentControllerUnitTest {
 		ApiResponse<CommentSummaryResponse> apiResponse = ApiResponse.successResponse(response, "댓글 조회 성공", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(commentService.findComments(anyLong(), anyInt(), eq(-1L))).thenReturn(response);
+		when(commentService.findComments(anyLong(), anyInt(), eq(-1L), anyString())).thenReturn(response);
 
 		//when
 		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment", 1L).param("size", "2"));
