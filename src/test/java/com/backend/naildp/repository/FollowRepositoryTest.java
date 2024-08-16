@@ -193,6 +193,27 @@ public class FollowRepositoryTest {
 		assertThat(unfollowedOptional.isPresent()).isFalse();
 	}
 
+	@Test
+	void deleteFollowByNicknames() {
+		//given
+		User followerUser = createTestMember("follower@", "follower", "010", cnt);
+		User followingUser = createTestMember("following@", "following", "010", cnt);
+		createTestFollow(followerUser, followingUser);
+
+		em.flush();
+		em.clear();
+
+		//when
+		followRepository.deleteByFollowerNicknameAndFollowingNickname(followerUser.getNickname(),
+			followingUser.getNickname());
+
+		//then
+		Optional<Follow> followOptional = followRepository.findFollowByFollowerNicknameAndFollowingNickname(
+			followerUser.getNickname(),
+			followingUser.getNickname());
+		assertThat(followOptional.isPresent()).isFalse();
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
 		User user = User.builder()
 			.nickname(nickname)
