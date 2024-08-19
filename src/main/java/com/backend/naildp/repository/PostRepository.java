@@ -36,10 +36,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 	@Query("select p from Post p join fetch p.user u where p.id = :id")
 	Optional<Post> findPostAndUser(@Param("id") Long postId);
 
-	Optional<Post> findPostByTempSaveIsTrueAndUser(User user);
-
 	Optional<Post> findPostByTempSaveIsTrueAndUserNickname(String nickname);
 
+	// 내가 올린 게시물 전체 조회
 	@Query("select p from Post p where p.tempSave = false"
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
@@ -60,6 +59,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 		@Param("followingNickname") List<String> followingNickname,
 		PageRequest pageRequest);
 
+	// 내가 올린 게시물 중 좋아요 조회
 	@Query("select p from Post p join p.postLikes pl where pl.user.nickname = :myNickname "
 		+ "and (p.boundary = 'ALL' "
 		+ "or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname) "
@@ -82,4 +82,59 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 		@Param("postNickname") String postNickname,
 		@Param("followingNickname") List<String> followingNickname,
 		PageRequest pageRequest);
+
+	// 아카이브 내 게시물 전체 조회
+	@Query("select p from Post p join ArchivePost ap on p.id = ap.post.id"
+		+ " where ap.archive.id = :archiveId"
+		+ " and p.tempSave = false"
+		+ " and (p.boundary = 'ALL'"
+		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
+		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
+		+ " order by  p.createdDate desc ")
+	Slice<Post> findArchivePostsByFollow(@Param("myNickname") String myNickname,
+		@Param("archiveId") Long archiveId,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("select p from Post p join ArchivePost ap on p.id = ap.post.id"
+		+ " where ap.archive.id = :archiveId"
+		+ " and p.id < :id "
+		+ " and p.tempSave = false"
+		+ " and (p.boundary = 'ALL'"
+		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
+		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
+		+ " order by  p.createdDate desc ")
+	Slice<Post> findArchivePostsByIdAndFollow(@Param("id") Long id, @Param("myNickname") String myNickname,
+		@Param("archiveId") Long archiveId,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	// 아카이브 내 게시물 좋아요 조회
+	@Query("select p from Post p join ArchivePost ap on p.id = ap.post.id"
+		+ " join PostLike pl on p.id = pl.post.id "
+		+ " where ap.archive.id = :archiveId"
+		+ " and p.tempSave = false"
+		+ " and (p.boundary = 'ALL'"
+		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
+		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
+		+ " order by  p.createdDate desc ")
+	Slice<Post> findLikedArchivePostsByFollow(@Param("myNickname") String myNickname,
+		@Param("archiveId") Long archiveId,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
+	@Query("select p from Post p join ArchivePost ap on p.id = ap.post.id"
+		+ " join PostLike pl on p.id = pl.post.id "
+		+ " where ap.archive.id = :archiveId"
+		+ " and p.id < :id "
+		+ " and p.tempSave = false"
+		+ " and (p.boundary = 'ALL'"
+		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
+		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
+		+ " order by  p.createdDate desc ")
+	Slice<Post> findLikedArchivePostsByIdAndFollow(@Param("id") Long id, @Param("myNickname") String myNickname,
+		@Param("archiveId") Long archiveId,
+		@Param("followingNickname") List<String> followingNickname,
+		PageRequest pageRequest);
+
 }

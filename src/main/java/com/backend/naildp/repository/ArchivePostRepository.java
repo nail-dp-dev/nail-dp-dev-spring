@@ -3,6 +3,7 @@ package com.backend.naildp.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,4 +21,12 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	List<ArchivePost> findAllArchivePostsByUserNicknameAndTempSaveIsFalse(@Param("nickname") String nickname);
 
 	List<PostMapping> findArchivePostsByArchiveUserNickname(String nickname);
+
+	boolean existsByArchiveIdAndPostId(Long archiveId, Long postId);
+
+	List<PostMapping> findArchivePostsByArchiveId(Long archiveId);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("delete from ArchivePost ap where ap.archive.id = : archiveId")
+	void deleteAllByArchiveId(@Param("archiveId") Long archiveId);
 }
