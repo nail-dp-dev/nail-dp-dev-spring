@@ -1,162 +1,146 @@
 package com.backend.naildp.service;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.*;
+import static org.assertj.core.api.Assertions.*;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
-import com.backend.naildp.repository.ArchiveMapping;
+import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.entity.Archive;
+import com.backend.naildp.entity.Follow;
+import com.backend.naildp.entity.Photo;
+import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.User;
 import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.FollowRepository;
+import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.UserRepository;
 
-@ExtendWith(MockitoExtension.class)
+@Disabled
+@SpringBootTest
+@Transactional
 public class GetArchiveServiceTest {
 
-	@Mock
-	private FollowRepository followRepository;
-
-	@Mock
-	private ArchiveRepository archiveRepository;
-
-	@InjectMocks
+	@Autowired
 	private ArchiveService archiveService;
 
-	@Test
-	void getFollowArchives() {
-		// Given
-		String nickname = "testUser";
-		Long cursorId = 1L;
-		int size = 5;
+	@Autowired
+	private UserRepository userRepository;
 
-		List<String> followingNickname = Arrays.asList("user1", "user2", nickname);
-		Slice<ArchiveMapping> archiveSlice = new SliceImpl<>(Arrays.asList(
-			new ArchiveMappingImpl(1L, "Archive 1", Boundary.ALL, "imgUrl1", 3L, 10L, "user1", "thumbUrl1"),
-			new ArchiveMappingImpl(2L, "Archive 2", Boundary.ALL, "imgUrl2", 2L, 10L, "user2", "thumbUrl2")
-		));
+	@Autowired
+	private ArchiveRepository archiveRepository;
+	@Autowired
+	private FollowRepository followRepository;
+	@Autowired
+	private PostRepository postRepository;
+	private User user1;
+	private User user2;
+	private User user3;
 
-		given(followRepository.findFollowingNicknamesByUserNickname(nickname)).willReturn(followingNickname);
-		given(archiveRepository.findArchivesByIdAndFollowing(followingNickname, cursorId, PageRequest.of(0, size)))
-			.willReturn(archiveSlice);
+	private PostLike postLike;
 
-		// When
-		PostSummaryResponse response = archiveService.getFollowingArchives(nickname, size, cursorId);
+	private Post post;
 
-		// Then
-		then(response).isNotNull();
-		then(response.getCursorId()).isEqualTo(2L);
-		then(response.getPostSummaryList()).hasSize(2);
+	@BeforeEach
+	void setUp() {
 
-		FollowArchiveResponseDto archive1 = (FollowArchiveResponseDto)response.getPostSummaryList().getContent().get(0);
-		FollowArchiveResponseDto archive2 = (FollowArchiveResponseDto)response.getPostSummaryList().getContent().get(1);
+		user1 = createUser("mj");
+		user2 = createUser("jw");
+		user3 = createUser("jw2");
 
-		then(archive1.getArchiveId()).isEqualTo(1L);
-		then(archive1.getNickname()).isEqualTo("user1");
-		then(archive1.getArchiveImgUrl()).isEqualTo("imgUrl1");
+		for (int i = 1; i <= 10; i++) {
+			createArchive(user2, Boundary.ALL, i);  // user1이 user2 팔로잉
+		}
+		createArchive(user1, Boundary.ALL, 1);
 
-		then(archive2.getArchiveId()).isEqualTo(2L);
-		then(archive2.getNickname()).isEqualTo("user2");
-		then(archive2.getArchiveImgUrl()).isEqualTo("imgUrl2");
+		createFollow(user1, user2);
+		createArchive(user3, Boundary.ALL, 1);  // user1이 user2 팔로잉
 
 	}
 
 	@Test
-	void getFollowArchives_empty() {
-		// Given
-		String nickname = "testUser";
-		Long cursorId = -1L;
-		int size = 5;
+	@DisplayName("팔로잉 없을때 -none")
+	void testGetFollowingArchives1() {
 
-		List<String> followingNickname = Arrays.asList("user1", "user2", nickname);
-		Slice<ArchiveMapping> emptyArchiveSlice = new SliceImpl<>(Collections.emptyList());
+		PostSummaryResponse response = archiveService.getFollowingArchives("jw", 5, -1L);
 
-		given(followRepository.findFollowingNicknamesByUserNickname(nickname)).willReturn(followingNickname);
-		given(archiveRepository.findArchivesByFollowing(followingNickname, PageRequest.of(0, size)))
-			.willReturn(emptyArchiveSlice);
+		assertThat(response).isNotNull();
+		assertThat(response.getPostSummaryList()).hasSize(0);
+		assertThat(response.getCursorId()).isEqualTo(-1L);
 
-		// When
-		PostSummaryResponse response = archiveService.getFollowingArchives(nickname, size, cursorId);
-
-		// Then
-		then(response).isNotNull();
-		then(response.getCursorId()).isEqualTo(-1L);
-		then(response.getPostSummaryList()).isEmpty();
 	}
 
-	private static class ArchiveMappingImpl implements ArchiveMapping {
-		private final Long id;
-		private final String name;
-		private final Boundary boundary;
-		private final String archiveImgUrl;
-		private final Long postCount;
-		private final Long archiveCount;
-		private final String nickname;
-		private final String thumbnailUrl;
+	@Test
+	@DisplayName("팔로잉 게시물 조회 - 1명")
+	void testGetFollowingArchives2() {
 
-		public ArchiveMappingImpl(Long id, String name, Boundary boundary, String archiveImgUrl,
-			Long postCount, Long archiveCount, String nickname, String thumbnailUrl) {
-			this.id = id;
-			this.name = name;
-			this.boundary = boundary;
-			this.archiveImgUrl = archiveImgUrl;
-			this.postCount = postCount;
-			this.archiveCount = archiveCount;
-			this.nickname = nickname;
-			this.thumbnailUrl = thumbnailUrl;
-		}
+		PostSummaryResponse response = archiveService.getFollowingArchives("mj", 5, -1L);
+		Slice<FollowArchiveResponseDto> contents = (Slice<FollowArchiveResponseDto>)response.getPostSummaryList();
 
-		@Override
-		public Long getId() {
-			return id;
-		}
+		assertThat(response).isNotNull();
+		assertThat(contents.getSize()).isEqualTo(5);
+		assertThat(contents.getContent().get(0).getArchiveId()).isEqualTo(10L);
+		assertThat(contents.getContent().get(0).getArchiveCount()).isEqualTo(10L);
 
-		@Override
-		public String getName() {
-			return name;
-		}
+	}
 
-		@Override
-		public Boundary getBoundary() {
-			return boundary;
-		}
+	@Test
+	@DisplayName("팔로잉 게시물 조회 - 2명")
+	void testGetFollowingArchives3() {
+		createFollow(user1, user3);
 
-		@Override
-		public String getArchiveImgUrl() {
-			return archiveImgUrl;
-		}
+		PostSummaryResponse response = archiveService.getFollowingArchives("mj", 5, -1L);
+		Slice<FollowArchiveResponseDto> contents = (Slice<FollowArchiveResponseDto>)response.getPostSummaryList();
 
-		@Override
-		public Long getPostCount() {
-			return postCount;
-		}
+		assertThat(response).isNotNull();
+		assertThat(contents.getSize()).isEqualTo(5);
+		assertThat(contents.getContent().get(0).getArchiveId()).isEqualTo(12L);
+		assertThat(contents.getContent().get(0).getArchiveCount()).isEqualTo(1);
 
-		@Override
-		public Long getArchiveCount() {
-			return archiveCount;
-		}
+	}
 
-		@Override
-		public String getNickname() {
-			return nickname;
-		}
+	private User createUser(String postWriter) {
+		User user = User.builder().nickname(postWriter).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		userRepository.saveAndFlush(user);
+		return user;
+	}
 
-		@Override
-		public String getThumbnailUrl() {
-			return thumbnailUrl;
-		}
+	private void createPost(User postWriter, String content, int i) {
+		Post post = Post.builder()
+			.user(postWriter)
+			.postContent(content + i)
+			.tempSave(false)
+			.boundary(Boundary.ALL)
+			.build();
+		postRepository.save(post);
+		Photo photo = new Photo(post, new FileRequestDto("file" + i + ".jpg", 12345L, "fileUrl" + i + ".jpg"));
+		post.addPhoto(photo);
+	}
+
+	private void createArchive(User user, Boundary boundary, int i) {
+		Archive archive = new Archive(user, user.getNickname() + "archive" + i, boundary);
+		archiveRepository.save(archive);
+	}
+
+	// private void addArchivePost(Archive archive, Post post) {
+	// 	ArchivePost archivePost = new ArchivePost(archive, post);
+	// 	em.persist(archivePost);
+	// }
+
+	private void createFollow(User follower, User following) {
+		Follow follow = new Follow(follower, following);
+		followRepository.save(follow);
 	}
 
 }

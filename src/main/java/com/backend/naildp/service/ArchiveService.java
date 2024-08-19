@@ -151,7 +151,6 @@ public class ArchiveService {
 			archiveList = archiveRepository.findArchivesByIdAndFollowing(followingNickname, cursorId, pageRequest);
 
 		}
-
 		if (archiveList.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
