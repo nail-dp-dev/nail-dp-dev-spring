@@ -96,7 +96,8 @@ public class ArchiveService {
 			throw new CustomException("비공개 게시물은 저장할 수 없습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
-		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname, postUser)) {
+		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname, postUser)
+			&& post.notWrittenBy(nickname)) {
 			throw new CustomException("팔로워만 게시물을 저장할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
@@ -184,7 +185,7 @@ public class ArchiveService {
 		}
 
 		if (archive.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname,
-			archive.getUser())) {
+			archive.getUser()) && archive.notEqualsNickname(nickname)) {
 			throw new CustomException("팔로워 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
@@ -223,7 +224,7 @@ public class ArchiveService {
 		}
 
 		if (archive.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(nickname,
-			archive.getUser())) {
+			archive.getUser()) && archive.notEqualsNickname(nickname)) {
 			throw new CustomException("팔로워 아카이브입니다.", ErrorCode.INVALID_BOUNDARY);
 		}
 
