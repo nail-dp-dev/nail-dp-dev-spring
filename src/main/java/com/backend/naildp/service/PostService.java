@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PostService {
 
 	private final PostRepository postRepository;
@@ -48,6 +47,7 @@ public class PostService {
 	private final FollowRepository followRepository;
 	private final UsersProfileRepository usersProfileRepository;
 	private final S3Service s3Service;
+	private final PostDeletionFacade postDeletionFacade;
 
 	@Transactional
 	public void uploadPost(String nickname, PostRequestDto postRequestDto, List<MultipartFile> files) {
@@ -116,6 +116,7 @@ public class PostService {
 	}
 
 	// 게시물 수정 조회
+	@Transactional(readOnly = true)
 	public EditPostResponseDto getEditingPost(String nickname, Long postId) {
 
 		User user = userRepository.findByNickname(nickname)
@@ -197,6 +198,7 @@ public class PostService {
 	 * /posts/{postId}
 	 * 특정 게시물 상세정보 읽기 API
 	 */
+	@Transactional(readOnly = true)
 	public PostInfoResponse postInfo(String nickname, Long postId) {
 		// post - writer 정보 가져오기
 		Post post = postRepository.findPostAndWriterById(postId)
@@ -236,9 +238,7 @@ public class PostService {
 		if (post.notWrittenBy(nickname)) {
 			throw new CustomException("게시글 삭제는 작성자만 할 수 있습니다.", ErrorCode.USER_MISMATCH);
 		}
-		// archivePost, comment, photo, postLike, tagPost
-		// postRepository.deleteAllByPostId(archive.getId());
-		postRepository.delete(post);
+		postDeletionFacade.deletePostAndAssociations(postId);
 
 	}
 
