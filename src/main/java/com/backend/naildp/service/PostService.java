@@ -230,6 +230,7 @@ public class PostService {
 		post.changeBoundary(postBoundaryRequest);
 	}
 
+	@Transactional
 	public void deletePost(Long postId, String nickname) {
 
 		Post post = postRepository.findById(postId)
