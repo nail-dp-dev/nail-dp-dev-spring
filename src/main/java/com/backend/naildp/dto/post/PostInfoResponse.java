@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.User;
 
@@ -27,23 +28,26 @@ public class PostInfoResponse {
 	private List<FileInfoResponse> files;
 	private String postContent;
 	private long likeCount;
+	private boolean isLiked;
 	private long commentCount;
 	private long sharedCount;
 	private List<String> tags;
 
-	public static PostInfoResponse of(Post post, User user, String profileUrl, boolean followingStatus,
-		int followerCount,
+	public static PostInfoResponse of(Post post, String userNickname, boolean followingStatus, int followerCount,
 		List<Tag> tags) {
 
+		User writer = post.getUser();
+		List<PostLike> postLikes = post.getPostLikes();
 		List<FileInfoResponse> fileInfoResponses = post.getPhotos().stream().map(FileInfoResponse::new).toList();
 
 		return PostInfoResponse.builder()
-			.nickname(user.getNickname())
-			.profileUrl(profileUrl)
+			.nickname(writer.getNickname())
+			.profileUrl(writer.getThumbnailUrl())
 			.followingStatus(followingStatus)
 			.followerCount(followerCount)
 			.postContent(post.getPostContent())
-			.likeCount(post.getPostLikes().size())
+			.likeCount(postLikes.size())
+			.isLiked(postLikes.stream().anyMatch(postLike -> postLike.isLikedBy(userNickname)))
 			.commentCount(post.getComments().size())
 			.sharedCount(post.getSharing())
 			.tags(tags.stream().map(Tag::getName).collect(Collectors.toList()))

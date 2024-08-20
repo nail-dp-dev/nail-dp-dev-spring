@@ -2,6 +2,8 @@ package com.backend.naildp.entity;
 
 import java.util.UUID;
 
+import org.hibernate.annotations.Formula;
+
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 
@@ -44,6 +46,9 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private String thumbnailUrl = "default";
 
+	@Formula("(select count(*) from Archive where Archive.user_id = user_id and Archive.boundary <> 'NONE' )")
+	private int archiveCount;
+
 	@Builder
 	public User(String nickname, String phoneNumber, UserRole role, boolean agreement) {
 		this.nickname = nickname;
@@ -65,6 +70,10 @@ public class User extends BaseEntity {
 
 	public void thumbnailUrlUpdate(String thumbnailUrl) {
 		this.thumbnailUrl = thumbnailUrl;
+	}
+
+	public void updatePoint(Long point) {
+		this.point = point;
 	}
 
 }

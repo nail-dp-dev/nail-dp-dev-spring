@@ -22,24 +22,32 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.post.EditPostResponseDto;
+import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.PostService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PostController.class)
 public class PostCreateControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	ObjectMapper objectMapper;
 
 	@Autowired
 	private WebApplicationContext context;
@@ -261,5 +269,60 @@ public class PostCreateControllerTest {
 			.andDo(print());
 	}
 
+	@DisplayName("게시물 공개 범위 변경 API 예외 - 요청자와 게시물 작성자가 다를 때")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void changePostBoundaryExceptionWithOtherUser() throws Exception {
+		//given
+		Long postId = 1L;
+		PostBoundaryRequest postBoundaryRequest = new PostBoundaryRequest(Boundary.FOLLOW);
+		String wrongUserNickname = "wrongNickname";
+
+		String request = objectMapper.writeValueAsString(postBoundaryRequest);
+
+		CustomException exception = new CustomException("게시글 범위 설정은 작성자만 할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		doThrow(exception).when(postService).changeBoundary(anyLong(), any(PostBoundaryRequest.class), anyString());
+
+		//when
+		ResultActions resultActions = mockMvc.perform(
+			patch("/posts/{postId}/closer", postId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(request)
+				.with(csrf()));
+
+		//then
+		resultActions.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value(exception.getMessage()))
+			.andExpect(jsonPath("$.code").value(exception.getErrorCode().getErrorCode()))
+			.andDo(print());
+	}
+
+	@DisplayName("게시물 공개 범위 변경")
+	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
+	void changePostBoundaryApiTest() throws Exception {
+		//given
+		Long postId = 1L;
+		PostBoundaryRequest postBoundaryRequest = new PostBoundaryRequest(Boundary.FOLLOW);
+		String wrongUserNickname = "wrongNickname";
+
+		String request = objectMapper.writeValueAsString(postBoundaryRequest);
+		ApiResponse<Object> apiResponse = ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2000);
+
+		doNothing().when(postService).changeBoundary(anyLong(), any(PostBoundaryRequest.class), anyString());
+
+		//when
+		ResultActions resultActions = mockMvc.perform(
+			patch("/posts/{postId}/closer", postId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(request)
+				.with(csrf()));
+
+		//then
+		resultActions.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andDo(print());
+	}
 }
 

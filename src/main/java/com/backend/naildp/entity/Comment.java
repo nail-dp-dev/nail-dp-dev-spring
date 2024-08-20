@@ -3,6 +3,7 @@ package com.backend.naildp.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Formula;
 
 import jakarta.persistence.Column;
@@ -36,6 +37,7 @@ public class Comment extends BaseEntity {
 	@JoinColumn(name = "post_id")
 	private Post post;
 
+	@BatchSize(size = 20)
 	@OneToMany(mappedBy = "comment")
 	private List<CommentLike> commentLikes = new ArrayList<>();
 

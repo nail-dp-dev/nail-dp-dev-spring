@@ -21,6 +21,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.entity.Photo;
@@ -29,6 +30,7 @@ import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
@@ -281,4 +283,41 @@ class PostCreateServiceTest {
 		assertEquals(Boundary.ALL, responseDto.getBoundary());
 		assertFalse(responseDto.getTempSave());
 	}
+
+	@DisplayName("게시물 공개범위 변경 예외 테스트 - 작성자와 요청자가 다를 때")
+	@Test
+	void changeBoundaryExceptionWithOtherUser() {
+		//given
+		String wrongUserNickname = "wrongNickname";
+		User user = User.builder().nickname("nickname").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class,
+			() -> postService.changeBoundary(1L, new PostBoundaryRequest(Boundary.FOLLOW), wrongUserNickname));
+
+		//then
+		assertThat(exception.getMessage()).isEqualTo("게시글 범위 설정은 작성자만 할 수 있습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_MISMATCH);
+	}
+
+	@DisplayName("게시물 공개범위 변경 테스트")
+	@Test
+	void changeBoundary() {
+		//given
+		String userNickname = "nickname";
+		User user = User.builder().nickname(userNickname).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+
+		//when
+		postService.changeBoundary(1L, new PostBoundaryRequest(Boundary.NONE), userNickname);
+
+		//then
+		verify(postRepository).findPostAndUser(1L);
+	}
+
 }

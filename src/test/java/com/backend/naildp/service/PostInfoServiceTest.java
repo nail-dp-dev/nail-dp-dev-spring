@@ -101,8 +101,8 @@ public class PostInfoServiceTest {
 			oldestPostId,
 			nickname);
 
-		Slice<HomePostResponse> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
-		Slice<HomePostResponse> secondSummaryList = secondPostSummaryResponse.getPostSummaryList();
+		Slice<?> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
+		Slice<?> secondSummaryList = secondPostSummaryResponse.getPostSummaryList();
 
 		//then
 		assertThat(firstSummaryList.hasNext()).isTrue();
@@ -128,7 +128,7 @@ public class PostInfoServiceTest {
 		//when
 		System.out.println("첫 페이지");
 		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", pageSize, cursorPostId, nickname);
-		Slice<HomePostResponse> responses = postSummaryResponse.getPostSummaryList();
+		Slice<HomePostResponse> responses = (Slice<HomePostResponse>)postSummaryResponse.getPostSummaryList();
 
 		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
 		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
@@ -154,7 +154,7 @@ public class PostInfoServiceTest {
 
 		//when
 		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
-		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+		Slice<HomePostResponse> postSummaryList = (Slice<HomePostResponse>)response.getPostSummaryList();
 
 		//then
 		assertThat(postSummaryList.hasNext()).isFalse();

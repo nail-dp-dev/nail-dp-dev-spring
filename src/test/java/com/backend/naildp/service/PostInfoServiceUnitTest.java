@@ -83,7 +83,7 @@ class PostInfoServiceUnitTest {
 		//when
 		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE,
 			cursorPostId, NICKNAME);
-		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
+		Slice<HomePostResponse> homePostResponses = (Slice<HomePostResponse>)postSummaryResponse.getPostSummaryList();
 
 		//then
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
@@ -120,7 +120,7 @@ class PostInfoServiceUnitTest {
 
 		//when
 		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
-		Slice<HomePostResponse> homePostResponses = postSummaryResponse.getPostSummaryList();
+		Slice<HomePostResponse> homePostResponses = (Slice<HomePostResponse>)postSummaryResponse.getPostSummaryList();
 
 		//then
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
@@ -152,7 +152,7 @@ class PostInfoServiceUnitTest {
 
 		//when
 		PostSummaryResponse response = postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
-		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+		Slice<HomePostResponse> postSummaryList = (Slice<HomePostResponse>)response.getPostSummaryList();
 
 		//then
 		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
@@ -187,7 +187,7 @@ class PostInfoServiceUnitTest {
 
 		//when
 		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1);
-		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+		Slice<HomePostResponse> postSummaryList = (Slice<HomePostResponse>)response.getPostSummaryList();
 
 		//then
 		assertThat(postSummaryList.hasNext()).isFalse();
@@ -216,7 +216,7 @@ class PostInfoServiceUnitTest {
 
 		//when
 		PostSummaryResponse response = postInfoService.findLikedPost(nickname, pageSize, -1L);
-		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+		Slice<HomePostResponse> postSummaryList = (Slice<HomePostResponse>)response.getPostSummaryList();
 
 		//then
 		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
@@ -267,7 +267,7 @@ class PostInfoServiceUnitTest {
 
 		//when
 		PostSummaryResponse response = postInfoService.homePosts("NEW", PAGE_SIZE, cursorId, nickname);
-		Slice<HomePostResponse> postSummaryList = response.getPostSummaryList();
+		Slice<HomePostResponse> postSummaryList = (Slice<HomePostResponse>)response.getPostSummaryList();
 
 		//then
 		assertThat(response).extracting(PostSummaryResponse::getCursorId).isEqualTo(-1L);
