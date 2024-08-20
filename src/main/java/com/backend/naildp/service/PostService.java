@@ -228,6 +228,20 @@ public class PostService {
 		post.changeBoundary(postBoundaryRequest);
 	}
 
+	public void deletePost(Long postId, String nickname) {
+
+		Post post = postRepository.findById(postId)
+			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		if (post.notWrittenBy(nickname)) {
+			throw new CustomException("게시글 삭제는 작성자만 할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+		// archivePost, comment, photo, postLike, tagPost
+		// postRepository.deleteAllByPostId(archive.getId());
+		postRepository.delete(post);
+
+	}
+
 	private void deleteFileUrls(List<String> deletedFileUrls) {
 		if (deletedFileUrls == null || deletedFileUrls.isEmpty()) {
 			return;
@@ -297,4 +311,5 @@ public class PostService {
 			throw new CustomException("본인이 작성한 게시글만 수정할 수 있습니다.", ErrorCode.USER_MISMATCH);
 		}
 	}
+
 }
