@@ -64,6 +64,9 @@ class PostCreateServiceTest {
 	@InjectMocks
 	PostService postService;
 
+	@Mock
+	private PostDeletionFacade postDeletionFacade;
+
 	@Test
 	@DisplayName("게시물 업로드 테스트")
 	void testUploadPost() {
@@ -320,4 +323,44 @@ class PostCreateServiceTest {
 		verify(postRepository).findPostAndUser(1L);
 	}
 
+	@Test
+	@DisplayName("게시물 삭제 성공 테스트")
+	public void deletePostSuccessfully() {
+		User user = User.builder().nickname("user1").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+		given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+		postService.deletePost(1L, "user1");
+
+		then(postDeletionFacade).should().deletePostAndAssociations(1L);
+	}
+
+	@Test
+	@DisplayName("게시물 삭제 실패 테스트 - 작성자가 아닌 경우")
+	public void deletePost_IsNotAuthor() {
+		User user = User.builder().nickname("user1").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+		given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+		assertThatThrownBy(() -> postService.deletePost(1L, "user2"))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("게시글 삭제는 작성자만 할 수 있습니다.");
+
+		then(postDeletionFacade).shouldHaveNoInteractions();
+	}
+
+	@Test
+	@DisplayName("게시물 삭제 실패 테스트 - 게시물 존재하지 않는 경우")
+	public void deletePost_NotFound() {
+		User user = User.builder().nickname("user1").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
+		given(postRepository.findById(1L)).willReturn(Optional.empty());
+
+		assertThatThrownBy(() -> postService.deletePost(1L, "user1"))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("해당 포스트를 찾을 수 없습니다.");
+
+		then(postDeletionFacade).shouldHaveNoInteractions();
+	}
 }
