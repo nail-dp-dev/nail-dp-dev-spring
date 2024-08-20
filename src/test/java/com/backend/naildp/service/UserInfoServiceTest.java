@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,6 +102,8 @@ class UserInfoServiceTest {
 		archive1 = new Archive(user1, "alswl archive", Boundary.ALL);
 
 		user1.updatePoint(1000L);
+
+		Follow follow = new Follow(user1, user2);
 	}
 
 	@DisplayName("사용자 정보 조회 - 저장한 포스트의 공개범위가 전체일 떄")
@@ -114,7 +116,7 @@ class UserInfoServiceTest {
 		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
+		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(new ArrayList<>());
 		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
@@ -142,7 +144,7 @@ class UserInfoServiceTest {
 		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
+		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(new ArrayList<>());
 		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
@@ -168,7 +170,7 @@ class UserInfoServiceTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1, archivePost2));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
-			List.of(user2.getNickname(), "user3"));
+			new ArrayList<>(List.of(user2.getNickname(), "user3")));
 		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
@@ -191,7 +193,8 @@ class UserInfoServiceTest {
 		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(List.of(user2.getNickname()));
+		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
+			new ArrayList<>(List.of(user2.getNickname())));
 		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
 			Optional.of(profile1.getProfileUrl()));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);

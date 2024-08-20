@@ -52,6 +52,7 @@ public class UserInfoService {
 			user.getNickname());
 
 		List<String> followings = followRepository.findFollowingNicknamesByUserNickname(user.getNickname());
+		followings.add(nickname);
 
 		int count = 0;
 
@@ -61,7 +62,7 @@ public class UserInfoService {
 				.filter(post -> {
 					Boundary boundary = post.getBoundary();
 					return boundary == Boundary.ALL || (boundary == Boundary.FOLLOW && followings.contains(
-						post.getUser().getNickname()));
+						post.getUser().getNickname())) || (boundary == Boundary.NONE && !post.notWrittenBy(nickname));
 				})
 				.count();
 		}
@@ -74,6 +75,48 @@ public class UserInfoService {
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
 			.followingCount(followRepository.countFollowingsByUserNickname(user.getNickname()))
+			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public UserInfoResponseDto getOtherUserInfo(String myNickname, String otherNickname) {
+
+		User myUser = userRepository.findByNickname(myNickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		User otherUser = userRepository.findByNickname(otherNickname)
+			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		List<ArchivePost> archivePosts = archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse(
+			otherNickname);
+
+		List<String> followings = followRepository.findFollowingNicknamesByUserNickname(otherNickname);
+		followings.add(otherNickname);
+
+		int count = 0;
+
+		if (!archivePosts.isEmpty()) {
+			count = (int)archivePosts.stream()
+				.map(ArchivePost::getPost)
+				.filter(post -> {
+					Boundary boundary = post.getBoundary();
+					return boundary == Boundary.ALL || (boundary == Boundary.FOLLOW && followings.contains(
+						post.getUser().getNickname())) || (boundary == Boundary.NONE && !post.notWrittenBy(
+						otherNickname));
+
+				})
+				.count();
+		}
+
+		return UserInfoResponseDto.builder()
+			.nickname(otherUser.getNickname())
+			.point(otherUser.getPoint())
+			.profileUrl(otherUser.getThumbnailUrl())
+			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(otherUser))
+			.saveCount(count)
+			.followerCount(followRepository.countFollowersByUserNickname(otherUser.getNickname()))
+			.followingCount(followRepository.countFollowingsByUserNickname(otherUser.getNickname()))
+			.followingStatus(followRepository.existsByFollowerNicknameAndFollowing(otherNickname, myUser))
 			.build();
 	}
 
