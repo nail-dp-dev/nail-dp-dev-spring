@@ -78,6 +78,7 @@ public class ArchiveService {
 		return PostSummaryResponse.createUserArchiveSummary(archiveList);
 	}
 
+	@Transactional(readOnly = true)
 	public PostSummaryResponse getOtherArchives(String myNickname, String otherNickname, int size, Long cursorId) {
 
 		User otherUser = userRepository.findByNickname(otherNickname)
