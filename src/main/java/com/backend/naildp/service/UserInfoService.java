@@ -110,13 +110,13 @@ public class UserInfoService {
 
 		return UserInfoResponseDto.builder()
 			.nickname(otherUser.getNickname())
-			.point(otherUser.getPoint())
+			.point(null)
 			.profileUrl(otherUser.getThumbnailUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(otherUser))
 			.saveCount(count)
 			.followerCount(followRepository.countFollowersByUserNickname(otherUser.getNickname()))
 			.followingCount(followRepository.countFollowingsByUserNickname(otherUser.getNickname()))
-			.followingStatus(followRepository.existsByFollowerNicknameAndFollowing(otherNickname, myUser))
+			.followingStatus(followRepository.existsByFollowerNicknameAndFollowing(myNickname, otherUser))
 			.build();
 	}
 
