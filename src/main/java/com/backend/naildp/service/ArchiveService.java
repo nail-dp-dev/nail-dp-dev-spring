@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
-import com.backend.naildp.dto.archive.ArchiveResponseDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
@@ -62,11 +61,46 @@ public class ArchiveService {
 	}
 
 	@Transactional(readOnly = true)
-	public ArchiveResponseDto getArchives(String nickname) {
+	public PostSummaryResponse getMyArchives(String nickname, int size, Long cursorId) {
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<ArchiveMapping> archiveList;
 
-		List<ArchiveMapping> archives = archiveRepository.findArchiveInfosByUserNickname(nickname);
+		if (cursorId == -1) {
+			archiveList = archiveRepository.findArchiveInfosByUserNickname(nickname, pageRequest);
+		} else {
+			archiveList = archiveRepository.findArchiveInfosByIdAndUserNickname(nickname, cursorId, pageRequest);
 
-		return ArchiveResponseDto.of(archives);
+		}
+		if (archiveList.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		return PostSummaryResponse.createUserArchiveSummary(archiveList);
+	}
+
+	public PostSummaryResponse getOtherArchives(String myNickname, String otherNickname, int size, Long cursorId) {
+
+		User otherUser = userRepository.findByNickname(otherNickname)
+			.orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
+				ErrorCode.NOT_FOUND));
+
+		//사용자가 아카이브 생성자의 팔로워인지 확인필요. -> isLock(잠금 썸네일)
+		boolean isFollower = followRepository.existsByFollowerNicknameAndFollowing(myNickname, otherUser);
+
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<ArchiveMapping> archiveList;
+
+		if (cursorId == -1) {
+			archiveList = archiveRepository.findArchiveInfosWithoutNone(otherNickname, pageRequest);
+		} else {
+			archiveList = archiveRepository.findArchiveInfosByIdWithoutNone(otherNickname, cursorId, pageRequest);
+
+		}
+		if (archiveList.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		return PostSummaryResponse.createOtherArchiveSummary(archiveList, isFollower);
 	}
 
 	@Transactional
@@ -270,4 +304,5 @@ public class ArchiveService {
 		}
 		archive.updateBoundary(boundary);
 	}
+
 }

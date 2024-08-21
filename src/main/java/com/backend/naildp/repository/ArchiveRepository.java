@@ -12,18 +12,51 @@ import org.springframework.data.repository.query.Param;
 import com.backend.naildp.entity.Archive;
 
 public interface ArchiveRepository extends JpaRepository<Archive, Long> {
+	// 내 아카이브 조회
 	@Query(
 		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
 			+ "from Archive a left join a.archivePosts ap "
 			+ "where a.user.nickname = :nickname "
 			+ "group by a.id "
 			+ "order by a.createdDate DESC")
-	List<ArchiveMapping> findArchiveInfosByUserNickname(@Param("nickname") String nickname);
+	Slice<ArchiveMapping> findArchiveInfosByUserNickname(@Param("nickname") String nickname, PageRequest pageRequest);
+
+	@Query(
+		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
+			+ "from Archive a left join a.archivePosts ap "
+			+ "where a.user.nickname = :nickname "
+			+ "and a.id < :id "
+			+ "group by a.id "
+			+ "order by a.createdDate DESC")
+	Slice<ArchiveMapping> findArchiveInfosByIdAndUserNickname(@Param("nickname") String nickname, @Param("id") Long id,
+		PageRequest pageRequest);
+
+	// 다른 유저 아카이브 조회
+	@Query(
+		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
+			+ "from Archive a left join a.archivePosts ap "
+			+ "where a.user.nickname = :nickname "
+			+ "and a.boundary <> 'NONE'"
+			+ "group by a.id "
+			+ "order by a.createdDate DESC")
+	Slice<ArchiveMapping> findArchiveInfosWithoutNone(@Param("nickname") String nickname, PageRequest pageRequest);
+
+	@Query(
+		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
+			+ "from Archive a left join a.archivePosts ap "
+			+ "where a.user.nickname = :nickname "
+			+ "and a.boundary <> 'NONE'"
+			+ "and a.id < :id "
+			+ "group by a.id "
+			+ "order by a.createdDate DESC")
+	Slice<ArchiveMapping> findArchiveInfosByIdWithoutNone(@Param("nickname") String nickname, @Param("id") Long id,
+		PageRequest pageRequest);
 
 	int countArchivesByUserNickname(String nickname);
 
 	Optional<Archive> findArchiveById(Long archiveId);
 
+	// 팔로잉한 아카이브 하나씩 조회
 	@Query(
 		"select a.id as id, u.nickname as nickname, u.thumbnailUrl as thumbnailUrl, a.archiveImgUrl as archiveImgUrl, u.archiveCount as archiveCount "
 			+ "from Archive a " + "join a.user u "
