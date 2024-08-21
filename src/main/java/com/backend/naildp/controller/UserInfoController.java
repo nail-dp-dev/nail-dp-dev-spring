@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +37,17 @@ public class UserInfoController {
 		UserInfoResponseDto userInfoResponseDto = userInfoService.getUserInfo(userDetails.getUser().getNickname());
 
 		return ResponseEntity.ok(ApiResponse.successResponse(userInfoResponseDto, "사용자 정보 조회 성공", 2000));
+
+	}
+
+	@GetMapping("/{nickname}")
+	ResponseEntity<ApiResponse<?>> getOtherUserInfo(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("nickname") String nickname) {
+
+		UserInfoResponseDto userInfoResponseDto = userInfoService.getOtherUserInfo(userDetails.getUser().getNickname(),
+			nickname);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(userInfoResponseDto, "다른 사용자 정보 조회 성공", 2000));
 
 	}
 
