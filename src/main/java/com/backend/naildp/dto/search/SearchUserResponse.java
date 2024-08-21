@@ -15,11 +15,10 @@ public class SearchUserResponse {
 	private Long postCount;
 	private Long savedPostCount;
 	private Long followerCount;
-	private Boolean isFollowing;
+	private boolean isFollowing;
 
-	@QueryProjection
 	public SearchUserResponse(String nickname, String profileUrl, Long postCount, Long savedPostCount,
-		Long followerCount, Boolean isFollowing) {
+		Long followerCount, boolean isFollowing) {
 		this.nickname = nickname;
 		this.profileUrl = profileUrl;
 		this.postCount = postCount;

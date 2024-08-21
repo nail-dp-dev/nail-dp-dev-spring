@@ -18,6 +18,7 @@ public class SearchService {
 	private final UserRepository userRepository;
 
 	public List<SearchUserResponse> searchUsers(String keyword, String username) {
-		return userRepository.searchByKeyword(keyword, username);
+		List<SearchUserResponse> searchUserResponses = userRepository.searchByKeyword(keyword, username);
+		return searchUserResponses;
 	}
 }
