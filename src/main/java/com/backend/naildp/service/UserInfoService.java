@@ -70,9 +70,6 @@ public class UserInfoService {
 	@Transactional(readOnly = true)
 	public UserInfoResponseDto getOtherUserInfo(String myNickname, String otherNickname) {
 
-		User myUser = userRepository.findByNickname(myNickname)
-			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
 		User otherUser = userRepository.findByNickname(otherNickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
