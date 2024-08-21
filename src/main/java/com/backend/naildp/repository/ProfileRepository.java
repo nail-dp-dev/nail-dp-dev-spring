@@ -16,4 +16,6 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
 	List<String> findProfileUrlsByType(@Param("type") ProfileType profileType);
 
 	Optional<Profile> findProfileByProfileUrl(String profileUrl);
+
+	boolean existsProfileByProfileUrlStartsWith(String profileUrl);
 }

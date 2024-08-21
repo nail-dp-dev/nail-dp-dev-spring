@@ -13,5 +13,6 @@ public class UserInfoResponseDto {
 	private String profileUrl;
 	private int followerCount;
 	private int followingCount;
+	private Boolean followingStatus;
 
 }
