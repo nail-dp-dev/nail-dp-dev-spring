@@ -3,6 +3,7 @@ package com.backend.naildp.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,5 +15,7 @@ public interface TagPostRepository extends JpaRepository<TagPost, Long> {
 	@Query("select tp from TagPost tp join fetch tp.tag t where tp.post = :post")
 	List<TagPost> findTagPostAndTagByPost(@Param("post") Post post);
 
-	void deleteAllByPostId(Long postId);
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("delete from TagPost tp where tp.post.id = :postId")
+	void deleteAllByPostId(@Param("postId") Long postId);
 }

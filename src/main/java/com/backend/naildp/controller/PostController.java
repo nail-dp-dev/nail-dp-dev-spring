@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -98,6 +98,13 @@ public class PostController {
 		@RequestBody PostBoundaryRequest postBoundaryRequest, @AuthenticationPrincipal UserDetails userDetails) {
 		postService.changeBoundary(postId, postBoundaryRequest, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2000));
+	}
+
+	@DeleteMapping("{postId}")
+	ResponseEntity<?> deletePost(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("postId") Long postId) {
+		postService.deletePost(postId, userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시글 삭제 완료", 2001));
 	}
 
 }
