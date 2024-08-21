@@ -54,25 +54,14 @@ public class UserInfoService {
 		List<String> followings = followRepository.findFollowingNicknamesByUserNickname(user.getNickname());
 		followings.add(nickname);
 
-		int count = 0;
-
-		if (!archivePosts.isEmpty()) {
-			count = (int)archivePosts.stream()
-				.map(ArchivePost::getPost)
-				.filter(post -> {
-					Boundary boundary = post.getBoundary();
-					return boundary == Boundary.ALL || (boundary == Boundary.FOLLOW && followings.contains(
-						post.getUser().getNickname())) || (boundary == Boundary.NONE && !post.notWrittenBy(nickname));
-				})
-				.count();
-		}
+		int saveCount = calculateSaveCount(archivePosts, followings, user.getNickname());
 
 		return UserInfoResponseDto.builder()
 			.nickname(user.getNickname())
 			.point(user.getPoint())
 			.profileUrl(user.getThumbnailUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(user))
-			.saveCount(count)
+			.saveCount(saveCount)
 			.followerCount(followRepository.countFollowersByUserNickname(user.getNickname()))
 			.followingCount(followRepository.countFollowingsByUserNickname(user.getNickname()))
 			.build();
@@ -93,27 +82,14 @@ public class UserInfoService {
 		List<String> followings = followRepository.findFollowingNicknamesByUserNickname(otherNickname);
 		followings.add(otherNickname);
 
-		int count = 0;
-
-		if (!archivePosts.isEmpty()) {
-			count = (int)archivePosts.stream()
-				.map(ArchivePost::getPost)
-				.filter(post -> {
-					Boundary boundary = post.getBoundary();
-					return boundary == Boundary.ALL || (boundary == Boundary.FOLLOW && followings.contains(
-						post.getUser().getNickname())) || (boundary == Boundary.NONE && !post.notWrittenBy(
-						otherNickname));
-
-				})
-				.count();
-		}
+		int saveCount = calculateSaveCount(archivePosts, followings, otherNickname);
 
 		return UserInfoResponseDto.builder()
 			.nickname(otherUser.getNickname())
 			.point(null)
 			.profileUrl(otherUser.getThumbnailUrl())
 			.postsCount(postRepository.countPostsByUserAndTempSaveIsFalse(otherUser))
-			.saveCount(count)
+			.saveCount(saveCount)
 			.followerCount(followRepository.countFollowersByUserNickname(otherUser.getNickname()))
 			.followingCount(followRepository.countFollowingsByUserNickname(otherUser.getNickname()))
 			.followingStatus(followRepository.existsByFollowerNicknameAndFollowing(myNickname, otherUser))
@@ -235,5 +211,21 @@ public class UserInfoService {
 
 	private boolean checkProfileType(Profile profile) {
 		return profile.getProfileType() != ProfileType.CUSTOMIZATION && profile.getProfileType() != ProfileType.AUTO;
+	}
+
+	private int calculateSaveCount(List<ArchivePost> archivePosts, List<String> followings, String userNickname) {
+		if (archivePosts.isEmpty()) {
+			return 0;
+		}
+
+		return (int)archivePosts.stream()
+			.map(ArchivePost::getPost)
+			.filter(post -> {
+				Boundary boundary = post.getBoundary();
+				return boundary == Boundary.ALL ||
+					(boundary == Boundary.FOLLOW && followings.contains(post.getUser().getNickname())) ||
+					(boundary == Boundary.NONE && !post.notWrittenBy(userNickname));
+			})
+			.count();
 	}
 }
