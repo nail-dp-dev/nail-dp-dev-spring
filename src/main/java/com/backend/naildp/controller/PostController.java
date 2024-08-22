@@ -97,7 +97,7 @@ public class PostController {
 	ResponseEntity<?> changePostBoundary(@PathVariable("postId") Long postId,
 		@RequestBody PostBoundaryRequest postBoundaryRequest, @AuthenticationPrincipal UserDetails userDetails) {
 		postService.changeBoundary(postId, postBoundaryRequest, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2001));
 	}
 
 	@DeleteMapping("{postId}")

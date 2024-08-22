@@ -1,6 +1,5 @@
 package com.backend.naildp.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -20,7 +19,6 @@ import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.service.CommentLikeService;
-import com.google.gson.Gson;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,7 +47,6 @@ class CommentLikeControllerUnitTest {
 			.andExpect(jsonPath("$.code").value(ErrorCode.NOT_FOUND.getErrorCode()))
 			.andDo(print());
 	}
-
 
 	@DisplayName("댓글 좋아요 등록 예외 - 비공개 게시물에 작성자가 아닌 사용자가 접근했을 때")
 	@Test
@@ -120,7 +117,7 @@ class CommentLikeControllerUnitTest {
 		//then
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("댓글 좋아요 취소 성공"))
-			.andExpect(jsonPath("$.code").value(2000))
+			.andExpect(jsonPath("$.code").value(2001))
 			.andDo(print());
 	}
 
