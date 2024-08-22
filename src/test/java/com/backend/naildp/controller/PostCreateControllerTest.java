@@ -37,7 +37,6 @@ import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.PostService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PostController.class)
@@ -307,7 +306,7 @@ public class PostCreateControllerTest {
 		String wrongUserNickname = "wrongNickname";
 
 		String request = objectMapper.writeValueAsString(postBoundaryRequest);
-		ApiResponse<Object> apiResponse = ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2000);
+		ApiResponse<Object> apiResponse = ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2001);
 
 		doNothing().when(postService).changeBoundary(anyLong(), any(PostBoundaryRequest.class), anyString());
 
