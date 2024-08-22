@@ -52,12 +52,6 @@ public class User extends BaseEntity {
 	@Formula("(select count(*) from Archive where Archive.user_id = user_id and Archive.boundary <> 'NONE' )")
 	private int archiveCount;
 
-	@OneToMany(mappedBy = "following")
-	private List<Follow> followers = new ArrayList<>();
-
-	@OneToMany(mappedBy = "follower")
-	private List<Follow> followings = new ArrayList<>();
-
 	@Builder
 	public User(String nickname, String phoneNumber, UserRole role, boolean agreement) {
 		this.nickname = nickname;
