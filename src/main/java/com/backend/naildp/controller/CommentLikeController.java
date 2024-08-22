@@ -34,7 +34,7 @@ public class CommentLikeController {
 	ResponseEntity<?> cancelLike(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
 		@AuthenticationPrincipal UserDetails userDetails) {
 		commentLikeService.cancelCommentLike(postId, commentId, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 좋아요 취소 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 좋아요 취소 성공", 2001));
 	}
 
 	@GetMapping("/{postId}/comment/{commentId}/like")

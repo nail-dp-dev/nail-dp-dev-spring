@@ -33,7 +33,7 @@ public class FollowController {
 	ResponseEntity<?> unfollow(@PathVariable("nickname") String nickname,
 		@AuthenticationPrincipal UserDetails userDetails) {
 		followService.unfollowUser(nickname, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 취소 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 취소 성공", 2001));
 	}
 
 	@GetMapping("/{nickname}/followers")
