@@ -94,7 +94,12 @@ public class WebSecurityConfig {
 				.requestMatchers("/auth/signup").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.requestMatchers("/home").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.anyRequest().authenticated() // 그 외 모든 요청 인증처리
+
 		);
+
+		http.oauth2Login(oauth2 -> oauth2
+			.userInfoEndpoint(userInfo -> userInfo // 사용자가 로그인에 성공하였을 경우,
+				.userService(principalOauth2UserService))) // 해당 서비스 로직을 타도록 설정)
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

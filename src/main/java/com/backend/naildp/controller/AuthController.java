@@ -41,7 +41,7 @@ public class AuthController {
 		return "This is a protected endpoint";
 	}
 
-	@GetMapping("/auth/kakao")
+	@GetMapping("/auth")
 	public ResponseEntity<ApiResponse<?>> kakaoLogin(@RequestParam("code") String code, HttpServletRequest req,
 		HttpServletResponse res) throws
 		JsonProcessingException {

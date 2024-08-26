@@ -1,7 +1,11 @@
 package com.backend.naildp.entity;
 
+import com.backend.naildp.common.ProviderType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -21,8 +25,9 @@ public class SocialLogin {
 	@Column(name = "login_id")
 	private Long socialId;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private String platform;
+	private ProviderType platform;
 
 	@Column(nullable = false)
 	private String email;
