@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
@@ -54,6 +56,9 @@ public class PostSearchRepositoryTest {
 	@PersistenceContext
 	EntityManager em;
 
+	@Autowired
+	PostRepository postRepository;
+
 	final int POST_CNT = 10;
 	String tagNameOfFollowedWriter = "가리비네일";
 	String tagNameOfNotFollowedWriter = "태그아님";
@@ -64,11 +69,9 @@ public class PostSearchRepositoryTest {
 		User writer = createUserByNickname("writer");
 		User writerNotFollowed = createUserByNickname("writerNotFollowed");
 
-
 		savePostByCnt(writer, POST_CNT, Boundary.ALL, tagNameOfFollowedWriter);
 		savePostByCnt(writer, POST_CNT, Boundary.FOLLOW, tagNameOfFollowedWriter);
 		savePostByCnt(writer, POST_CNT, Boundary.NONE, tagNameOfFollowedWriter);
-
 
 		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.ALL, tagNameOfNotFollowedWriter);
 		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.FOLLOW, tagNameOfNotFollowedWriter);
@@ -108,6 +111,46 @@ public class PostSearchRepositoryTest {
 
 		assertThat(posts).hasSize(expectedPostCount);
 		assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
+	}
+
+	@DisplayName("키워드를 가지는 게시물 검색")
+	@ParameterizedTest
+	@CsvSource(value = {"가리비네일, 20", "태그아님, 10"})
+	void searchPostsByKeyword(String keyword, int expectedPostCount) {
+		String username = "writer";
+		int pageSize = 20;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+		Post firstPost = em.createQuery("select p from Post p order by p.createdDate desc", Post.class)
+			.setMaxResults(1)
+			.getSingleResult();
+
+		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username,
+			firstPost.getId());
+
+		assertThat(posts).hasSize(expectedPostCount);
+		assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
+	}
+
+	@DisplayName("키워드를 가지는 게시물 검색 예외 - 커서인 Post 가 삭제되었을 때")
+	@ParameterizedTest
+	@CsvSource(value = {"가리비네일, 20", "태그아님, 10"})
+	void searchPostsByDeletedCursorId(String keyword, int expectedPostCount) {
+		String username = "writer";
+		int pageSize = 20;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+		Post firstPost = em.createQuery("select p from Post p order by p.createdDate desc", Post.class)
+			.setMaxResults(1)
+			.getSingleResult();
+
+		assertThatThrownBy(() ->
+			postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username, firstPost.getId() + 1))
+			.isInstanceOf(NullPointerException.class);
+
+		// Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username,
+		// 	firstPost.getId() + 1);
+		//
+		// assertThat(posts).hasSize(expectedPostCount);
+		// assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
 	}
 
 	private BooleanExpression usernamePermitted(String usernameCond) {
