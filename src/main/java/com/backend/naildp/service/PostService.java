@@ -243,6 +243,24 @@ public class PostService {
 
 	}
 
+	@Transactional(readOnly = true)
+	public Long countSharing(Long postId, String username) {
+		Post post = postRepository.findPostAndUser(postId)
+			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		// post 에 접근할 수 있는지 확인 필요
+		if (post.isClosed() && post.notWrittenBy(username)) {
+			throw new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username,
+			post.getUser()) && post.notWrittenBy(username)) {
+			throw new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		return post.getSharing();
+	}
+
 	private void deleteFileUrls(List<String> deletedFileUrls) {
 		if (deletedFileUrls == null || deletedFileUrls.isEmpty()) {
 			return;
