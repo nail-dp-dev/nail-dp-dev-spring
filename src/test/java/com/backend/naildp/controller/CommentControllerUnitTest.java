@@ -156,7 +156,7 @@ class CommentControllerUnitTest {
 	void 댓글_수정_API_테스트() throws Exception {
 		//given
 		Long modifiedCommentId = 1L;
-		ApiResponse<Long> apiResponse = ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2000);
+		ApiResponse<Long> apiResponse = ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2001);
 
 		CommentRegisterDto commentModifyDto = new CommentRegisterDto("수정 댓글");
 		String request = objectMapper.writeValueAsString(commentModifyDto);

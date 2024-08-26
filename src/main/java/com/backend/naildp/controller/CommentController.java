@@ -43,14 +43,14 @@ public class CommentController {
 		@AuthenticationPrincipal UserDetails userDetails) {
 		Long modifiedCommentId = commentService.modifyComment(postId, commentId, commentModifyDto,
 			userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(modifiedCommentId, "댓글 수정 성공", 2001));
 	}
 
 	@DeleteMapping("/{postId}/comment/{commentId}")
 	ResponseEntity<?> deleteComment(@PathVariable("postId") Long postId, @PathVariable("commentId") Long commentId,
 		@AuthenticationPrincipal UserDetails userDetails) {
 		commentService.deleteComment(postId, commentId, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "댓글 삭제 성공", 2001));
 	}
 
 	@GetMapping("/{postId}/comment")
@@ -58,7 +58,8 @@ public class CommentController {
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId, userDetails.getUsername());
+		CommentSummaryResponse response = commentService.findComments(postId, size, cursorId,
+			userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "댓글 조회 성공", 2000));
 	}
 }

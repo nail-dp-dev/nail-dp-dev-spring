@@ -71,7 +71,7 @@ class PostLikeControllerUnitTest {
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void cancelPostLikeApiTest() throws Exception {
 		Long resultId = 10L;
-		ApiResponse<Object> apiResponse = ApiResponse.successResponse(null, "좋아요 취소", 2000);
+		ApiResponse<Object> apiResponse = ApiResponse.successResponse(null, "좋아요 취소", 2001);
 
 		doNothing().when(postLikeService).unlikeByPostId(anyLong(), anyString());
 
