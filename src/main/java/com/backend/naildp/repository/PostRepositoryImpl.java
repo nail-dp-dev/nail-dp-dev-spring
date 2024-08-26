@@ -7,7 +7,6 @@ import static com.backend.naildp.entity.QPostLike.*;
 import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -17,8 +16,6 @@ import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.QArchivePost;
-import com.backend.naildp.entity.QPostLike;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;

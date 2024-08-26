@@ -1,8 +1,6 @@
 package com.backend.naildp.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -33,7 +31,7 @@ public class SearchService {
 	public PostSummaryResponse searchPosts(Pageable pageable, String keyword, String username, Long cursor) {
 		Slice<Post> posts = postRepository.searchPostByKeyword(pageable, keyword, username, cursor);
 
-		if(posts.isEmpty()) {
+		if (posts.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
@@ -43,12 +41,4 @@ public class SearchService {
 		return new PostSummaryResponse(posts, postsInArchive, likedPosts);
 	}
 
-	private String generatedCursor(Post post) {
-		return String.format("%06d", post.getPostLikes().size()) + post.getCreatedDate().toString()
-			.substring(2, 19)
-			.replace("T", "")
-			.replace("-", "")
-			.replace(":", "")
-			+ String.format("%08d", post.getId());
-	}
 }

@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +28,12 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.config.QueryDslTestConfig;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.entity.Archive;
+import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
@@ -153,6 +157,89 @@ public class PostSearchRepositoryTest {
 		// assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
 	}
 
+	@DisplayName("아카이브에 저장한 게시물 조회")
+	@Test
+	void postsInArchive() {
+		//given
+		String nickname = "nickname";
+		String writerNickname = "writer";
+		User user = getUserByNickname(nickname);
+		Archive archive = new Archive(user, "archive", Boundary.ALL, "default");
+		em.persist(archive);
+
+		List<Post> posts = getPublicPostsByNickname(writerNickname);
+
+		for (Post post : posts) {
+			em.persist(new ArchivePost(archive, post));
+		}
+
+		em.flush();
+		em.clear();
+
+		//when
+		List<Post> result = postRepository.findPostsInArchive(nickname);
+
+		//then
+		assertThat(result).extracting(Post::getUser).extracting(User::getNickname).containsOnly(writerNickname);
+		assertThat(result).hasSize(POST_CNT);
+	}
+
+	@DisplayName("아카이브가 없는 사용자의 저장한 게시물 조회")
+	@Test
+	void findSavedPostsWithNoArchiveUser() {
+		//given
+		String nickname = "nickname";
+		String writerNickname = "writer";
+		User user = getUserByNickname(nickname);
+		List<Post> posts = getPublicPostsByNickname(writerNickname);
+
+		em.flush();
+		em.clear();
+
+		//when
+		List<Post> result = postRepository.findPostsInArchive(nickname);
+
+		//then
+		assertThat(result).hasSize(0);
+	}
+
+	@DisplayName("좋아요한 게시물 조회 - 사용자가 좋아요를 하지 않은 경우")
+	@Test
+	void findLikedPostsWithNoLikeUser() {
+		//given
+		String nickname = "nickname";
+		User user = getUserByNickname(nickname);
+
+		//when
+		List<Post> likedPosts = postRepository.findLikedPosts(nickname);
+
+		//then
+		assertThat(likedPosts).hasSize(0);
+	}
+
+	@DisplayName("좋아요한 게시물 조회")
+	@Test
+	void findLikedPosts() {
+		//given
+		String nickname = "nickname";
+		String writerNickname = "writer";
+		User user = getUserByNickname(nickname);
+		List<Post> posts = getPublicPostsByNickname(writerNickname);
+		for (Post post : posts) {
+			em.persist(new PostLike(user, post));
+		}
+
+		em.flush();
+		em.clear();
+
+		//when
+		List<Post> likedPosts = postRepository.findLikedPosts(nickname);
+
+		//then
+		assertThat(likedPosts).hasSize(POST_CNT);
+		assertThat(likedPosts).extracting(Post::getUser).extracting(User::getNickname).containsOnly(writerNickname);
+	}
+
 	private BooleanExpression usernamePermitted(String usernameCond) {
 
 		return post.boundary.eq(Boundary.ALL)
@@ -252,5 +339,18 @@ public class PostSearchRepositoryTest {
 	private void createTag(String tagName) {
 		Tag tag = new Tag(tagName);
 		em.persist(tag);
+	}
+
+	private List<Post> getPublicPostsByNickname(String writerNickname) {
+		return em.createQuery("select p from Post p where p.user.nickname = :nickname and p.boundary = 'ALL'",
+				Post.class)
+			.setParameter("nickname", writerNickname)
+			.getResultList();
+	}
+
+	private User getUserByNickname(String nickname) {
+		return em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
+			.setParameter("nickname", nickname)
+			.getSingleResult();
 	}
 }
