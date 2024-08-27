@@ -61,7 +61,8 @@ public class PostServiceTest {
 		writer.thumbnailUrlUpdate("writerUrl");
 
 		createPostByCntAndBoundary(writer, 10, Boundary.ALL);
-
+		createPostByCntAndBoundary(writer, 10, Boundary.FOLLOW);
+		createPostByCntAndBoundary(writer, 10, Boundary.NONE);
 
 		em.flush();
 		em.clear();
@@ -72,10 +73,7 @@ public class PostServiceTest {
 	void postInfoTest() {
 		//given
 		String userNickname = "writer";
-		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", userNickname)
-			.setMaxResults(1)
-			.getSingleResult();
+		Post post = getFirstPostByNicknameAndBoundary(userNickname, Boundary.ALL);
 		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
 			.setParameter("nickname", "user")
 			.getSingleResult();
@@ -100,10 +98,7 @@ public class PostServiceTest {
 		User user = userRepository.findByNickname("user").orElseThrow();
 		User writer = userRepository.findByNickname("writer").orElseThrow();
 		em.persist(new Follow(user, writer));
-		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", writer.getNickname())
-			.setMaxResults(1)
-			.getSingleResult();
+		Post post = getFirstPostByNicknameAndBoundary(writer.getNickname(), Boundary.ALL);
 
 		//when
 		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), post.getId());
@@ -122,10 +117,7 @@ public class PostServiceTest {
 		//given
 		String writerNickname = "writer";
 		User user = userRepository.findByNickname("user").orElseThrow();
-		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", writerNickname)
-			.setMaxResults(1)
-			.getSingleResult();
+		Post post = getFirstPostByNicknameAndBoundary(writerNickname, Boundary.ALL);
 		PostLike postLike = new PostLike(user, post);
 		post.addPostLike(postLike);
 		em.persist(postLike);
@@ -144,10 +136,7 @@ public class PostServiceTest {
 	void changeBoundaryExceptionBecauseOfNotWrittenUser() {
 		//given
 		String userNickname = "writer";
-		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", userNickname)
-			.setMaxResults(1)
-			.getSingleResult();
+		Post post = getFirstPostByNicknameAndBoundary(userNickname, Boundary.ALL);
 		PostBoundaryRequest postBoundaryRequest = new PostBoundaryRequest(Boundary.NONE);
 		String wrongUserNickname = "wrongUser";
 
@@ -164,10 +153,7 @@ public class PostServiceTest {
 	void changeBoundary(Boundary boundary) {
 		//given
 		String userNickname = "writer";
-		Post post = em.createQuery("select p from Post p where p.user.nickname = :nickname", Post.class)
-			.setParameter("nickname", userNickname)
-			.setMaxResults(1)
-			.getSingleResult();
+		Post post = getFirstPostByNicknameAndBoundary(userNickname, Boundary.ALL);
 		PostBoundaryRequest postBoundaryRequest = new PostBoundaryRequest(boundary);
 
 		//when
@@ -175,6 +161,44 @@ public class PostServiceTest {
 
 		//then
 		assertThat(post.getBoundary()).isEqualTo(boundary);
+	}
+
+	@DisplayName("게시물 공유 횟수 조회 예외 테스트 - 비공개 게시물인 경우")
+	@Test
+	void privatePostSharedCountException() {
+		//given
+		Post privatePost = getFirstPostByNicknameAndBoundary("writer", Boundary.NONE);
+
+		//when & then
+		assertThatThrownBy(() -> postService.countSharing(privatePost.getId(), "user"))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("비공개 게시물은 작성자만 접근할 수 있습니다.");
+	}
+
+	@DisplayName("게시물 공유 횟수 조회 예외 테스트 - 팔로우 공개 게시물인데 팔로우가 아닐 때")
+	@Test
+	void followPostSharedCountException() {
+		//given
+		String notFollowNickname = "notFollower";
+		Post followPost = getFirstPostByNicknameAndBoundary("writer", Boundary.FOLLOW);
+
+		//when & then
+		assertThatThrownBy(() -> postService.countSharing(followPost.getId(), notFollowNickname))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.");
+	}
+
+	@DisplayName("게시물 공유 횟수 조회 테스트")
+	@Test
+	void postSharedCount() {
+		//given
+		Post post = getFirstPostByNicknameAndBoundary("writer", Boundary.ALL);
+
+		//when
+		Long sharedCount = postService.countSharing(post.getId(), "writer");
+
+		//then
+		assertThat(sharedCount).isEqualTo(0L);
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
@@ -240,5 +264,13 @@ public class PostServiceTest {
 
 		em.persist(tag);
 		em.persist(tagPost);
+	}
+
+	private Post getFirstPostByNicknameAndBoundary(String userNickname, Boundary boundary) {
+		return em.createQuery("select p from Post p where p.user.nickname = :nickname and p.boundary = :boundary", Post.class)
+			.setParameter("nickname", userNickname)
+			.setParameter("boundary", boundary)
+			.setMaxResults(1)
+			.getSingleResult();
 	}
 }
