@@ -7,6 +7,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
 import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
+import com.backend.naildp.dto.archive.UserArchiveResponseDto;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.repository.ArchiveMapping;
 
@@ -70,5 +71,18 @@ public class PostSummaryResponse {
 		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
 		return new PostSummaryResponse(cursorId,
 			followingArchives.map(FollowArchiveResponseDto::followArchiveResponseDto));
+	}
+
+	public static PostSummaryResponse createUserArchiveSummary(Slice<ArchiveMapping> followingArchives) {
+		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
+		return new PostSummaryResponse(cursorId,
+			followingArchives.map(UserArchiveResponseDto::userArchiveResponseDto));
+	}
+
+	public static PostSummaryResponse createOtherArchiveSummary(Slice<ArchiveMapping> followingArchives,
+		Boolean isFollower) {
+		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
+		return new PostSummaryResponse(cursorId,
+			followingArchives.map(archive -> UserArchiveResponseDto.otherArchiveResponseDto(archive, isFollower)));
 	}
 }
