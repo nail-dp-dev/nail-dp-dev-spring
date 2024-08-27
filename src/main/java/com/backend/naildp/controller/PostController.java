@@ -100,6 +100,13 @@ public class PostController {
 		return ResponseEntity.ok(ApiResponse.successResponse(sharedCount, "게시물 공유 횟수 조회 성공", 2000));
 	}
 
+	@PostMapping("/{postId}/shared")
+	ResponseEntity<ApiResponse<?>> sharePost(@PathVariable("postId") Long postId,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		Long sharedPostId = postService.sharePost(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시물 공유 성공", 2001));
+	}
+
 	@PatchMapping("/{postId}/closer")
 	ResponseEntity<?> changePostBoundary(@PathVariable("postId") Long postId,
 		@RequestBody PostBoundaryRequest postBoundaryRequest, @AuthenticationPrincipal UserDetails userDetails) {
