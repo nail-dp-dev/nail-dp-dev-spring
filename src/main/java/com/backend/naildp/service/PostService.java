@@ -266,7 +266,10 @@ public class PostService {
 		Post post = postRepository.findPostAndUser(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		// post 에 접근할 수 있는지 확인 필요
+		if (post.isTempSaved()) {
+			throw new CustomException("임시저장한 게시물은 공유할 수 없습니다.", ErrorCode.NOT_FOUND);
+		}
+
 		if (post.isClosed() && post.notWrittenBy(username)) {
 			throw new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
 		}

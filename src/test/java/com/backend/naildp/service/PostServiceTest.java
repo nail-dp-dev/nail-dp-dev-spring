@@ -201,6 +201,40 @@ public class PostServiceTest {
 		assertThat(sharedCount).isEqualTo(0L);
 	}
 
+	@DisplayName("게시물 공유 예외 - 임시 저장 게시물 공유")
+	@Test
+	void shareTempSavedPostException() {
+		//given
+		User writer = userRepository.findByNickname("writer").orElseThrow();
+		Post tempSavedPost = Post.builder().user(writer).postContent("content").boundary(Boundary.ALL).tempSave(true).build();
+
+		em.persist(tempSavedPost);
+
+		//when & then
+		assertThatThrownBy(() -> postService.sharePost(tempSavedPost.getId(), writer.getNickname()))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("임시저장한 게시물은 공유할 수 없습니다.");
+	}
+
+	@DisplayName("게시물 공유 테스트")
+	@Test
+	void sharePost() {
+		//given
+		User writer = userRepository.findByNickname("writer").orElseThrow();
+		Post post = Post.builder().user(writer).postContent("content").boundary(Boundary.ALL).tempSave(false).build();
+		postRepository.saveAndFlush(post);
+
+		//when
+		Long sharedPostId = postService.sharePost(post.getId(), writer.getNickname());
+		em.flush();
+		em.clear();
+
+		Post findPost = postRepository.findById(post.getId()).orElseThrow();
+
+		//then
+		assertThat(findPost.getSharing()).isEqualTo(1);
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
