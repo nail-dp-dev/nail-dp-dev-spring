@@ -90,37 +90,11 @@ public class PostSearchRepositoryTest {
 		em.clear();
 	}
 
-	@ParameterizedTest
-	@CsvSource(value = {"가리비네일, 20", "태그아님, 10"})
-	void test(String keyword, int expectedPostCount) {
-		String username = "writer";
-		int pageSize = 20;
-		PageRequest pageRequest = PageRequest.of(0, pageSize);
-		Post firstPost = em.createQuery("select p from Post p order by p.createdDate desc", Post.class)
-			.setMaxResults(1)
-			.getSingleResult();
-		String cursor = generatedCursor(firstPost.getCreatedDate(), firstPost.getPostLikes().size(), firstPost.getId());
-
-		List<Post> posts = queryFactory
-			.select(post)
-			.from(post)
-			.where(
-				usernamePermitted(username)
-					.and(containsInPost(keyword))
-					.and(lessThanCursor(cursor))
-			)
-			.orderBy(post.postLikes.size().desc(), post.createdDate.desc())
-			.limit(pageRequest.getPageSize())
-			.fetch();
-
-		assertThat(posts).hasSize(expectedPostCount);
-		assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
-	}
-
 	@DisplayName("키워드를 가지는 게시물 검색")
 	@ParameterizedTest
 	@CsvSource(value = {"가리비네일, 20", "태그아님, 10"})
 	void searchPostsByKeyword(String keyword, int expectedPostCount) {
+		//given
 		String username = "writer";
 		int pageSize = 20;
 		PageRequest pageRequest = PageRequest.of(0, pageSize);
@@ -128,10 +102,14 @@ public class PostSearchRepositoryTest {
 			.setMaxResults(1)
 			.getSingleResult();
 
+		//when
 		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username,
 			firstPost.getId());
 
+		//then
+		assertThat(posts.hasNext()).isFalse();
 		assertThat(posts).hasSize(expectedPostCount);
+		assertThat(posts.getNumberOfElements()).isEqualTo(expectedPostCount);
 		assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
 	}
 
@@ -139,6 +117,7 @@ public class PostSearchRepositoryTest {
 	@ParameterizedTest
 	@CsvSource(value = {"가리비네일, 20", "태그아님, 10"})
 	void searchPostsByDeletedCursorId(String keyword, int expectedPostCount) {
+		//given
 		String username = "writer";
 		int pageSize = 20;
 		PageRequest pageRequest = PageRequest.of(0, pageSize);
@@ -146,15 +125,28 @@ public class PostSearchRepositoryTest {
 			.setMaxResults(1)
 			.getSingleResult();
 
+		//when & then
 		assertThatThrownBy(() ->
 			postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username, firstPost.getId() + 1))
 			.isInstanceOf(NullPointerException.class);
+	}
 
-		// Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username,
-		// 	firstPost.getId() + 1);
-		//
-		// assertThat(posts).hasSize(expectedPostCount);
-		// assertThat(posts).extracting(Post::getBoundary).contains(Boundary.ALL);
+	@DisplayName("게시물 내용에 없는 키워드로 검색")
+	@Test
+	void searchNotContainedKeyword() {
+		//given
+		String username = "writer";
+		String keyword = "xxxx";
+		int pageSize = 20;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username, null);
+
+		//then
+		assertThat(posts).hasSize(0);
+		assertThat(posts.hasNext()).isFalse();
+		assertThat(posts.getNumberOfElements()).isEqualTo(0);
 	}
 
 	@DisplayName("아카이브에 저장한 게시물 조회")
