@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -22,6 +23,7 @@ import com.backend.naildp.entity.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -33,7 +35,7 @@ public class UserSearchRepositoryTest {
 	@Autowired
 	JPAQueryFactory jpaQueryFactory;
 
-	@Autowired
+	@PersistenceContext
 	EntityManager em;
 
 	@Autowired
@@ -58,9 +60,9 @@ public class UserSearchRepositoryTest {
 		em.clear();
 	}
 
-	// @Disabled
+	@DisplayName("키워드로 사용자 검색 테스트")
 	@Test
-	void test() {
+	void searchUserByKeyword() {
 		//given
 		String keyword = NICKNAME_PREFIX;
 		String username = "nickname";
@@ -69,16 +71,21 @@ public class UserSearchRepositoryTest {
 		List<SearchUserResponse> responses = userRepository.searchByKeyword(keyword, username);
 
 		//then
-		// for (SearchUserResponse res : responses) {
-		// 	System.out.println("============");
-		// 	System.out.println("res.Nickname = " + res.getNickname());
-		// 	System.out.println("res.ProfileUrl = " + res.getProfileUrl());
-		// 	System.out.println("res.PostCount = " + res.getPostCount());
-		// 	System.out.println("res.savedPostCount = " + res.getSavedPostCount());
-		// 	System.out.println("res.FollowerCount = " + res.getFollowerCount());
-		// 	System.out.println("res.IsFollowing = " + res.isFollowing());
-		// }
 		assertThat(responses).hasSize(10);
+	}
+
+	@DisplayName("사용자 닉네임이 아닌 키워드로 검색")
+	@Test
+	void searchUserByNotExistedKeyword() {
+		//given
+		String keyword = "abcdefghijklmnopqrstuvwxyz";
+		String username = "nickname";
+
+		//when
+		List<SearchUserResponse> responses = userRepository.searchByKeyword(keyword, username);
+
+		//then
+		assertThat(responses).hasSize(0);
 	}
 
 	private User createUserByNickname(String nickname) {

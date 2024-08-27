@@ -23,13 +23,13 @@ public class SearchService {
 	private final UserRepository userRepository;
 	private final PostRepository postRepository;
 
-	public List<SearchUserResponse> searchUsers(String keyword, String username) {
-		List<SearchUserResponse> searchUserResponses = userRepository.searchByKeyword(keyword, username);
+	public List<SearchUserResponse> searchUsers(String nicknameKeyword, String username) {
+		List<SearchUserResponse> searchUserResponses = userRepository.searchByKeyword(nicknameKeyword, username);
 		return searchUserResponses;
 	}
 
-	public PostSummaryResponse searchPosts(Pageable pageable, String keyword, String username, Long cursor) {
-		Slice<Post> posts = postRepository.searchPostByKeyword(pageable, keyword, username, cursor);
+	public PostSummaryResponse searchPosts(Pageable pageable, String postKeyword, String username, Long cursor) {
+		Slice<Post> posts = postRepository.searchPostByKeyword(pageable, postKeyword, username, cursor);
 
 		if (posts.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
