@@ -73,7 +73,8 @@ public class PostServiceTest {
 	void postInfoTest() {
 		//given
 		String userNickname = "writer";
-		Post post = getFirstPostByNicknameAndBoundary(userNickname, Boundary.ALL);
+		Boundary boundary = Boundary.ALL;
+		Post post = getFirstPostByNicknameAndBoundary(userNickname, boundary);
 		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
 			.setParameter("nickname", "user")
 			.getSingleResult();
@@ -89,16 +90,18 @@ public class PostServiceTest {
 		//then
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(userNickname);
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(userNickname + "Url");
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getBoundary).isEqualTo(boundary.toString());
 	}
 
 	@DisplayName("팔로우한 유저의 게시물 상세 조회 테스트")
-	@Test
-	void posInfoWithFollow() {
+	@ParameterizedTest
+	@EnumSource(value = Boundary.class, names = {"ALL", "FOLLOW"})
+	void posInfoWithFollow(Boundary boundary) {
 		//given
 		User user = userRepository.findByNickname("user").orElseThrow();
 		User writer = userRepository.findByNickname("writer").orElseThrow();
 		em.persist(new Follow(user, writer));
-		Post post = getFirstPostByNicknameAndBoundary(writer.getNickname(), Boundary.ALL);
+		Post post = getFirstPostByNicknameAndBoundary(writer.getNickname(), boundary);
 
 		//when
 		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), post.getId());
@@ -109,6 +112,7 @@ public class PostServiceTest {
 			.isEqualTo(writer.getNickname() + "Url");
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getFollowerCount).isEqualTo(1L);
 		assertThat(postInfoResponse.isFollowingStatus()).isTrue();
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getBoundary).isEqualTo(boundary.toString());
 	}
 
 	@DisplayName("좋아요한 게시물 상세 조회 테스트")
@@ -117,18 +121,20 @@ public class PostServiceTest {
 		//given
 		String writerNickname = "writer";
 		User user = userRepository.findByNickname("user").orElseThrow();
-		Post post = getFirstPostByNicknameAndBoundary(writerNickname, Boundary.ALL);
-		PostLike postLike = new PostLike(user, post);
-		post.addPostLike(postLike);
+		Post publicPost = getFirstPostByNicknameAndBoundary(writerNickname, Boundary.ALL);
+		PostLike postLike = new PostLike(user, publicPost);
+		publicPost.addPostLike(postLike);
 		em.persist(postLike);
 
 		//when
-		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), post.getId());
+		PostInfoResponse postInfoResponse = postService.postInfo(user.getNickname(), publicPost.getId());
 
 		//then
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getNickname).isEqualTo(writerNickname);
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getProfileUrl).isEqualTo(writerNickname + "Url");
 		assertThat(postInfoResponse).extracting(PostInfoResponse::getLikeCount).isEqualTo(1L);
+		assertThat(postInfoResponse).extracting(PostInfoResponse::getBoundary)
+			.isEqualTo(publicPost.getBoundary().toString());
 	}
 
 	@DisplayName("게시물 공개 범위 설정 시 예외 테스트 - 작성자와 요청자가 일치하지 않을 때")
