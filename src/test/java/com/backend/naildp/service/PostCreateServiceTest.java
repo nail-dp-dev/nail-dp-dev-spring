@@ -8,9 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +35,7 @@ import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
@@ -60,6 +65,9 @@ class PostCreateServiceTest {
 
 	@Mock
 	PhotoRepository photoRepository;
+
+	@Mock
+	FollowRepository followRepository;
 
 	@InjectMocks
 	PostService postService;
@@ -362,5 +370,118 @@ class PostCreateServiceTest {
 			.hasMessage("해당 포스트를 찾을 수 없습니다.");
 
 		then(postDeletionFacade).shouldHaveNoInteractions();
+	}
+
+	@Test
+	@DisplayName("게시물 공유 횟수 조회 예외 - 비공개 게시물에 작성자가 아닌 경우")
+	void privatePostSharedCountExceptionWithoutWriter() {
+		//given
+		User user = User.builder().nickname("user").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post privatePost = Post.builder().user(writer).postContent("").tempSave(false).boundary(Boundary.NONE).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(privatePost));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class, () -> postService.countSharing(1L, "user"));
+
+		//then
+		assertThat(exception).hasMessage("비공개 게시물은 작성자만 접근할 수 있습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_BOUNDARY);
+	}
+
+	@Test
+	@DisplayName("게시물 공유 횟수 조회 예외 - 팔로우 공개 게시물에 작성자와 팔로워가 아닌 경우")
+	void followPostSharedCountExceptionWithoutWriterAndFollower() {
+		//given
+		User user = User.builder().nickname("user").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post followPost = Post.builder().user(writer).postContent("").tempSave(false).boundary(Boundary.FOLLOW).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		when(followRepository.existsByFollowerNicknameAndFollowing(eq(user.getNickname()), any(User.class)))
+			.thenReturn(false);
+
+		//when
+		CustomException exception = assertThrows(CustomException.class, () -> postService.countSharing(1L, "user"));
+
+		//then
+		assertThat(exception).hasMessage("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_BOUNDARY);
+	}
+
+	@ParameterizedTest
+	@DisplayName("게시물 공유 횟수 조회 - 팔로워가 조회")
+	@EnumSource(value = Boundary.class, names = {"ALL", "FOLLOW"})
+	void postSharedCountWithFollower(Boundary boundary) {
+		//given
+		User user = User.builder().nickname("user").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post followPost = Post.builder().user(writer).postContent("").tempSave(false).boundary(boundary).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(user.getNickname()), any(User.class)))
+			.thenReturn(true);
+
+		//when
+		postService.countSharing(1L, "user");
+
+		//then
+		assertThat(followPost.getSharing()).isEqualTo(0L);
+	}
+
+	@ParameterizedTest
+	@DisplayName("게시물 공유 횟수 조회 - 작성자가 조회")
+	@EnumSource(value = Boundary.class)
+	void postSharedCountWithWriter(Boundary boundary) {
+		//given
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post followPost = Post.builder().user(writer).postContent("").tempSave(false).boundary(boundary).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), any(User.class)))
+			.thenReturn(true);
+
+		//when
+		postService.countSharing(1L, "writer");
+
+		//then
+		assertThat(followPost.getSharing()).isEqualTo(0L);
+	}
+
+	@Test
+	@DisplayName("임시저장 게시물 공유 예외")
+	void tempSavedPostShareException() {
+		//given
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post tempSavedPost = Post.builder().user(writer).postContent("").tempSave(true).boundary(Boundary.ALL).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(tempSavedPost));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class, () -> postService.sharePost(1L, "user"));
+
+		//then
+		assertThat(exception).hasMessage("임시저장한 게시물은 공유할 수 없습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
+	}
+
+	@ParameterizedTest
+	@DisplayName("게시물 공유 테스트 - 작성자가 공유")
+	@EnumSource(value = Boundary.class)
+	void tempSavedPostShareException(Boundary boundary) {
+		//given
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(writer).postContent("").tempSave(false).boundary(boundary).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), any(User.class)))
+			.thenReturn(true);
+
+		//when
+		postService.sharePost(1L, writer.getNickname());
+
+		//then
+		assertThat(post.getSharing()).isEqualTo(1);
 	}
 }
