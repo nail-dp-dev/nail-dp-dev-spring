@@ -3,6 +3,7 @@ package com.backend.naildp.dto.post;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -27,6 +28,7 @@ public class PostInfoResponse {
 	private long followerCount;
 	private List<FileInfoResponse> files;
 	private String postContent;
+	private String boundary;
 	private long likeCount;
 	private boolean isLiked;
 	private long commentCount;
@@ -46,6 +48,7 @@ public class PostInfoResponse {
 			.followingStatus(followingStatus)
 			.followerCount(followerCount)
 			.postContent(post.getPostContent())
+			.boundary(post.getBoundary().toString())
 			.likeCount(postLikes.size())
 			.isLiked(postLikes.stream().anyMatch(postLike -> postLike.isLikedBy(userNickname)))
 			.commentCount(post.getComments().size())
