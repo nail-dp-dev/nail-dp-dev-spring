@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.TagPost;
 
-public interface TagPostRepository extends JpaRepository<TagPost, Long> {
+public interface TagPostRepository extends JpaRepository<TagPost, Long>, TagPostSearchRepository {
 
 	@Query("select tp from TagPost tp join fetch tp.tag t where tp.post = :post")
 	List<TagPost> findTagPostAndTagByPost(@Param("post") Post post);
