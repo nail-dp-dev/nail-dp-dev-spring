@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
 
@@ -45,7 +46,8 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 	Slice<PostLike> findPostLikesByIdAndFollowing(@Param("nickname") String nickname, @Param("id") Long cursorId,
 		@Param("following") List<User> following, PageRequest pageRequest);
 
-	List<PostMapping> findPostLikesByUserNickname(String nickname);
+	@Query("SELECT pl.post FROM PostLike pl WHERE pl.user.nickname = :nickname")
+	List<Post> findPostLikesByUserNickname(@Param("nickname") String nickname);
 
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("delete from PostLike pl where pl.post.id = :postId")

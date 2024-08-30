@@ -14,7 +14,6 @@ import com.backend.naildp.entity.Post;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostMapping;
 import com.backend.naildp.repository.PostRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -48,8 +47,8 @@ public class UserPostService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
-		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(myNickname);
+		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
+		List<Post> likedPosts = postLikeRepository.findPostLikesByUserNickname(myNickname);
 
 		return new PostSummaryResponse(postList, savedPosts, likedPosts);
 	}
@@ -74,7 +73,7 @@ public class UserPostService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
+		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(myNickname);
 
 		return PostSummaryResponse.createLikedPostSummary(postList, savedPosts);
 	}

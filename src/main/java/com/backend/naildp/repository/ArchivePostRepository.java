@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.entity.ArchivePost;
+import com.backend.naildp.entity.Post;
 
 public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> {
 
@@ -20,7 +21,8 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	@Query("select ap from ArchivePost ap join fetch ap.archive a join fetch ap.post p where a.user.nickname = :nickname and p.tempSave = false")
 	List<ArchivePost> findAllArchivePostsByUserNicknameAndTempSaveIsFalse(@Param("nickname") String nickname);
 
-	List<PostMapping> findArchivePostsByArchiveUserNickname(String nickname);
+	@Query("select ap.post as post from ArchivePost ap join ap.post p where ap.archive.user.nickname = :nickname and p.tempSave = false")
+	List<Post> findArchivePostsByArchiveUserNickname(@Param("nickname") String nickname);
 
 	boolean existsByArchiveIdAndPostId(Long archiveId, Long postId);
 
