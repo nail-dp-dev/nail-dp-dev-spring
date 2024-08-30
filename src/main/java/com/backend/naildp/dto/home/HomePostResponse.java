@@ -29,7 +29,7 @@ public class HomePostResponse {
 	private LocalDateTime createdDate;
 	private Boundary boundary;
 
-	public HomePostResponse(Post post, List<?> savedPosts, List<?> likedPosts) {
+	public HomePostResponse(Post post, List<Post> savedPosts, List<Post> likedPosts) {
 
 		Photo photo = post.getPhotos().get(0);
 
@@ -44,7 +44,7 @@ public class HomePostResponse {
 		boundary = post.getBoundary();
 	}
 
-	public static HomePostResponse likedPostResponse(Post post, List<?> savedPost) {
+	public static HomePostResponse likedPostResponse(Post post, List<Post> savedPost) {
 		Photo photo = post.getPhotos().get(0);
 
 		return HomePostResponse.builder()
