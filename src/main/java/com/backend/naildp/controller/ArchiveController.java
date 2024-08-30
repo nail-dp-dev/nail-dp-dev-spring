@@ -2,6 +2,7 @@ package com.backend.naildp.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -11,14 +12,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.naildp.dto.archive.ArchiveBoundaryRequestDto;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
+import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
+import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.PostIdRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.ArchiveService;
+import com.backend.naildp.validation.ValidationSequence;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,11 +35,11 @@ public class ArchiveController {
 
 	@PostMapping("/archive")
 	ResponseEntity<ApiResponse<?>> createArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestBody CreateArchiveRequestDto requestDto) {
+		@Validated(ValidationSequence.class) @RequestBody CreateArchiveRequestDto requestDto) {
 
-		archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
+		Long archiveId = archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "새 아카이브 생성 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(archiveId, "새 아카이브 생성 성공", 2001));
 	}
 
 	@GetMapping("/archive")
@@ -104,10 +110,10 @@ public class ArchiveController {
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
 
-		PostSummaryResponse postSummaryResponse = archiveService.getArchivePosts(
+		ArchivePostSummaryResponse archivePostSummaryResponse = archiveService.getArchivePosts(
 			userDetails.getUser().getNickname(), archiveId, size, cursorId);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "특정 아카이브 내 게시물 조회 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(archivePostSummaryResponse, "특정 아카이브 내 게시물 조회 성공", 2000));
 	}
 
 	@GetMapping("/archive/{archiveId}/like")
@@ -125,7 +131,7 @@ public class ArchiveController {
 	@PatchMapping("/archive/{archiveId}/name")
 	ResponseEntity<ApiResponse<?>> changeArchiveName(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("archiveId") Long archiveId,
-		@RequestBody CreateArchiveRequestDto requestDto) {
+		@Validated(ValidationSequence.class) @RequestBody ArchiveNameRequestDto requestDto) {
 
 		archiveService.changeArchiveName(userDetails.getUser().getNickname(), archiveId, requestDto.getArchiveName());
 
@@ -135,10 +141,10 @@ public class ArchiveController {
 	@PatchMapping("/archive/{archiveId}/boundary")
 	ResponseEntity<ApiResponse<?>> changeArchiveBoundary(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("archiveId") Long archiveId,
-		@RequestBody CreateArchiveRequestDto requestDto) {
+		@Valid @RequestBody ArchiveBoundaryRequestDto requestDto) {
 
 		archiveService.changeArchiveBoundary(userDetails.getUser().getNickname(), archiveId, requestDto.getBoundary());
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 이름 변경 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 공개범위 변경 성공", 2001));
 	}
 }

@@ -31,6 +31,7 @@ import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
+import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
@@ -224,16 +225,20 @@ public class PostCreateControllerTest {
 	@WithMockUser(username = "testUser", roles = {"USER"})
 	void readPostDetails() throws Exception {
 		//given
+		User user = User.builder().nickname("testUser").phoneNumber("ph").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
 		PostInfoResponse response = PostInfoResponse.builder()
-			.nickname("testUser")
-			.profileUrl("url")
+			.nickname(post.getUser().getNickname())
+			.profileUrl(post.getUser().getThumbnailUrl())
 			.followingStatus(false)
 			.followerCount(0L)
 			.files(List.of(new PostInfoResponse.FileInfoResponse("photo.jpg", true, false)))
-			.postContent("content")
-			.likeCount(0L)
-			.commentCount(0L)
-			.sharedCount(0L)
+			.postContent(post.getPostContent())
+			.boundary(post.getBoundary().toString())
+			.likeCount(post.getPostLikes().size())
+			.commentCount(post.getComments().size())
+			.sharedCount(post.getSharing())
 			.tags(List.of("tag1", "tag2"))
 			.build();
 
