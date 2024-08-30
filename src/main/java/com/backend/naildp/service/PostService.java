@@ -76,10 +76,10 @@ public class PostService {
 
 		List<TagRequestDto> tags = postRequestDto.getTags();
 		for (TagRequestDto tag : tags) {
-			Tag existingTag = tagRepository.findByName(tag.getTagName())
-				.orElseGet(() -> tagRepository.save(new Tag(tag.getTagName()))); //null 일 때 호출
+			String tagName = tag.getTagName().toLowerCase();
+			Tag existingTag = tagRepository.findByName(tagName)
+				.orElseGet(() -> tagRepository.save(new Tag(tagName)));
 			tagPostRepository.save(new TagPost(existingTag, post));
-
 		}
 		fileRequestDtos.stream().map(fileRequestDto -> new Photo(post, fileRequestDto)).forEach(photoRepository::save);
 	}
@@ -304,8 +304,9 @@ public class PostService {
 	private void updateTagsAndFiles(List<TagRequestDto> tags, List<MultipartFile> files, Post post) {
 		if (tags != null && !tags.isEmpty()) {
 			for (TagRequestDto tag : tags) {
-				Tag existingTag = tagRepository.findByName(tag.getTagName())
-					.orElseGet(() -> tagRepository.save(new Tag(tag.getTagName())));
+				String tagName = tag.getTagName().toLowerCase();
+				Tag existingTag = tagRepository.findByName(tagName)
+					.orElseGet(() -> tagRepository.save(new Tag(tagName)));
 				tagPostRepository.save(new TagPost(existingTag, post));
 			}
 		}
