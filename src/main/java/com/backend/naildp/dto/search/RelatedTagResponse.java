@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.util.StringUtils;
 
+import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Tag;
 
@@ -21,10 +22,11 @@ public class RelatedTagResponse {
 	private boolean isPhoto;
 	private boolean isVideo;
 
-	public RelatedTagResponse(Tag tag, String photoUrl) {
+	public RelatedTagResponse(Tag tag, List<Photo> photos) {
+		String photoUrl = !photos.isEmpty() ? photos.get(0).getPhotoUrl() : "default.jpg";
 		this.tagName = tag.getName();
 		this.tagImageUrl = photoUrl;
-		this.isPhoto = true;
-		this.isVideo = true;
+		this.isPhoto = FileExtensionChecker.isPhotoExtension(photoUrl);
+		this.isVideo = FileExtensionChecker.isVideoExtension(photoUrl);
 	}
 }

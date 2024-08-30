@@ -75,8 +75,7 @@ public class SearchService {
 			);
 
 		return tagPostMap.entrySet().stream()
-			.map(entry -> new RelatedTagResponse(entry.getKey(),
-				!entry.getValue().isEmpty() ? entry.getValue().get(0).getPhotoUrl() : "default"))
+			.map(entry -> new RelatedTagResponse(entry.getKey(), entry.getValue()))
 			.limit(10)
 			.toList();
 	}
