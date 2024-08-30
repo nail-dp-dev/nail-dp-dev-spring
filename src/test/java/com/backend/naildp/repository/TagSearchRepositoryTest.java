@@ -7,6 +7,7 @@ import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.config.QueryDslTestConfig;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
@@ -56,6 +58,9 @@ public class TagSearchRepositoryTest {
 	@Autowired
 	JPAQueryFactory queryFactory;
 
+	@Autowired
+	TagPostRepository tagPostRepository;
+
 	@PersistenceContext
 	EntityManager em;
 
@@ -67,7 +72,10 @@ public class TagSearchRepositoryTest {
 	@BeforeEach
 	void before() {
 		User writer = createUserByNickname(WRITER_NICKNAME);
+		User follower = createUserByNickname(FOLLOWER_NICKNAME);
 		User postLiker = createUserByNickname(LIKER_NICKNAME);
+
+		em.persist(new Follow(follower, writer));
 
 		Post post3 = createPostByUser(writer, "가리비", List.of("가리비", "가비"), false, Boundary.ALL);
 		Post post4 = createPostByUser(writer, "가리비 - 팔로우 공개", List.of("가리비 네일"), false, Boundary.FOLLOW);
@@ -120,22 +128,12 @@ public class TagSearchRepositoryTest {
 
 	@DisplayName("키워드로 연관 태그 검색시 오름차순으로 10개까지 정렬")
 	@Test
-	void searchTagsContainingKeyword() {
+	void searchRelatedTagsContainingKeyword() {
 		//given
 		String keyword = "가";
 
 		//when
-		List<TagPost> tagPosts = queryFactory
-			.select(tagPost)
-			.from(tagPost)
-			.join(tagPost.post, post).fetchJoin().join(tagPost.tag, tag).fetchJoin()
-			.where(keywordContainedInTag(keyword)
-				.and(post.tempSave.isFalse())
-				.and(usernamePermitted(USER_NICKNAME))
-			)
-			.orderBy(tag.name.asc())
-			.limit(10)
-			.fetch();
+		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keyword, FOLLOWER_NICKNAME);
 
 		//then
 		assertThat(tagPosts).extracting(TagPost::getTag).extracting(Tag::getName).startsWith(keyword);
@@ -145,22 +143,14 @@ public class TagSearchRepositoryTest {
 			.containsAnyOf(Boundary.ALL, Boundary.FOLLOW);
 	}
 
-	@DisplayName("키워드가 포함된 태그 검색 - 결과가 없을 때")
+	@DisplayName("키워드로 연관 태그 검색시 결과가 없을 때")
 	@Test
-	void searchTagsNoResult() {
+	void searchRelatedTagsNoResult() {
 		//given
 		String keyword = "가나다라마바사아";
 
 		//when
-		List<TagPost> tagPosts = queryFactory
-			.select(tagPost)
-			.from(tagPost)
-			.join(tagPost.post, post).fetchJoin().join(tagPost.tag, tag).fetchJoin()
-			.where(keywordContainedInTag(keyword)
-				.and(post.tempSave.isFalse())
-				.and(usernamePermitted(USER_NICKNAME))
-			)
-			.fetch();
+		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keyword, USER_NICKNAME);
 
 		//then
 		assertThat(tagPosts).hasSize(0);

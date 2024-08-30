@@ -35,7 +35,6 @@ public class TagPostRepositoryImpl implements TagPostSearchRepository {
 				.and(usernamePermitted(userNickname))
 			)
 			.orderBy(tag.name.asc())
-			.limit(10)
 			.fetch();
 	}
 

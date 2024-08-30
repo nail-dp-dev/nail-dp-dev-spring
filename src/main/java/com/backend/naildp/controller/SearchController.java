@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.amazonaws.Response;
 import com.backend.naildp.dto.home.PostSummaryResponse;
+import com.backend.naildp.dto.search.RelatedTagResponse;
 import com.backend.naildp.dto.search.SearchUserResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.SearchService;
@@ -42,5 +44,13 @@ public class SearchController {
 		PostSummaryResponse response = searchService.searchPosts(pageable, keyword,
 			userDetails.getUsername(), cursor);
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "게시물 검색 성공", 2000));
+	}
+
+	@GetMapping("/tags")
+	ResponseEntity<?> relatedTags(@RequestParam(name = "keyword", defaultValue = "") String keyword,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		List<RelatedTagResponse> responses = searchService.searchRelatedTagsByKeyword(keyword,
+			userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(responses, "연관 태그 검색 성공", 2000));
 	}
 }
