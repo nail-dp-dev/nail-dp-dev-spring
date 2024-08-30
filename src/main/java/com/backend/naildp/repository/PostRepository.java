@@ -13,7 +13,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRepository {
 
 	Slice<Post> findPostsByBoundaryAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
 
