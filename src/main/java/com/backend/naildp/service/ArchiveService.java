@@ -243,7 +243,7 @@ public class ArchiveService {
 		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
 		List<Post> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
 
-		return new PostSummaryResponse(postList, savedPosts, likedPosts);
+		return PostSummaryResponse.createArchivePostSummary(postList, savedPosts, likedPosts, archive.getName());
 	}
 
 	@Transactional(readOnly = true)
