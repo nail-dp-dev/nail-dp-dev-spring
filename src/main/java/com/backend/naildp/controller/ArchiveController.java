@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.naildp.dto.archive.ArchiveBoundaryRequestDto;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
+import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.PostIdRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
@@ -36,9 +37,9 @@ public class ArchiveController {
 	ResponseEntity<ApiResponse<?>> createArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@Validated(ValidationSequence.class) @RequestBody CreateArchiveRequestDto requestDto) {
 
-		archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
+		Long archiveId = archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "새 아카이브 생성 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(archiveId, "새 아카이브 생성 성공", 2001));
 	}
 
 	@GetMapping("/archive")
@@ -109,10 +110,10 @@ public class ArchiveController {
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
 
-		PostSummaryResponse postSummaryResponse = archiveService.getArchivePosts(
+		ArchivePostSummaryResponse archivePostSummaryResponse = archiveService.getArchivePosts(
 			userDetails.getUser().getNickname(), archiveId, size, cursorId);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "특정 아카이브 내 게시물 조회 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(archivePostSummaryResponse, "특정 아카이브 내 게시물 조회 성공", 2000));
 	}
 
 	@GetMapping("/archive/{archiveId}/like")

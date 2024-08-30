@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
+import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
@@ -42,7 +43,7 @@ public class ArchiveService {
 	private final PostLikeRepository postLikeRepository;
 
 	@Transactional
-	public void createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
+	public Long createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
 			ErrorCode.NOT_FOUND));
 
@@ -57,6 +58,7 @@ public class ArchiveService {
 			createArchiveRequestDto.getBoundary());
 
 		archiveRepository.save(archive);
+		return archive.getId();
 
 	}
 
@@ -207,7 +209,7 @@ public class ArchiveService {
 	}
 
 	@Transactional(readOnly = true)
-	public PostSummaryResponse getArchivePosts(String nickname, Long archiveId, int size,
+	public ArchivePostSummaryResponse getArchivePosts(String nickname, Long archiveId, int size,
 		long cursorId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
 		Slice<Post> postList;
@@ -236,13 +238,13 @@ public class ArchiveService {
 		}
 
 		if (postList.isEmpty()) {
-			return PostSummaryResponse.createEmptyResponse();
+			return ArchivePostSummaryResponse.createEmptyResponse(archive.getName());
 		}
 
 		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
 		List<Post> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
 
-		return new PostSummaryResponse(postList, savedPosts, likedPosts);
+		return ArchivePostSummaryResponse.of(postList, savedPosts, likedPosts, archive.getName());
 	}
 
 	@Transactional(readOnly = true)
