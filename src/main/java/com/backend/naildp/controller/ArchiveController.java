@@ -36,9 +36,9 @@ public class ArchiveController {
 	ResponseEntity<ApiResponse<?>> createArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@Validated(ValidationSequence.class) @RequestBody CreateArchiveRequestDto requestDto) {
 
-		archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
+		Long archiveId = archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "새 아카이브 생성 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(archiveId, "새 아카이브 생성 성공", 2001));
 	}
 
 	@GetMapping("/archive")

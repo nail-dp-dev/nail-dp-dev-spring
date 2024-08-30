@@ -42,7 +42,7 @@ public class ArchiveService {
 	private final PostLikeRepository postLikeRepository;
 
 	@Transactional
-	public void createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
+	public Long createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
 			ErrorCode.NOT_FOUND));
 
@@ -57,6 +57,7 @@ public class ArchiveService {
 			createArchiveRequestDto.getBoundary());
 
 		archiveRepository.save(archive);
+		return archive.getId();
 
 	}
 
