@@ -39,7 +39,7 @@ public class SearchController {
 	ResponseEntity<?> searchPosts(
 		@PageableDefault(size = 50) Pageable pageable,
 		@RequestParam(name = "keyword", defaultValue = "") String keyword,
-		@RequestParam(name = "cursor", defaultValue = "null") Long cursor,
+		@RequestParam(name = "cursor", required = false) Long cursor,
 		@AuthenticationPrincipal UserDetails userDetails) {
 		PostSummaryResponse response = searchService.searchPosts(pageable, keyword,
 			userDetails.getUsername(), cursor);

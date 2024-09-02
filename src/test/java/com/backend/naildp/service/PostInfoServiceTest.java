@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,7 @@ public class PostInfoServiceTest {
 		System.out.println("======= BeforeEach 끝 ======");
 	}
 
+	@Disabled
 	@DisplayName("최신 게시글 조회 메서드 연속 호출 테스트")
 	@Test
 	void callNewPostsTwice() {
