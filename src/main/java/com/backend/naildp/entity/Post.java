@@ -120,4 +120,8 @@ public class Post extends BaseEntity {
 	public void changeBoundary(PostBoundaryRequest postBoundaryRequest) {
 		this.boundary = postBoundaryRequest.getCloser();
 	}
+
+	public void share() {
+		this.sharing++;
+	}
 }

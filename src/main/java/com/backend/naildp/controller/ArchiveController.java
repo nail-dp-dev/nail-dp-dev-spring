@@ -2,6 +2,7 @@ package com.backend.naildp.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -11,14 +12,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.naildp.dto.archive.ArchiveBoundaryRequestDto;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
+import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.PostIdRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
 import com.backend.naildp.service.ArchiveService;
+import com.backend.naildp.validation.ValidationSequence;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,7 +34,7 @@ public class ArchiveController {
 
 	@PostMapping("/archive")
 	ResponseEntity<ApiResponse<?>> createArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestBody CreateArchiveRequestDto requestDto) {
+		@Validated(ValidationSequence.class) @RequestBody CreateArchiveRequestDto requestDto) {
 
 		archiveService.createArchive(userDetails.getUser().getNickname(), requestDto);
 
@@ -125,7 +130,7 @@ public class ArchiveController {
 	@PatchMapping("/archive/{archiveId}/name")
 	ResponseEntity<ApiResponse<?>> changeArchiveName(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("archiveId") Long archiveId,
-		@RequestBody CreateArchiveRequestDto requestDto) {
+		@Validated(ValidationSequence.class) @RequestBody ArchiveNameRequestDto requestDto) {
 
 		archiveService.changeArchiveName(userDetails.getUser().getNickname(), archiveId, requestDto.getArchiveName());
 
@@ -135,10 +140,10 @@ public class ArchiveController {
 	@PatchMapping("/archive/{archiveId}/boundary")
 	ResponseEntity<ApiResponse<?>> changeArchiveBoundary(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@PathVariable("archiveId") Long archiveId,
-		@RequestBody CreateArchiveRequestDto requestDto) {
+		@Valid @RequestBody ArchiveBoundaryRequestDto requestDto) {
 
 		archiveService.changeArchiveBoundary(userDetails.getUser().getNickname(), archiveId, requestDto.getBoundary());
 
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 이름 변경 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 공개범위 변경 성공", 2001));
 	}
 }

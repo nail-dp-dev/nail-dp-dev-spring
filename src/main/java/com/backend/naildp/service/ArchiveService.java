@@ -239,8 +239,8 @@ public class ArchiveService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
-		List<PostMapping> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
+		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
+		List<Post> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
 
 		return new PostSummaryResponse(postList, savedPosts, likedPosts);
 	}
@@ -279,7 +279,7 @@ public class ArchiveService {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
-		List<PostMapping> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
+		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
 
 		return PostSummaryResponse.createLikedPostSummary(postList, savedPosts);
 	}
