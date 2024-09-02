@@ -1,5 +1,7 @@
 package com.backend.naildp.dto.auth;
 
+import com.backend.naildp.common.ProviderType;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,5 +13,5 @@ public class KakaoUserInfoDto {
 	private Long id;
 	private String email;
 	private String profileUrl;
-	private final String platform = "kakao";
+	private ProviderType platform;
 }

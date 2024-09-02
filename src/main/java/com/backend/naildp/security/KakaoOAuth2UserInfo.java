@@ -2,6 +2,8 @@ package com.backend.naildp.security;
 
 import java.util.Map;
 
+import com.backend.naildp.common.ProviderType;
+
 public class KakaoOAuth2UserInfo implements OAuth2UserInfo {
 
 	private Map<String, Object> attributes;
@@ -11,8 +13,8 @@ public class KakaoOAuth2UserInfo implements OAuth2UserInfo {
 	}
 
 	@Override
-	public String getProvider() {
-		return "kakao";
+	public ProviderType getProvider() {
+		return ProviderType.kakao;
 	}
 
 	@Override

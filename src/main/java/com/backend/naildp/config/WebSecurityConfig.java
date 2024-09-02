@@ -20,6 +20,7 @@ import com.backend.naildp.jwt.JwtAuthenticationFilter;
 import com.backend.naildp.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.security.UserDetailsServiceImpl;
+import com.backend.naildp.service.CustomOAuth2UserService;
 
 @Configuration
 @EnableWebSecurity // Spring Security 지원을 가능하게 함
@@ -34,13 +35,16 @@ public class WebSecurityConfig {
 
 	private final ExceptionHandlerFilter exceptionHandlerFilter;
 
+	private final CustomOAuth2UserService customOAuth2UserService;
+
 	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService,
-		AuthenticationConfiguration authenticationConfiguration, ExceptionHandlerFilter exceptionHandlerFilter) {
+		AuthenticationConfiguration authenticationConfiguration, ExceptionHandlerFilter exceptionHandlerFilter,
+		CustomOAuth2UserService customOAuth2UserService) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
 		this.authenticationConfiguration = authenticationConfiguration;
 		this.exceptionHandlerFilter = exceptionHandlerFilter;
-
+		this.customOAuth2UserService = customOAuth2UserService;
 	}
 
 	@Bean
@@ -97,9 +101,9 @@ public class WebSecurityConfig {
 
 		);
 
-		http.oauth2Login(oauth2 -> oauth2
-			.userInfoEndpoint(userInfo -> userInfo // 사용자가 로그인에 성공하였을 경우,
-				.userService(principalOauth2UserService))) // 해당 서비스 로직을 타도록 설정)
+		http.oauth2Login(oauth2Configurer -> oauth2Configurer
+			.userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+				.userService(customOAuth2UserService))); // 해당 서비스 로직을 타도록 설정)
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

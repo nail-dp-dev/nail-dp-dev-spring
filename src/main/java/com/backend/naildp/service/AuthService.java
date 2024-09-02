@@ -10,7 +10,6 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
@@ -27,6 +26,7 @@ import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.repository.UsersProfileRepository;
+import com.backend.naildp.security.OAuth2UserInfo;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,14 +63,15 @@ public class AuthService {
 
 		userRepository.save(user);
 
-		KakaoUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
-		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(), user);
+		OAuth2UserInfo userInfo = cookieUtil.getUserInfoFromCookie(req);
+		SocialLogin socialLogin = new SocialLogin(userInfo.getProviderId(), userInfo.getProvider(), userInfo.getEmail(),
+			user);
 		socialLoginRepository.save(socialLogin);
 
-		if (userInfo.getProfileUrl() != null) {
+		if (userInfo.getImageUrl() != null) {
 			Profile profile = Profile.builder()
-				.profileUrl(userInfo.getProfileUrl())
-				.name(userInfo.getProfileUrl())
+				.profileUrl(userInfo.getImageUrl())
+				.name(userInfo.getImageUrl())
 				.thumbnail(true)
 				.profileType(ProfileType.AUTO)
 				.build();
@@ -82,7 +83,7 @@ public class AuthService {
 
 			profileRepository.save(profile);
 			usersProfileRepository.save(usersProfile);
-			user.thumbnailUrlUpdate(userInfo.getProfileUrl());
+			user.thumbnailUrlUpdate(userInfo.getImageUrl());
 		}
 
 		cookieUtil.deleteCookie("userInfo", req, res);

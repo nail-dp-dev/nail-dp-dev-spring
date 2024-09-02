@@ -1,62 +1,72 @@
 package com.backend.naildp.service;
 
-import java.util.Objects;
+import java.util.Map;
 
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
+import com.backend.naildp.common.CookieUtil;
+import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.repository.SocialLoginRepository;
+import com.backend.naildp.repository.UserMapping;
+import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.security.KakaoOAuth2UserInfo;
 import com.backend.naildp.security.OAuth2UserInfo;
+import com.backend.naildp.security.UserDetailsImpl;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
 @Service
+@RequestScope
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+	private final SocialLoginRepository socialLoginRepository;
+	private final UserRepository userRepository;
+	private final JwtUtil jwtUtil;
+	private final CookieUtil cookieUtil;
+	private final HttpServletRequest request;
+	private final HttpServletResponse response;
 
-	// 구글로부터 받은 userRequest 데이터에 대한 후처리되는 함수
-	// 함수 종료 시  @AuthenticationPrincipal 어노테이션이 생성
 	@Override
-	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws
+		OAuth2AuthenticationException {
 
 		OAuth2User oAuth2User = super.loadUser(userRequest);
 		OAuth2UserInfo oAuth2UserInfo = null;
+		String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-		if (userRequest.getClientRegistration().getRegistrationId().equals("google")) {
-			oAuth2UserInfo = new KakaoOAuth2UserInfo(oAuth2User.getAttributes());
+		if (registrationId.equals("kakao")) {
+			oAuth2UserInfo = new KakaoOAuth2UserInfo((Map<String, Object>)oAuth2User.getAttributes().get("id"));
 		} else {
 			System.out.println("지원하지않음.");
 		}
-		if (userRequest.getClientRegistration().getRegistrationId().equals("google")) {
-			oAuth2UserInfo = new GoogleUserInfo(oAuth2User.getAttributes());
-		} else {
-			System.out.println("Only Google");
+
+		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(
+			oAuth2UserInfo.getProviderId(), oAuth2UserInfo.getProvider()).orElse(null);
+
+		if (socialUser == null) { // 해당 소셜 유저가 없을 경우
+			log.info("userInfo 쿠키 생성");
+			cookieUtil.setUserInfoCookie(response, oAuth2UserInfo);
+
+			throw new OAuth2AuthenticationException("소셜 계정이 연결된 회원이 없습니다. 회원 가입이 필요합니다.");
 		}
 
-		String provider = Objects.requireNonNull(oAuth2UserInfo).getProvider();
-		String providerId = oAuth2UserInfo.getProviderId();
-		String username = provider + "_" + providerId;
-		String password = "비밀번호";
-		String email = oAuth2UserInfo.getEmail();
-		String role = "RULE_USER";
-		Timestamp createDate = new Timestamp(System.currentTimeMillis());
+		log.info("jwt 쿠키 생성");
+		cookieUtil.deleteCookie("userInfo", request, response);
 
-		User userEntity = userRepository.findByUsername(username);
+		String token = jwtUtil.createToken(socialUser.getUser().getNickname(),
+			socialUser.getUser().getRole());
+		jwtUtil.addJwtToCookie(token, response);
 
-		if (userEntity == null) {
-			userEntity = User.builder()
-				.username(username)
-				.password(password)
-				.email(email)
-				.role(role)
-				.provider(provider)
-				.providerId(providerId)
-				.enabled(1)
-				.createDate(createDate)
-				.build();
-			userRepository.save(userEntity);
-		}
-
-		return new PrincipalDetails(userEntity, oAuth2User.getAttributes());
+		return new UserDetailsImpl(socialUser.getUser(), oAuth2User.getAttributes());
 	}
+
 }

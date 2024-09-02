@@ -23,7 +23,7 @@ public class SocialLogin {
 
 	@Id
 	@Column(name = "login_id")
-	private Long socialId;
+	private String socialId;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
