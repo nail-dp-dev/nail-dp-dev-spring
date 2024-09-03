@@ -23,9 +23,9 @@ public class FollowController {
 	private final FollowService followService;
 
 	@PostMapping("/{nickname}/follow")
-	ResponseEntity<?> follow(@PathVariable("nickname") String nickname,
+	ResponseEntity<?> follow(@PathVariable("nickname") String followingNickname,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		followService.followUser(nickname, userDetails.getUsername());
+		followService.followUser(followingNickname, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 성공", 2001));
 	}
 
