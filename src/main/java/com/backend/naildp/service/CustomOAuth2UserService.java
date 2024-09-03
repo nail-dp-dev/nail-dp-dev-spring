@@ -43,8 +43,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		OAuth2UserInfo oAuth2UserInfo = null;
 		String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
+		Map<String, Object> attributes = oAuth2User.getAttributes();
+		System.out.println("OAuth2 User Attributes: " + attributes);
+
 		if (registrationId.equals("kakao")) {
-			oAuth2UserInfo = new KakaoOAuth2UserInfo((Map<String, Object>)oAuth2User.getAttributes().get("id"));
+			oAuth2UserInfo = new KakaoOAuth2UserInfo((Map<String, Object>)oAuth2User.getAttributes());
+
 		} else {
 			System.out.println("지원하지않음.");
 		}
