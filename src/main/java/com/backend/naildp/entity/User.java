@@ -46,7 +46,7 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private String thumbnailUrl = "default";
 
-	@Formula("(select count(*) from Archive where Archive.user_id = user_id and Archive.boundary <> 'NONE' )")
+	@Formula("(select count(*) from archive where archive.user_id = user_id and archive.boundary <> 'NONE' )")
 	private int archiveCount;
 
 	@Builder
