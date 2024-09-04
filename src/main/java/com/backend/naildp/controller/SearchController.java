@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.amazonaws.Response;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.dto.search.RelatedTagResponse;
 import com.backend.naildp.dto.search.SearchUserResponse;
@@ -39,10 +38,10 @@ public class SearchController {
 	ResponseEntity<?> searchPosts(
 		@PageableDefault(size = 50) Pageable pageable,
 		@RequestParam(name = "keyword", defaultValue = "") String keyword,
-		@RequestParam(name = "cursor", required = false) Long cursor,
+		@RequestParam(name = "cursorId", required = false) Long cursorId,
 		@AuthenticationPrincipal UserDetails userDetails) {
 		PostSummaryResponse response = searchService.searchPosts(pageable, keyword,
-			userDetails.getUsername(), cursor);
+			userDetails.getUsername(), cursorId);
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "게시물 검색 성공", 2000));
 	}
 

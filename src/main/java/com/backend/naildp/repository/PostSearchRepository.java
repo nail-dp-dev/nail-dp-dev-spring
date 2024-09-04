@@ -8,7 +8,7 @@ import org.springframework.data.domain.Slice;
 import com.backend.naildp.entity.Post;
 
 public interface PostSearchRepository {
-	Slice<Post> searchPostByKeyword(Pageable pageable, String keyword, String username, Long cursor);
+	Slice<Post> searchPostByKeyword(Pageable pageable, String keyword, String username, Long cursorId);
 
 	List<Post> findPostsInArchive(String username);
 

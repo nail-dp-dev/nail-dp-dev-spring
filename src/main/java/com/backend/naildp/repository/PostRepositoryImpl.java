@@ -35,14 +35,14 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	}
 
 	@Override
-	public Slice<Post> searchPostByKeyword(Pageable pageable, String keyword, String username, Long cursor) {
+	public Slice<Post> searchPostByKeyword(Pageable pageable, String keyword, String username, Long cursorId) {
 		List<Post> posts = queryFactory
 			.select(post)
 			.from(post)
 			.where(
 				usernamePermitted(username)
 					.and(containsInPost(keyword))
-					.and(lessThanCursor(cursor))
+					.and(lessThanCursor(cursorId))
 			)
 			.orderBy(post.postLikes.size().desc(), post.createdDate.desc())
 			.limit(pageable.getPageSize() + 1)
