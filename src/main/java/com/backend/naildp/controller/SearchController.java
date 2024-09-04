@@ -37,10 +37,10 @@ public class SearchController {
 	@GetMapping("/posts")
 	ResponseEntity<?> searchPosts(
 		@PageableDefault(size = 50) Pageable pageable,
-		@RequestParam(name = "keyword", defaultValue = "") String keyword,
+		@RequestParam(name = "keyword", defaultValue = "") List<String> keywords,
 		@RequestParam(name = "cursorId", required = false) Long cursorId,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		PostSummaryResponse response = searchService.searchPosts(pageable, keyword,
+		PostSummaryResponse response = searchService.searchPosts(pageable, keywords,
 			userDetails.getUsername(), cursorId);
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "게시물 검색 성공", 2000));
 	}

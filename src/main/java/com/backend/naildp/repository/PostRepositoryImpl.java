@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;
@@ -35,13 +36,13 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	}
 
 	@Override
-	public Slice<Post> searchPostByKeyword(Pageable pageable, String keyword, String username, Long cursorId) {
+	public Slice<Post> searchPostByKeyword(Pageable pageable, List<String> keywords, String username, Long cursorId) {
 		List<Post> posts = queryFactory
 			.select(post)
 			.from(post)
 			.where(
 				usernamePermitted(username)
-					.and(containsInPost(keyword))
+					.and(containsInPost(keywords))
 					.and(lessThanCursor(cursorId))
 			)
 			.orderBy(post.postLikes.size().desc(), post.createdDate.desc())
@@ -90,18 +91,34 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			);
 	}
 
-	private BooleanExpression containsInPost(String keyword) {
-		if (!StringUtils.hasText(keyword)) {
+	private BooleanBuilder containsInPost(List<String> keywords) {
+		if (keywords.isEmpty()) {
 			return null;
 		}
 
-		return post.postContent.contains(keyword).or(
-			JPAExpressions
-				.select(tagPost.tag.name)
-				.from(tagPost)
-				.where(tagPost.post.eq(post))
-				.contains(keyword)
-		);
+		BooleanBuilder builder = new BooleanBuilder();
+
+		keywords.forEach(keyword -> {
+			if (StringUtils.hasText(keyword)) {
+				builder.and(postContentContains(keyword).or(postTagsContains(keyword)));
+			}
+		});
+
+		return builder;
+	}
+
+	private BooleanExpression postContentContains(String keyword) {
+
+		return post.postContent.contains(keyword);
+	}
+
+	private BooleanExpression postTagsContains(String keyword) {
+
+		return JPAExpressions
+			.select(tagPost.tag.name)
+			.from(tagPost)
+			.where(tagPost.post.eq(post))
+			.contains(keyword);
 	}
 
 	private BooleanExpression lessThanCursor(Long cursorId) {
