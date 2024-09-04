@@ -40,8 +40,8 @@ public class SearchService {
 		return searchUserResponses;
 	}
 
-	public PostSummaryResponse searchPosts(Pageable pageable, String postKeyword, String username, Long cursor) {
-		Slice<Post> posts = postRepository.searchPostByKeyword(pageable, postKeyword, username, cursor);
+	public PostSummaryResponse searchPosts(Pageable pageable, String postKeyword, String username, Long cursorId) {
+		Slice<Post> posts = postRepository.searchPostByKeyword(pageable, postKeyword, username, cursorId);
 
 		if (posts.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
