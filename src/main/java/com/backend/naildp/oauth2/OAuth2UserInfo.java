@@ -1,4 +1,4 @@
-package com.backend.naildp.security;
+package com.backend.naildp.oauth2;
 
 import com.backend.naildp.common.ProviderType;
 

@@ -1,4 +1,4 @@
-package com.backend.naildp.security;
+package com.backend.naildp.oauth2;
 
 import java.util.Map;
 
@@ -24,7 +24,8 @@ public class KakaoOAuth2UserInfo implements OAuth2UserInfo {
 
 	@Override
 	public String getEmail() {
-		return (String)attributes.get("account_email");
+		Map<String, Object> account = (Map<String, Object>)attributes.get("kakao_account");
+		return (String)account.get("email");
 	}
 
 	@Override

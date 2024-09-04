@@ -13,6 +13,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -26,7 +27,6 @@ import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.repository.UsersProfileRepository;
-import com.backend.naildp.security.OAuth2UserInfo;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,6 +50,7 @@ public class AuthService {
 	@Transactional
 	public ResponseEntity<ApiResponse<?>> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req,
 		HttpServletResponse res) {
+		log.info("회원가입");
 		Optional<User> findUser = userRepository.findByNickname(loginRequestDto.getNickname());
 		if (findUser.isPresent()) {
 			throw new CustomException("이미 존재하는 사용자입니다.", ErrorCode.ALREADY_EXIST);
@@ -63,15 +64,15 @@ public class AuthService {
 
 		userRepository.save(user);
 
-		OAuth2UserInfo userInfo = cookieUtil.getUserInfoFromCookie(req);
-		SocialLogin socialLogin = new SocialLogin(userInfo.getProviderId(), userInfo.getProvider(), userInfo.getEmail(),
+		SocialUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
+		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(),
 			user);
 		socialLoginRepository.save(socialLogin);
 
-		if (userInfo.getImageUrl() != null) {
+		if (userInfo.getProfileUrl() != null) {
 			Profile profile = Profile.builder()
-				.profileUrl(userInfo.getImageUrl())
-				.name(userInfo.getImageUrl())
+				.profileUrl(userInfo.getProfileUrl())
+				.name(userInfo.getProfileUrl())
 				.thumbnail(true)
 				.profileType(ProfileType.AUTO)
 				.build();
@@ -83,7 +84,7 @@ public class AuthService {
 
 			profileRepository.save(profile);
 			usersProfileRepository.save(usersProfile);
-			user.thumbnailUrlUpdate(userInfo.getImageUrl());
+			user.thumbnailUrlUpdate(userInfo.getProfileUrl());
 		}
 
 		cookieUtil.deleteCookie("userInfo", req, res);

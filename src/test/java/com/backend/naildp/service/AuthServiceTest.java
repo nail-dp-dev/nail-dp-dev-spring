@@ -19,10 +19,10 @@ import org.springframework.http.ResponseEntity;
 import com.backend.naildp.JwtUtilTest;
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -72,7 +72,7 @@ class AuthServiceTest {
 	private UsersProfileRepository usersProfileRepository;
 
 	private LoginRequestDto loginRequestDto;
-	private KakaoUserInfoDto kakaoUserInfoDto;
+	private SocialUserInfoDto kakaoUserInfoDto;
 
 	@BeforeEach
 	public void setUp() {
@@ -80,7 +80,7 @@ class AuthServiceTest {
 		loginRequestDto.setNickname("alswl123");
 		loginRequestDto.setPhoneNumber("010-1234-5678");
 
-		kakaoUserInfoDto = new KakaoUserInfoDto(123L, "alswl123@naver.com", "http://naver.com/profile.jpg");
+		kakaoUserInfoDto = new SocialUserInfoDto(123L, "alswl123@naver.com", "http://naver.com/profile.jpg");
 	}
 
 	@Test
