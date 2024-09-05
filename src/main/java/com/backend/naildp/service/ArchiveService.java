@@ -323,6 +323,24 @@ public class ArchiveService {
 
 		archivePostRepository.deleteAllByPostIdAndArchiveId(unsaveRequestDto.getPostId(),
 			unsaveRequestDto.getArchiveId());
+	}
 
+	@Transactional
+	public PostSummaryResponse getSavedArchives(String nickname, Long postId, int size, long cursorId) {
+
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<ArchiveMapping> archiveList;
+
+		if (cursorId == -1) {
+			archiveList = archiveRepository.findSavedArchiveByPage(nickname, postId, pageRequest);
+		} else {
+			archiveList = archiveRepository.findSavedArchiveByIdAndPage(nickname, postId, cursorId, pageRequest);
+
+		}
+		if (archiveList.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		return PostSummaryResponse.createUserArchiveSummary(archiveList);
 	}
 }

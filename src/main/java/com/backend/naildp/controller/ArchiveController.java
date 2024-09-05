@@ -157,4 +157,15 @@ public class ArchiveController {
 
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시물 저장 해제 성공", 2001));
 	}
+
+	@GetMapping("posts/{postId}/archive")
+	ResponseEntity<ApiResponse<?>> getSavedArchives(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@PathVariable("postId") Long postId,
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
+		PostSummaryResponse postSummaryResponse = archiveService.getSavedArchives(userDetails.getUser().getNickname(),
+			postId, size, cursorId);
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "해당 게시물이 저장된 아카이브 조회 성공", 2001));
+
+	}
 }
