@@ -44,7 +44,7 @@ public class User extends BaseEntity {
 	private boolean agreement;
 
 	@Column(nullable = false)
-	private String thumbnailUrl = "default";
+	private String thumbnailUrl = "/assets/img/profile/basic/basic_1.png";
 
 	@Formula("(select count(*) from archive where archive.user_id = user_id and archive.boundary <> 'NONE' )")
 	private int archiveCount;

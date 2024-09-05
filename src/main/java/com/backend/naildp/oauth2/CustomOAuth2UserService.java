@@ -36,8 +36,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	private final HttpServletResponse response;
 
 	@Override
-	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws
-		OAuth2AuthenticationException {
+	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
 		OAuth2User oAuth2User = super.loadUser(userRequest);
 		OAuth2UserInfo oAuth2UserInfo = null;
@@ -49,13 +48,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		if (registrationId.equals("kakao")) {
 			oAuth2UserInfo = new KakaoOAuth2UserInfo(attributes);
 
+		} else if (registrationId.equals("google")) {
+			oAuth2UserInfo = new GoogleOAuth2UserInfo(attributes);
+		} else if (registrationId.equals("naver")) {
+			oAuth2UserInfo = new NaverOAuth2UserInfo(attributes);
 		} else {
 			System.out.println("지원하지않음.");
 			throw new OAuth2AuthenticationException("지원하지 않는 소셜로그인입니다.");
 		}
 
-		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(
-			oAuth2UserInfo.getProviderId(), oAuth2UserInfo.getProvider()).orElse(null);
+		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
+			oAuth2UserInfo.getProvider()).orElse(null);
 
 		if (socialUser == null) {
 			log.info("userInfo 쿠키 생성");

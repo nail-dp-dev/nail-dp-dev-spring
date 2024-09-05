@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.backend.naildp.JwtUtilTest;
 import com.backend.naildp.common.CookieUtil;
+import com.backend.naildp.common.ProviderType;
 import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.google.gson.Gson;
 
@@ -44,8 +45,8 @@ public class CookieUtilTest {
 
 	@BeforeEach
 	public void setUp() {
-		userInfo = new SocialUserInfoDto(123L, "alswl123@naver.com",
-			"http://naver.com/profile.jpg");
+		userInfo = new SocialUserInfoDto("123L", "alswl123@naver.com",
+			"http://naver.com/profile.jpg", ProviderType.kakao);
 		gson = new Gson();
 	}
 

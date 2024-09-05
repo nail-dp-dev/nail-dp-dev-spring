@@ -16,7 +16,6 @@ import org.springframework.context.annotation.Import;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 
 import jakarta.persistence.EntityManager;
@@ -84,7 +83,8 @@ public class FollowRepositoryTest {
 		createTestFollow(follower4, user);
 
 		//when
-		List<User> followerUsers = em.createQuery("select f.follower from Follow f where f.following.nickname = :nickname",
+		List<User> followerUsers = em.createQuery(
+				"select f.follower from Follow f where f.following.nickname = :nickname",
 				User.class)
 			.setParameter("nickname", user.getNickname())
 			.getResultList();
@@ -221,11 +221,7 @@ public class FollowRepositoryTest {
 			.phoneNumber(phoneNumber)
 			.agreement(true)
 			.build();
-
-		SocialLogin socialLogin = new SocialLogin(socialLoginId, "kakao", email, user);
 		em.persist(user);
-		em.persist(socialLogin);
-		cnt++;
 		return user;
 	}
 

@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.backend.naildp.JwtUtilTest;
 import com.backend.naildp.common.CookieUtil;
+import com.backend.naildp.common.ProviderType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
@@ -80,7 +81,8 @@ class AuthServiceTest {
 		loginRequestDto.setNickname("alswl123");
 		loginRequestDto.setPhoneNumber("010-1234-5678");
 
-		kakaoUserInfoDto = new SocialUserInfoDto(123L, "alswl123@naver.com", "http://naver.com/profile.jpg");
+		kakaoUserInfoDto = new SocialUserInfoDto("123L", "alswl123@naver.com", "http://naver.com/profile.jpg",
+			ProviderType.kakao);
 	}
 
 	@Test
