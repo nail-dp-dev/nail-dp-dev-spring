@@ -45,8 +45,8 @@ public class ArchiveService {
 
 	@Transactional
 	public Long createArchive(String nickname, CreateArchiveRequestDto createArchiveRequestDto) {
-		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
-			ErrorCode.NOT_FOUND));
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.", ErrorCode.NOT_FOUND));
 
 		if (user.getRole() == UserRole.USER) {
 			int archiveCount = archiveRepository.countArchivesByUserNickname(nickname);
@@ -85,8 +85,7 @@ public class ArchiveService {
 	public PostSummaryResponse getOtherArchives(String myNickname, String otherNickname, int size, Long cursorId) {
 
 		User otherUser = userRepository.findByNickname(otherNickname)
-			.orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
-				ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.", ErrorCode.NOT_FOUND));
 
 		//사용자가 아카이브 생성자의 팔로워인지 확인필요. -> isLock(잠금 썸네일)
 		boolean isFollower = followRepository.existsByFollowerNicknameAndFollowing(myNickname, otherUser);
@@ -148,8 +147,8 @@ public class ArchiveService {
 
 	@Transactional
 	public void copyArchive(String nickname, ArchiveIdRequestDto requestDto) {
-		User user = userRepository.findByNickname(nickname).orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.",
-			ErrorCode.NOT_FOUND));
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.", ErrorCode.NOT_FOUND));
 
 		Archive originalArchive = archiveRepository.findArchiveById(requestDto.getArchiveId())
 			.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -210,8 +209,7 @@ public class ArchiveService {
 	}
 
 	@Transactional(readOnly = true)
-	public ArchivePostSummaryResponse getArchivePosts(String nickname, Long archiveId, int size,
-		long cursorId) {
+	public ArchivePostSummaryResponse getArchivePosts(String nickname, Long archiveId, int size, long cursorId) {
 		PageRequest pageRequest = PageRequest.of(0, size);
 		Slice<Post> postList;
 
@@ -233,19 +231,19 @@ public class ArchiveService {
 		if (cursorId == -1) {
 			postList = postRepository.findArchivePostsByFollow(nickname, archiveId, followingNickname, pageRequest);
 		} else {
-			postList = postRepository.findArchivePostsByIdAndFollow(cursorId, nickname, archiveId,
-				followingNickname,
+			postList = postRepository.findArchivePostsByIdAndFollow(cursorId, nickname, archiveId, followingNickname,
 				pageRequest);
 		}
 
 		if (postList.isEmpty()) {
-			return ArchivePostSummaryResponse.createEmptyResponse(archive.getName());
+			return ArchivePostSummaryResponse.createEmptyResponse(archive.getName(), archive.getUser().getNickname());
 		}
 
 		List<Post> savedPosts = archivePostRepository.findArchivePostsByArchiveUserNickname(nickname);
 		List<Post> likedPosts = postLikeRepository.findPostLikesByUserNickname(nickname);
 
-		return ArchivePostSummaryResponse.of(postList, savedPosts, likedPosts, archive.getName());
+		return ArchivePostSummaryResponse.of(postList, savedPosts, likedPosts, archive.getName(),
+			archive.getUser().getNickname());
 	}
 
 	@Transactional(readOnly = true)
@@ -274,8 +272,7 @@ public class ArchiveService {
 				pageRequest);
 		} else {
 			postList = postRepository.findLikedArchivePostsByIdAndFollow(cursorId, nickname, archiveId,
-				followingNickname,
-				pageRequest);
+				followingNickname, pageRequest);
 		}
 
 		if (postList.isEmpty()) {
@@ -311,15 +308,14 @@ public class ArchiveService {
 
 	@Transactional
 	public void unsaveFromArchive(String nickname, UnsaveRequestDto unsaveRequestDto) {
-		unsaveRequestDto.getArchiveId().forEach(
-			archiveId -> {
-				Archive archive = archiveRepository.findArchiveById(archiveId)
-					.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		unsaveRequestDto.getArchiveId().forEach(archiveId -> {
+			Archive archive = archiveRepository.findArchiveById(archiveId)
+				.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-				if (archive.notEqualsNickname(nickname)) {
-					throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
-				}
-			});
+			if (archive.notEqualsNickname(nickname)) {
+				throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+			}
+		});
 
 		archivePostRepository.deleteAllByPostIdAndArchiveId(unsaveRequestDto.getPostId(),
 			unsaveRequestDto.getArchiveId());
