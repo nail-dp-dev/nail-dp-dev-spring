@@ -364,7 +364,6 @@ class ArchiveServiceTest {
 
 		given(archiveRepository.findArchiveById(111L)).willReturn(Optional.of(archive));
 		given(archiveRepository.findArchiveById(112L)).willReturn(Optional.of(archive));
-
 		// When
 		archiveService.unsaveFromArchive(nickname, unsaveRequestDto);
 
