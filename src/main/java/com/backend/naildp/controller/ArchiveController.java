@@ -165,7 +165,7 @@ public class ArchiveController {
 		@RequestParam(required = false, defaultValue = "-1", value = "cursorId") long cursorId) {
 		PostSummaryResponse postSummaryResponse = archiveService.getSavedArchives(userDetails.getUser().getNickname(),
 			postId, size, cursorId);
-		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "해당 게시물이 저장된 아카이브 조회 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "해당 게시물이 저장된 아카이브 조회 성공", 2000));
 
 	}
 }
