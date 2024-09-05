@@ -151,7 +151,7 @@ public class ArchiveController {
 
 	@DeleteMapping("/archive/unsave")
 	ResponseEntity<ApiResponse<?>> unsaveFromArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestBody UnsaveRequestDto unsaveRequestDto) {
+		@Valid @RequestBody UnsaveRequestDto unsaveRequestDto) {
 
 		archiveService.unsaveFromArchive(userDetails.getUser().getNickname(), unsaveRequestDto);
 

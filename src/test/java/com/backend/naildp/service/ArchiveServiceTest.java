@@ -19,6 +19,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
+import com.backend.naildp.dto.archive.UnsaveRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
@@ -352,6 +353,53 @@ class ArchiveServiceTest {
 
 		// Then
 		verify(archive).updateBoundary(boundary);
+	}
+
+	@Test
+	@DisplayName("아카이브에서 포스트 저장 해제")
+	void unsaveFromArchive_Success() {
+		// Given
+		String nickname = "alswl";
+		UnsaveRequestDto unsaveRequestDto = new UnsaveRequestDto(1L, List.of(111L, 112L));
+
+		given(archiveRepository.findArchiveById(111L)).willReturn(Optional.of(archive));
+		given(archiveRepository.findArchiveById(112L)).willReturn(Optional.of(archive));
+
+		// When
+		archiveService.unsaveFromArchive(nickname, unsaveRequestDto);
+
+		// Then
+		verify(archivePostRepository, times(1)).deleteAllByPostIdAndArchiveId(any(Long.class), anyList());
+	}
+
+	@Test
+	@DisplayName("아카이브가 존재하지 않을 때 예외를 던진다")
+	void unsaveFromArchive_ArchiveNotFound() {
+		// Given
+		String nickname = "alswl";
+		UnsaveRequestDto unsaveRequestDto = new UnsaveRequestDto(1L, List.of(111L, 112L));
+
+		given(archiveRepository.findArchiveById(111L)).willReturn(Optional.empty());
+
+		// Then
+		assertThatThrownBy(() -> archiveService.unsaveFromArchive(nickname, unsaveRequestDto))
+			.isInstanceOf(CustomException.class)
+			.hasMessageContaining("해당 아카이브를 찾을 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("아카이브 소유자가 다를 때 예외를 던진다")
+	void unsaveFromArchive_UserMismatch() {
+		// Given
+		String nickname = "user1";
+		UnsaveRequestDto unsaveRequestDto = new UnsaveRequestDto(1L, List.of(111L, 112L));
+
+		given(archiveRepository.findArchiveById(111L)).willReturn(Optional.of(archive));
+
+		// Then
+		assertThatThrownBy(() -> archiveService.unsaveFromArchive(nickname, unsaveRequestDto))
+			.isInstanceOf(CustomException.class)
+			.hasMessageContaining("본인의 아카이브에만 접근할 수 있습니다.");
 	}
 
 }
