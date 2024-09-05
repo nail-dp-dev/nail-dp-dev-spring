@@ -18,6 +18,7 @@ import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
 import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.PostIdRequestDto;
+import com.backend.naildp.dto.archive.UnsaveRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.security.UserDetailsImpl;
@@ -146,5 +147,14 @@ public class ArchiveController {
 		archiveService.changeArchiveBoundary(userDetails.getUser().getNickname(), archiveId, requestDto.getBoundary());
 
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "아카이브 공개범위 변경 성공", 2001));
+	}
+
+	@DeleteMapping("/archive/unsave")
+	ResponseEntity<ApiResponse<?>> unsaveFromArchive(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestBody UnsaveRequestDto unsaveRequestDto) {
+
+		archiveService.unsaveFromArchive(userDetails.getUser().getNickname(), unsaveRequestDto);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시물 저장 해제 성공", 2001));
 	}
 }

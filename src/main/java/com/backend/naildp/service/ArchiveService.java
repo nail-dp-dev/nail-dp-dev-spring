@@ -12,6 +12,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
+import com.backend.naildp.dto.archive.UnsaveRequestDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
@@ -308,4 +309,20 @@ public class ArchiveService {
 		archive.updateBoundary(boundary);
 	}
 
+	@Transactional
+	public void unsaveFromArchive(String nickname, UnsaveRequestDto unsaveRequestDto) {
+		unsaveRequestDto.getArchiveId().forEach(
+			archiveId -> {
+				Archive archive = archiveRepository.findArchiveById(archiveId)
+					.orElseThrow(() -> new CustomException("해당 아카이브를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+				if (archive.notEqualsNickname(nickname)) {
+					throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
+				}
+			});
+
+		archivePostRepository.deleteAllByPostIdAndArchiveId(unsaveRequestDto.getPostId(),
+			unsaveRequestDto.getArchiveId());
+
+	}
 }
