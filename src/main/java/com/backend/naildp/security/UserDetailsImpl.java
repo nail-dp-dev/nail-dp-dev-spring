@@ -2,20 +2,35 @@ package com.backend.naildp.security;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.entity.User;
 
-public class UserDetailsImpl implements UserDetails {
+public class UserDetailsImpl implements UserDetails, OAuth2User {
 
 	private final User user;
+	private Map<String, Object> attributes;
 
 	public UserDetailsImpl(User user) {
 		this.user = user;
+	}
+
+	//OAuth 로그인
+	public UserDetailsImpl(User user, Map<String, Object> attributes) {
+		this.user = user;
+		this.attributes = attributes;
+	}
+
+	//OAuth2User의 메서드
+	@Override
+	public Map<String, Object> getAttributes() {
+		return attributes;
 	}
 
 	public User getUser() {
@@ -63,5 +78,10 @@ public class UserDetailsImpl implements UserDetails {
 	@Override
 	public boolean isEnabled() {
 		return true;
+	}
+
+	@Override
+	public String getName() {
+		return null;
 	}
 }

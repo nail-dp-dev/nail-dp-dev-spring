@@ -10,10 +10,10 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -50,6 +50,7 @@ public class AuthService {
 	@Transactional
 	public ResponseEntity<ApiResponse<?>> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req,
 		HttpServletResponse res) {
+		log.info("회원가입");
 		Optional<User> findUser = userRepository.findByNickname(loginRequestDto.getNickname());
 		if (findUser.isPresent()) {
 			throw new CustomException("이미 존재하는 사용자입니다.", ErrorCode.ALREADY_EXIST);
@@ -63,8 +64,9 @@ public class AuthService {
 
 		userRepository.save(user);
 
-		KakaoUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
-		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(), user);
+		SocialUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
+		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(),
+			user);
 		socialLoginRepository.save(socialLogin);
 
 		if (userInfo.getProfileUrl() != null) {

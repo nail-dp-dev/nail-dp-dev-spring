@@ -5,7 +5,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.auth.LoginRequestDto;
@@ -13,21 +12,21 @@ import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.AuthService;
-import com.backend.naildp.service.KakaoService;
 import com.backend.naildp.validation.ValidationSequence;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
 
 	private final AuthService authService;
-	private final KakaoService kakaoService;
+	// private final KakaoService kakaoService;
 
 	@PostMapping("/auth/signup")
 	public ResponseEntity<ApiResponse<?>> signupUser(@Valid @RequestBody LoginRequestDto loginRequestDto,
@@ -39,13 +38,6 @@ public class AuthController {
 	@GetMapping("/protected")
 	public String protectedEndpoint() {
 		return "This is a protected endpoint";
-	}
-
-	@GetMapping("/auth/kakao")
-	public ResponseEntity<ApiResponse<?>> kakaoLogin(@RequestParam("code") String code, HttpServletRequest req,
-		HttpServletResponse res) throws
-		JsonProcessingException {
-		return kakaoService.kakaoLogin(code, req, res);
 	}
 
 	@PostMapping("/auth/nickname")
