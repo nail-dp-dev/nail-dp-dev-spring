@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.TagPost;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -25,21 +26,29 @@ public class TagPostRepositoryImpl implements TagPostSearchRepository {
 	}
 
 	@Override
-	public List<TagPost> searchRelatedTags(String keyword, String userNickname) {
+	public List<TagPost> searchRelatedTags(List<String> keywords, String userNickname) {
 		return queryFactory
 			.select(tagPost)
 			.from(tagPost)
 			.join(tagPost.post, post).fetchJoin().join(tagPost.tag, tag).fetchJoin()
-			.where(keywordContainedInTag(keyword)
-				.and(post.tempSave.isFalse())
+			.where(post.tempSave.isFalse()
 				.and(usernamePermitted(userNickname))
+				.and(keywordContainedInTag(keywords))
 			)
-			.orderBy(tag.name.asc())
+			.orderBy(tag.name.length().asc(), tag.name.asc())
 			.fetch();
 	}
 
-	private BooleanExpression keywordContainedInTag(String keyword) {
-		return tag.name.like(keyword + "%");
+	private BooleanBuilder keywordContainedInTag(List<String> keywords) {
+		if (keywords.isEmpty()) {
+			return null;
+		}
+
+		BooleanBuilder builder = new BooleanBuilder();
+
+		keywords.forEach(keyword -> builder.or(tag.name.like(keyword + "%")));
+
+		return builder;
 	}
 
 	private BooleanExpression usernamePermitted(String usernameCond) {

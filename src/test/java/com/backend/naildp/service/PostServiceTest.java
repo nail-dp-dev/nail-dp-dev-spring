@@ -26,7 +26,6 @@ import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Profile;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
@@ -212,7 +211,12 @@ public class PostServiceTest {
 	void shareTempSavedPostException() {
 		//given
 		User writer = userRepository.findByNickname("writer").orElseThrow();
-		Post tempSavedPost = Post.builder().user(writer).postContent("content").boundary(Boundary.ALL).tempSave(true).build();
+		Post tempSavedPost = Post.builder()
+			.user(writer)
+			.postContent("content")
+			.boundary(Boundary.ALL)
+			.tempSave(true)
+			.build();
 
 		em.persist(tempSavedPost);
 
@@ -246,7 +250,7 @@ public class PostServiceTest {
 		User user = new User(loginRequestDto, UserRole.USER);
 		em.persist(user);
 
-		addSocialLoginInfo(email, socialId, user);
+		// addSocialLoginInfo(email, socialId, user);
 		addProfile(user);
 
 		return user;
@@ -265,11 +269,11 @@ public class PostServiceTest {
 		em.persist(usersProfile);
 	}
 
-	private void addSocialLoginInfo(String email, Long socialId, User user) {
-		SocialLogin socialLogin = new SocialLogin(socialId, "kakao", email, user);
-
-		em.persist(socialLogin);
-	}
+	// private void addSocialLoginInfo(String email, Long socialId, User user) {
+	// 	SocialLogin socialLogin = new SocialLogin(socialId, "kakao", email, user);
+	//
+	// 	em.persist(socialLogin);
+	// }
 
 	private List<Post> createPostByCntAndBoundary(User writer, int postCnt, Boundary boundary) {
 		List<Post> postList = new ArrayList<>();
@@ -307,7 +311,8 @@ public class PostServiceTest {
 	}
 
 	private Post getFirstPostByNicknameAndBoundary(String userNickname, Boundary boundary) {
-		return em.createQuery("select p from Post p where p.user.nickname = :nickname and p.boundary = :boundary", Post.class)
+		return em.createQuery("select p from Post p where p.user.nickname = :nickname and p.boundary = :boundary",
+				Post.class)
 			.setParameter("nickname", userNickname)
 			.setParameter("boundary", boundary)
 			.setMaxResults(1)

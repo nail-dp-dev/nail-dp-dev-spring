@@ -21,7 +21,6 @@ import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -147,9 +146,7 @@ class PostLikeServiceTest {
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
-		SocialLogin socialLogin = new SocialLogin(socialId, "kakao", email, user);
 		User savedUser = userRepository.save(user);
-		em.persist(socialLogin);
 		return savedUser;
 	}
 

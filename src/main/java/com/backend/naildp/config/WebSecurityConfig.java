@@ -19,6 +19,9 @@ import com.backend.naildp.jwt.ExceptionHandlerFilter;
 import com.backend.naildp.jwt.JwtAuthenticationFilter;
 import com.backend.naildp.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.oauth2.CustomOAuth2UserService;
+import com.backend.naildp.oauth2.OAuth2AuthenticationFailureHandler;
+import com.backend.naildp.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.backend.naildp.security.UserDetailsServiceImpl;
 
 @Configuration
@@ -29,18 +32,26 @@ public class WebSecurityConfig {
 
 	private final JwtUtil jwtUtil;
 	private final UserDetailsServiceImpl userDetailsService;
-	//authenticationManager를 가져오기위해ㅔ
 	private final AuthenticationConfiguration authenticationConfiguration;
 
 	private final ExceptionHandlerFilter exceptionHandlerFilter;
 
+	private final CustomOAuth2UserService customOAuth2UserService;
+	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
 	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService,
-		AuthenticationConfiguration authenticationConfiguration, ExceptionHandlerFilter exceptionHandlerFilter) {
+		AuthenticationConfiguration authenticationConfiguration, ExceptionHandlerFilter exceptionHandlerFilter,
+		CustomOAuth2UserService customOAuth2UserService,
+		OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+		OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
 		this.authenticationConfiguration = authenticationConfiguration;
 		this.exceptionHandlerFilter = exceptionHandlerFilter;
-
+		this.customOAuth2UserService = customOAuth2UserService;
+		this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+		this.oAuth2AuthenticationFailureHandler = oAuth2AuthenticationFailureHandler;
 	}
 
 	@Bean
@@ -91,10 +102,17 @@ public class WebSecurityConfig {
 			authorizeHttpRequests
 				.requestMatchers("/").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.requestMatchers("/auth/**").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-				.requestMatchers("/auth/signup").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.requestMatchers("/home").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 				.anyRequest().authenticated() // 그 외 모든 요청 인증처리
+
 		);
+
+		http.oauth2Login(oauth2Configurer -> oauth2Configurer
+			.userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+				.userService(customOAuth2UserService))
+			.successHandler(oAuth2AuthenticationSuccessHandler)
+			.failureHandler(oAuth2AuthenticationFailureHandler)
+		); // 해당 서비스 로직을 타도록 설정)
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

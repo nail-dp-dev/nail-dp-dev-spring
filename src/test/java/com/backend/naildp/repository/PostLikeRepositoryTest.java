@@ -25,7 +25,6 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 
 import jakarta.persistence.EntityManager;
@@ -209,9 +208,7 @@ class PostLikeRepositoryTest {
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLogInId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
-		SocialLogin socialLogin = new SocialLogin(socialLogInId, "kakao", email, user);
 		em.persist(user);
-		em.persist(socialLogin);
 		return user;
 	}
 

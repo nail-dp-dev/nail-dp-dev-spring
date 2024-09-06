@@ -6,7 +6,7 @@ import java.net.URLEncoder;
 
 import org.springframework.stereotype.Component;
 
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.google.gson.Gson;
 
 import jakarta.servlet.http.Cookie;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class CookieUtil {
 
-	public void setUserInfoCookie(HttpServletResponse response, KakaoUserInfoDto userInfo) {
+	public void setUserInfoCookie(HttpServletResponse response, SocialUserInfoDto userInfo) {
 		Gson gson = new Gson();
 		String userInfoJson = gson.toJson(userInfo);
 
@@ -37,7 +37,7 @@ public class CookieUtil {
 		}
 	}
 
-	public KakaoUserInfoDto getUserInfoFromCookie(HttpServletRequest req) {
+	public SocialUserInfoDto getUserInfoFromCookie(HttpServletRequest req) {
 		Cookie[] cookies = req.getCookies();
 		if (cookies != null) {
 			for (Cookie cookie : cookies) {
@@ -47,7 +47,7 @@ public class CookieUtil {
 						String decodedUserInfoJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
 						Gson gson = new Gson();
 						log.info(decodedUserInfoJson);
-						return gson.fromJson(decodedUserInfoJson, KakaoUserInfoDto.class);
+						return gson.fromJson(decodedUserInfoJson, SocialUserInfoDto.class);
 					} catch (UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}

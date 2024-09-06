@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -64,14 +63,16 @@ class CommentServiceTest {
 		Post post = findPostByWriterNickname("postWriter");
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID, userNickname);
+		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID,
+			userNickname);
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then
 		assertNotEquals(-1L, response.getCursorId());
 		assertTrue(contents.hasNext());
 		assertEquals(pageSize, contents.getNumberOfElements());
-		assertThat(contents).extracting(CommentInfoResponse::getProfileUrl).containsOnly("default");
+		assertThat(contents).extracting(CommentInfoResponse::getProfileUrl)
+			.containsOnly("/assets/img/profile/basic/basic_1.png");
 	}
 
 	@DisplayName("댓글 조회 테스트 - 댓글수보다 페이지가 클때")
@@ -83,14 +84,16 @@ class CommentServiceTest {
 		Post post = findPostByWriterNickname("postWriter");
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID, userNickname);
+		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID,
+			userNickname);
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then
 		assertNotEquals(-1L, response.getCursorId());
 		assertFalse(contents.hasNext());
 		assertNotEquals(pageSize, contents.getNumberOfElements());
-		assertThat(contents).extracting(CommentInfoResponse::getProfileUrl).containsOnly("default");
+		assertThat(contents).extracting(CommentInfoResponse::getProfileUrl)
+			.containsOnly("/assets/img/profile/basic/basic_1.png");
 	}
 
 	@DisplayName("댓글 조회 테스트 - 댓글이 없을때")
@@ -101,7 +104,8 @@ class CommentServiceTest {
 		Post post = findPostByWriterNickname(POST_WRITER_NICKNAME_WITHOUT_COMMENT);
 
 		//when
-		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID, userNickname);
+		CommentSummaryResponse response = commentService.findComments(post.getId(), pageSize, FIRST_CURSOR_ID,
+			userNickname);
 		Slice<CommentInfoResponse> contents = response.getContents();
 
 		//then

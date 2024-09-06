@@ -22,7 +22,6 @@ import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.AuthService;
-import com.backend.naildp.service.KakaoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,9 +36,6 @@ public class AuthControllerTest {
 
 	@MockBean
 	private AuthService authService;
-
-	@MockBean
-	private KakaoService kakaoService;
 
 	private ObjectMapper objectMapper;
 	private LoginRequestDto loginRequestDto;
@@ -80,22 +76,22 @@ public class AuthControllerTest {
 			.andDo(print());
 	}
 
-	@Test
-	@DisplayName("카카오 로그인 성공")
-	public void testKakaoLogin() throws Exception {
-		// given
-		String code = "authCode";
-		given(kakaoService.kakaoLogin(eq(code), any(HttpServletRequest.class), any(HttpServletResponse.class)))
-			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그인이 완료되었습니다", 2000)));
-
-		// when & then
-		mockMvc.perform(get("/auth/kakao")
-				.param("code", code))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.message").value("로그인이 완료되었습니다"))
-			.andExpect(jsonPath("$.code").value(2000))
-			.andDo(print());
-	}
+	// @Test
+	// @DisplayName("카카오 로그인 성공")
+	// public void testKakaoLogin() throws Exception {
+	// 	// given
+	// 	String code = "authCode";
+	// 	given(kakaoService.kakaoLogin(eq(code), any(HttpServletRequest.class), any(HttpServletResponse.class)))
+	// 		.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그인이 완료되었습니다", 2000)));
+	//
+	// 	// when & then
+	// 	mockMvc.perform(get("/auth/kakao")
+	// 			.param("code", code))
+	// 		.andExpect(status().isOk())
+	// 		.andExpect(jsonPath("$.message").value("로그인이 완료되었습니다"))
+	// 		.andExpect(jsonPath("$.code").value(2000))
+	// 		.andDo(print());
+	// }
 
 	@Test
 	@DisplayName("닉네임 중복 확인 성공")
