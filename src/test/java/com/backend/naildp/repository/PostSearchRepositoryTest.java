@@ -2,7 +2,6 @@ package com.backend.naildp.repository;
 
 import static com.backend.naildp.entity.QFollow.*;
 import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QTag.*;
 import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
@@ -64,27 +63,31 @@ public class PostSearchRepositoryTest {
 	PostRepository postRepository;
 
 	final int POST_CNT = 10;
-	String tagNameOfFollowedWriter = "가리비네일";
-	String tagNameOfNotFollowedWriter = "태그아님";
 
 	@BeforeEach
 	void before() {
 		User user = createUserByNickname("nickname");
 		User writer = createUserByNickname("writer");
 		User writerNotFollowed = createUserByNickname("writerNotFollowed");
+		User writerUsingTags = createUserByNickname("writerUsingTags");
 
-		savePostByCnt(writer, POST_CNT, Boundary.ALL, tagNameOfFollowedWriter);
-		savePostByCnt(writer, POST_CNT, Boundary.FOLLOW, tagNameOfFollowedWriter);
-		savePostByCnt(writer, POST_CNT, Boundary.NONE, tagNameOfFollowedWriter);
+		Tag tag = createTag("가리비네일");
+		Tag notTag = createTag("태그아님");
+		Tag springNailTag = createTag("봄 네일");
+		Tag summerNailTag = createTag("여름 네일");
 
-		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.ALL, tagNameOfNotFollowedWriter);
-		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.FOLLOW, tagNameOfNotFollowedWriter);
-		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.NONE, tagNameOfNotFollowedWriter);
+		savePostByCnt(writer, POST_CNT, Boundary.ALL, List.of(tag));
+		savePostByCnt(writer, POST_CNT, Boundary.FOLLOW, List.of(tag));
+		savePostByCnt(writer, POST_CNT, Boundary.NONE, List.of(tag));
+
+		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.ALL, List.of(notTag));
+		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.FOLLOW, List.of(notTag));
+		savePostByCnt(writerNotFollowed, POST_CNT, Boundary.NONE, List.of(notTag));
+
+		savePostByCnt(writerUsingTags, POST_CNT, Boundary.ALL, List.of(springNailTag, summerNailTag));
+		savePostByCnt(writerUsingTags, POST_CNT, Boundary.FOLLOW, List.of(springNailTag, summerNailTag));
 
 		createFollow(user, writer);
-
-		createTag(tagNameOfFollowedWriter);
-		createTag(tagNameOfNotFollowedWriter);
 
 		em.flush();
 		em.clear();
@@ -103,7 +106,7 @@ public class PostSearchRepositoryTest {
 			.getSingleResult();
 
 		//when
-		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username,
+		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username,
 			firstPost.getId());
 
 		//then
@@ -127,8 +130,47 @@ public class PostSearchRepositoryTest {
 
 		//when & then
 		assertThatThrownBy(() ->
-			postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username, firstPost.getId() + 1))
+			postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username, firstPost.getId() + 1))
 			.isInstanceOf(NullPointerException.class);
+	}
+
+	@DisplayName("일반 사용자로 두개의 키워드를 갖는 게시물 검색")
+	@Test
+	void searchPostsContainingTwoKeywordsByNormalUser() {
+		//given
+		String username = "user";
+		int pageSize = 30;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		Slice<Post> posts = postRepository.searchPostByKeyword(pageRequest,
+			List.of("봄 네일", "여름 네일"),
+			username, null);
+		List<String> tags = posts.flatMap(p -> p.getTagPosts().stream().map(tp -> tp.getTag().getName())).toList();
+
+		//then
+		assertThat(posts).hasSize(POST_CNT);
+		assertThat(tags).contains("봄 네일", "여름 네일");
+	}
+
+	@DisplayName("작성자로 두개의 키워드를 갖는 게시물 검색")
+	@Test
+	void searchPostsContainingTwoKeywordsByPostWriter() {
+		//given
+		String username = "writerUsingTags";
+		int pageSize = 30;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		Slice<Post> posts = postRepository.searchPostByKeyword(pageRequest,
+			List.of("봄 네일", "여름 네일"),
+			username, null);
+		List<String> tags = posts.flatMap(p -> p.getTagPosts().stream().map(tp -> tp.getTag().getName())).toList();
+
+		//then
+		assertThat(posts).hasSize(POST_CNT * 2);
+		assertThat(tags).contains("봄 네일", "여름 네일");
+
 	}
 
 	@DisplayName("게시물 내용에 없는 키워드로 검색")
@@ -141,7 +183,7 @@ public class PostSearchRepositoryTest {
 		PageRequest pageRequest = PageRequest.of(0, pageSize);
 
 		//when
-		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), keyword, username, null);
+		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username, null);
 
 		//then
 		assertThat(posts).hasSize(0);
@@ -293,10 +335,10 @@ public class PostSearchRepositoryTest {
 		return user;
 	}
 
-	private Post createPostByUser(User user, Boundary boundary, String tagName) {
+	private Post createPostByUserAndBoundaryAndTag(User user, Boundary boundary, List<Tag> tags) {
 		Post post = Post.builder()
 			.user(user)
-			.postContent(tagName)
+			.postContent(tags.get(0).getName())
 			.tempSave(false)
 			.boundary(boundary)
 			.build();
@@ -304,23 +346,23 @@ public class PostSearchRepositoryTest {
 		Photo photo = new Photo(post, new FileRequestDto(".jpg", 1L, ".jpg"));
 		post.addPhoto(photo);
 
-		Tag findTag = queryFactory.selectFrom(tag).where(tag.name.eq(tagName)).fetchOne();
-		TagPost tagPost = new TagPost(findTag, post);
-		post.addTagPost(tagPost);
+		for (Tag tag : tags) {
+			TagPost tagPost = new TagPost(tag, post);
+			post.addTagPost(tagPost);
+			em.persist(tagPost);
+		}
 
 		em.persist(post);
 		em.persist(photo);
-		em.persist(tagPost);
+
 
 		return post;
 	}
 
-	private Post savePostByCnt(User writer, int postCnt, Boundary boundary, String tagName) {
-		Post lastPost = null;
+	private void savePostByCnt(User writer, int postCnt, Boundary boundary, List<Tag> tags) {
 		for (int i = 0; i < postCnt; i++) {
-			lastPost = createPostByUser(writer, boundary, tagName);
+			createPostByUserAndBoundaryAndTag(writer, boundary, tags);
 		}
-		return lastPost;
 	}
 
 	private void createFollow(User follower, User following) {
@@ -328,9 +370,10 @@ public class PostSearchRepositoryTest {
 		em.persist(follow);
 	}
 
-	private void createTag(String tagName) {
+	private Tag createTag(String tagName) {
 		Tag tag = new Tag(tagName);
 		em.persist(tag);
+		return tag;
 	}
 
 	private List<Post> getPublicPostsByNickname(String writerNickname) {

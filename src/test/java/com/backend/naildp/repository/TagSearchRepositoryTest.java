@@ -133,11 +133,13 @@ public class TagSearchRepositoryTest {
 		String keyword = "가";
 
 		//when
-		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keyword, FOLLOWER_NICKNAME);
+		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(List.of(keyword), FOLLOWER_NICKNAME);
 
 		//then
 		assertThat(tagPosts).extracting(TagPost::getTag).extracting(Tag::getName).startsWith(keyword);
-		assertThat(tagPosts).extracting(TagPost::getTag).isSortedAccordingTo(Comparator.comparing(Tag::getName));
+		assertThat(tagPosts).extracting(TagPost::getTag)
+			.extracting(Tag::getName)
+			.isSortedAccordingTo(Comparator.comparingLong(String::length).thenComparing(String::compareTo));
 		assertThat(tagPosts).extracting(TagPost::getPost)
 			.extracting(Post::getBoundary)
 			.containsAnyOf(Boundary.ALL, Boundary.FOLLOW);
@@ -150,10 +152,24 @@ public class TagSearchRepositoryTest {
 		String keyword = "가나다라마바사아";
 
 		//when
-		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keyword, USER_NICKNAME);
+		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(List.of(keyword), USER_NICKNAME);
 
 		//then
 		assertThat(tagPosts).hasSize(0);
+	}
+
+	@DisplayName("여러개의 키워드로 연관 태그 검색")
+	@Test
+	void searchRelatedTagsWithNumberOfTags() {
+		//given
+		List<String> keywords = List.of("aa", "bb");
+
+		//when
+		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keywords, USER_NICKNAME);
+
+		//then
+		assertThat(tagPosts).hasSize(keywords.size());
+		assertThat(tagPosts).extracting(TagPost::getTag).extracting(Tag::getName).containsExactlyElementsOf(keywords);
 	}
 
 	private BooleanExpression keywordContainedInTag(String keyword) {

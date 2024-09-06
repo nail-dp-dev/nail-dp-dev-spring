@@ -6,5 +6,5 @@ import com.backend.naildp.entity.TagPost;
 
 public interface TagPostSearchRepository {
 
-	List<TagPost> searchRelatedTags(String keyword, String userNickname);
+	List<TagPost> searchRelatedTags(List<String> keywords, String userNickname);
 }
