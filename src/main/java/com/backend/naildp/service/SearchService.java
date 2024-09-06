@@ -1,6 +1,7 @@
 package com.backend.naildp.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.dto.search.RelatedTagResponse;
@@ -25,7 +27,9 @@ import com.backend.naildp.repository.TagPostRepository;
 import com.backend.naildp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -54,7 +58,15 @@ public class SearchService {
 	}
 
 	public List<RelatedTagResponse> searchRelatedTagsByKeyword(String keyword, String username) {
-		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keyword.strip().toLowerCase(), username);
+		List<String> keywords = Arrays.stream(keyword.split(" ")).filter(StringUtils::hasText).toList();
+		log.info("===================");
+		for (String s : keywords) {
+			log.info("키워드 = {} : {}", s, s.length());
+		}
+		log.info("===================");
+
+		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keywords, username);
+		System.out.println("tagPosts.size() = " + tagPosts.size());
 
 		Map<Tag, List<Photo>> tagPostMap = tagPosts.stream()
 			.collect(Collectors.groupingBy(TagPost::getTag,
