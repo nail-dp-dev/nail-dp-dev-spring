@@ -59,14 +59,8 @@ public class SearchService {
 
 	public List<RelatedTagResponse> searchRelatedTagsByKeyword(String keyword, String username) {
 		List<String> keywords = Arrays.stream(keyword.split(" ")).filter(StringUtils::hasText).toList();
-		log.info("===================");
-		for (String s : keywords) {
-			log.info("키워드 = {} : {}", s, s.length());
-		}
-		log.info("===================");
 
 		List<TagPost> tagPosts = tagPostRepository.searchRelatedTags(keywords, username);
-		System.out.println("tagPosts.size() = " + tagPosts.size());
 
 		Map<Tag, List<Photo>> tagPostMap = tagPosts.stream()
 			.collect(Collectors.groupingBy(TagPost::getTag,
