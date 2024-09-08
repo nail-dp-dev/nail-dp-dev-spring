@@ -20,8 +20,10 @@ import com.backend.naildp.jwt.JwtAuthenticationFilter;
 import com.backend.naildp.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.oauth2.CustomOAuth2UserService;
-import com.backend.naildp.oauth2.OAuth2AuthenticationFailureHandler;
-import com.backend.naildp.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.backend.naildp.oauth2.handler.CustomAccessDeniedHandler;
+import com.backend.naildp.oauth2.handler.CustomAuthenticationEntryPoint;
+import com.backend.naildp.oauth2.handler.OAuth2AuthenticationFailureHandler;
+import com.backend.naildp.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.backend.naildp.security.UserDetailsServiceImpl;
 
 @Configuration
@@ -100,9 +102,9 @@ public class WebSecurityConfig {
 
 		http.authorizeHttpRequests((authorizeHttpRequests) ->
 			authorizeHttpRequests
-				.requestMatchers("/").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+				.requestMatchers("/").permitAll()
 				.requestMatchers("/auth/**").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-				.requestMatchers("/home").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+				.requestMatchers("/home").permitAll()
 				.anyRequest().authenticated() // 그 외 모든 요청 인증처리
 
 		);
@@ -112,13 +114,16 @@ public class WebSecurityConfig {
 				.userService(customOAuth2UserService))
 			.successHandler(oAuth2AuthenticationSuccessHandler)
 			.failureHandler(oAuth2AuthenticationFailureHandler)
-		); // 해당 서비스 로직을 타도록 설정)
+		);
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);
 		// http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
+		http.exceptionHandling((exceptions) -> exceptions
+			.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+			.accessDeniedHandler(new CustomAccessDeniedHandler()));
 		return http.build();
 	}
 }

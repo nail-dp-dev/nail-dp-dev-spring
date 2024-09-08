@@ -64,8 +64,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 			try {
 				setAuthentication(info.getSubject());
 			} catch (Exception e) {
-				log.error(e.getMessage());
-				return;
+				throw e;
 			}
 		}
 
