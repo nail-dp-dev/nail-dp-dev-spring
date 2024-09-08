@@ -14,6 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,6 +32,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AuthControllerTest {
+
+	@MockBean
+	private OAuth2AuthorizedClientService authorizedClientService;
+
+	@MockBean
+	private ClientRegistrationRepository clientRegistrationRepository;
 
 	@Autowired
 	private MockMvc mockMvc;

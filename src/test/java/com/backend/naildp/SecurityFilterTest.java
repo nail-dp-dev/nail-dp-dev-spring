@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +34,12 @@ public class SecurityFilterTest {
 	private WebApplicationContext context;
 	@Autowired
 	private MockMvc mockMvc;
+
+	@MockBean
+	private OAuth2AuthorizedClientService authorizedClientService;
+
+	@MockBean
+	private ClientRegistrationRepository clientRegistrationRepository;
 
 	@MockBean
 	private AuthService authService;

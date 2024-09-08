@@ -23,6 +23,8 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -43,6 +45,12 @@ class CommentControllerUnitTest {
 
 	@Autowired
 	ObjectMapper objectMapper;
+
+	@MockBean
+	private OAuth2AuthorizedClientService authorizedClientService;
+
+	@MockBean
+	private ClientRegistrationRepository clientRegistrationRepository;
 
 	@MockBean
 	CommentService commentService;
