@@ -23,7 +23,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private final CookieUtil cookieUtil;
 	private final JwtUtil jwtUtil;
-	//private static final String signupUri = "/sign-up";
 	private static final String homeUri = "http://localhost:3000";
 
 	@Override
@@ -35,12 +34,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		// 유저 정보가 있는 경우(JWT 토큰을 생성하여 쿠키에 추가)
 		String token = jwtUtil.createToken(userDetails.getUser().getNickname(), userDetails.getUser().getRole());
 		jwtUtil.addJwtToCookie(token, response);
-
-		if (userDetails == null) {
-			// return UriComponentsBuilder.fromUriString(targetUrl)
-			// 	.queryParam("error", "Login failed")
-			// 	.build().toUriString();
-		}
 
 		getRedirectStrategy().sendRedirect(request, response, homeUri);
 	}
