@@ -19,16 +19,17 @@ import lombok.NoArgsConstructor;
 public class ArchivePostSummaryResponse {
 	private Long cursorId;
 	private String archiveName;
+	private String nickname;
 	private Slice<?> postSummaryList;
 
 	public static ArchivePostSummaryResponse of(Slice<Post> latestPosts, List<Post> savedPosts,
-		List<Post> likedPosts, String name) {
+		List<Post> likedPosts, String archiveName, String nickname) {
 		Long cursorId = latestPosts.getContent().get(latestPosts.getNumberOfElements() - 1).getId();
-		return new ArchivePostSummaryResponse(cursorId, name,
+		return new ArchivePostSummaryResponse(cursorId, archiveName, nickname,
 			latestPosts.map(post -> new HomePostResponse(post, savedPosts, likedPosts)));
 	}
 
-	public static ArchivePostSummaryResponse createEmptyResponse(String name) {
-		return new ArchivePostSummaryResponse(-1L, name, new SliceImpl<>(new ArrayList<>()));
+	public static ArchivePostSummaryResponse createEmptyResponse(String archiveName, String nickname) {
+		return new ArchivePostSummaryResponse(-1L, archiveName, nickname, new SliceImpl<>(new ArrayList<>()));
 	}
 }
