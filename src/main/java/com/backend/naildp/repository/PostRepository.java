@@ -127,7 +127,9 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 
 	@Query("select p from Post p join ArchivePost ap on p.id = ap.post.id"
 		+ " join PostLike pl on p.id = pl.post.id "
+		+ " join Users u on pl.user.id = u.id"
 		+ " where ap.archive.id = :archiveId"
+		+ " and u.nickname = :myNickname"
 		+ " and p.id < :id "
 		+ " and p.tempSave = false"
 		+ " and (p.boundary = 'ALL'"
