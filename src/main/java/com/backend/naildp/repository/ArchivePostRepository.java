@@ -35,4 +35,8 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("delete from ArchivePost ap where ap.post.id = :postId")
 	void deleteAllByPostId(@Param("postId") Long postId);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("delete from ArchivePost ap where ap.post.id = :postId and ap.archive.id in :archiveList")
+	void deleteAllByPostIdAndArchiveId(@Param("postId") Long postId, @Param("archiveList") List<Long> archiveList);
 }
