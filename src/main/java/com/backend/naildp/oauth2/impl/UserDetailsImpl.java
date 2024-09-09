@@ -1,4 +1,4 @@
-package com.backend.naildp.security;
+package com.backend.naildp.oauth2.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;

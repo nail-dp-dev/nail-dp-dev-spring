@@ -25,7 +25,7 @@ import com.backend.naildp.dto.post.TempPostRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.PostService;
 import com.backend.naildp.validation.ValidationSequence;
 

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.dto.userInfo.TempSaveResponseDto;
 import com.backend.naildp.exception.ApiResponse;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.UserPostService;
 
 import lombok.RequiredArgsConstructor;

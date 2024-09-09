@@ -1,4 +1,4 @@
-package com.backend.naildp.jwt;
+package com.backend.naildp.oauth2.jwt;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -38,8 +38,8 @@ public class JwtUtil {
 	public static final String AUTHORIZATION_KEY = "auth";
 
 	public static final String BEARER_PREFIX = "Bearer ";
-
-	private final long TOKEN_TIME = 30 * 24 * 60 * 60 * 1000L; //60분l
+	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 10;//1000* 60 * 30L
+	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60L * 24 * 7;
 
 	@Value("${jwt.secret.key}") // Base64 Encode 한 SecretKey
 	private String secretKey;
@@ -60,22 +60,30 @@ public class JwtUtil {
 	public String createToken(String username, UserRole role) {
 		Date date = new Date();
 
-		return BEARER_PREFIX +
-			Jwts.builder()
-				.setSubject(username) // 사용자 식별자값(ID)
-				.claim(AUTHORIZATION_KEY, role) // 사용자 권한
-				.setExpiration(new Date(date.getTime() + TOKEN_TIME)) // 만료 시간
-				.setIssuedAt(date) // 발급일
-				.signWith(key, signatureAlgorithm) // 암호화 알고리즘
-				.compact();
+		return BEARER_PREFIX + Jwts.builder().setSubject(username) // 사용자 식별자값(ID)
+			.claim(AUTHORIZATION_KEY, role) // 사용자 권한
+			.setExpiration(new Date(date.getTime() + ACCESS_TOKEN_EXPIRE_TIME)) // 만료 시간
+			.setIssuedAt(date) // 발급일
+			.signWith(key, signatureAlgorithm) // 암호화 알고리즘
+			.compact();
+	}
+
+	public String createRefreshToken() {
+		Date date = new Date();
+
+		return BEARER_PREFIX + Jwts.builder()
+			.setExpiration(new Date(date.getTime() + REFRESH_TOKEN_EXPIRE_TIME)) // 만료 시간
+			.setIssuedAt(date) // 발급일
+			.signWith(key, signatureAlgorithm) // 암호화 알고리즘
+			.compact();
 	}
 
 	// JWT Cookie 에 저장
-	public void addJwtToCookie(String token, HttpServletResponse res) {
+	public void addJwtToCookie(String token, String name, HttpServletResponse res) {
 		try {
 			token = URLEncoder.encode(token, "utf-8").replaceAll("\\+", "%20"); // Cookie Value 에는 공백이 불가능해서 encoding 진행
 
-			Cookie cookie = new Cookie(AUTHORIZATION_HEADER, token); // Name-Value
+			Cookie cookie = new Cookie(name, token); // Name-Value
 			cookie.setPath("/");
 
 			// Response 객체에 Cookie 추가
@@ -117,7 +125,12 @@ public class JwtUtil {
 
 	// JWT에서 사용자 정보 가져오기
 	public Claims getUserInfoFromToken(String token) {
-		return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+		try {
+			return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+		} catch (ExpiredJwtException e) {
+			// 만료된 토큰에서도 Claims 반환
+			return e.getClaims();
+		}
 	}
 
 	// HttpServletRequest 에서 Cookie Value : JWT 가져오기

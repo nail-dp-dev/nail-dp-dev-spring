@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;

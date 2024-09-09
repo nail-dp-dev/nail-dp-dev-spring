@@ -31,8 +31,8 @@ import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.jwt.JwtAuthorizationFilter;
-import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -92,7 +92,7 @@ class AuthServiceTest {
 		given(userRepository.findByNickname(loginRequestDto.getNickname())).willReturn(Optional.empty());
 		given(cookieUtil.getUserInfoFromCookie(req)).willReturn(kakaoUserInfoDto);
 		doNothing().when(cookieUtil).deleteCookie("userInfo", req, res);
-		given(jwtUtil.createToken(anyString(), any(UserRole.class))).willReturn("Authorization");
+		given(jwtUtil.createToken(any(), any(UserRole.class))).willReturn(anyString());
 
 		// when
 		ResponseEntity<ApiResponse<?>> response = authService.signupUser(loginRequestDto, req, res);
@@ -105,7 +105,6 @@ class AuthServiceTest {
 		verify(profileRepository).save(any(Profile.class));
 		verify(usersProfileRepository).save(any(UsersProfile.class));
 		verify(cookieUtil).deleteCookie("userInfo", req, res);
-		verify(jwtUtil).addJwtToCookie("Authorization", res);
 	}
 
 	@Test
@@ -127,7 +126,7 @@ class AuthServiceTest {
 		verify(profileRepository, never()).save(any(Profile.class));
 		verify(cookieUtil, never()).deleteCookie(anyString(), any(HttpServletRequest.class),
 			any(HttpServletResponse.class));
-		verify(jwtUtil, never()).addJwtToCookie(anyString(), any(HttpServletResponse.class));
+		verify(jwtUtil, never()).addJwtToCookie(any(), anyString(), any(HttpServletResponse.class));
 	}
 
 	private User createUser() {

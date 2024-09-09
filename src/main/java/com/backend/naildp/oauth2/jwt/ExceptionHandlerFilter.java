@@ -1,4 +1,4 @@
-package com.backend.naildp.jwt;
+package com.backend.naildp.oauth2.jwt;
 
 import java.io.IOException;
 

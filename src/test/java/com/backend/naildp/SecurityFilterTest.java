@@ -20,8 +20,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.backend.naildp.jwt.JwtUtil;
-import com.backend.naildp.security.UserDetailsServiceImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.service.AuthService;
 
 @SpringBootTest(classes = NaildpApplication.class)

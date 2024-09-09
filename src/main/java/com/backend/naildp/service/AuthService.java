@@ -21,8 +21,9 @@ import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.jwt.JwtAuthorizationFilter;
-import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.RedisUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -44,6 +45,7 @@ public class AuthService {
 	private final SocialLoginRepository socialLoginRepository;
 	private final ProfileRepository profileRepository;
 	private final JwtUtil jwtUtil;
+	private final RedisUtil redisUtil;
 	private final JwtAuthorizationFilter jwtAuthorizationFilter;
 	private final UsersProfileRepository usersProfileRepository;
 
@@ -91,7 +93,9 @@ public class AuthService {
 		log.info("쿠키 지우기");
 
 		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
-		jwtUtil.addJwtToCookie(createToken, res);
+		jwtUtil.addJwtToCookie(createToken, "Authorization", res);
+		jwtUtil.addJwtToCookie(jwtUtil.createRefreshToken(), "refreshToken", res);
+		redisUtil.saveRefreshToken(user.getNickname(), jwtUtil.createRefreshToken());
 
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "회원가입 완료되었습니다", 2001));
 	}
