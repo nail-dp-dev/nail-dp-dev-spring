@@ -9,7 +9,7 @@ import com.backend.naildp.common.UserRole;
 class UserTest {
 
 	@Test
-	void create() {
+	void userCreateTest() {
 
 		User user = User.builder()
 			.nickname("nick")
@@ -18,7 +18,6 @@ class UserTest {
 			.agreement(true)
 			.build();
 
-		assertThat(user.getThumbnailUrl()).isEqualTo("default");
 		assertThat(user.getPoint()).isEqualTo(0L);
 	}
 

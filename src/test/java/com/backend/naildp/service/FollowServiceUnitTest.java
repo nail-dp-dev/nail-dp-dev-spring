@@ -60,7 +60,7 @@ class FollowServiceUnitTest {
 			.thenReturn(Optional.of(follow));
 
 		//when
-		Long followId = followService.followUser(followerNickname, followingNickname);
+		Long followId = followService.followUser(followingNickname, followerNickname);
 
 		//then
 		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followerNickname, followingNickname);
@@ -85,7 +85,7 @@ class FollowServiceUnitTest {
 		when(followRepository.saveAndFlush(any(Follow.class))).thenReturn(follow);
 
 		//when
-		Long followId = followService.followUser(followerNickname, followingNickname);
+		Long followId = followService.followUser(followingNickname, followerNickname);
 
 		//then
 		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followerNickname, followingNickname);

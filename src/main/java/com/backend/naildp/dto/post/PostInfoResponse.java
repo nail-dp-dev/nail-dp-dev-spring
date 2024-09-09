@@ -31,12 +31,13 @@ public class PostInfoResponse {
 	private String boundary;
 	private long likeCount;
 	private boolean isLiked;
+	private boolean isSaved;
 	private long commentCount;
 	private long sharedCount;
 	private List<String> tags;
 
 	public static PostInfoResponse of(Post post, String userNickname, boolean followingStatus, int followerCount,
-		List<Tag> tags) {
+		List<Post> savedPost, List<Tag>tags) {
 
 		User writer = post.getUser();
 		List<PostLike> postLikes = post.getPostLikes();
@@ -51,6 +52,7 @@ public class PostInfoResponse {
 			.boundary(post.getBoundary().toString())
 			.likeCount(postLikes.size())
 			.isLiked(postLikes.stream().anyMatch(postLike -> postLike.isLikedBy(userNickname)))
+			.isSaved(savedPost.contains(post))
 			.commentCount(post.getComments().size())
 			.sharedCount(post.getSharing())
 			.tags(tags.stream().map(Tag::getName).collect(Collectors.toList()))
