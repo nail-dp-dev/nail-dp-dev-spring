@@ -76,4 +76,26 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
 	Slice<ArchiveMapping> findArchivesByIdAndFollowing(@Param("followingNickname") List<String> followingNickname,
 		@Param("id") Long id,
 		PageRequest pageRequest);
+
+	@Query(
+		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
+			+ "from Archive a left join a.archivePosts ap "
+			+ "where a.user.nickname = :nickname "
+			+ "and ap.post.id = :postId "
+			+ "group by a.id "
+			+ "order by a.createdDate DESC")
+	Slice<ArchiveMapping> findSavedArchiveByPage(@Param("nickname") String nickname, @Param("postId") Long postId,
+		PageRequest pageRequest);
+
+	@Query(
+		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
+			+ "from Archive a left join a.archivePosts ap "
+			+ "where a.user.nickname = :nickname "
+			+ "and ap.post.id = :postId "
+			+ "and a.id < :id "
+			+ "group by a.id "
+			+ "order by a.createdDate DESC")
+	Slice<ArchiveMapping> findSavedArchiveByIdAndPage(@Param("nickname") String nickname, @Param("postId") Long postId,
+		@Param("id") Long cursorId,
+		PageRequest pageRequest);
 }
