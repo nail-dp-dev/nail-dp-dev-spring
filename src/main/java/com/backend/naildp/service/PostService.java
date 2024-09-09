@@ -16,6 +16,7 @@ import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
+import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.Tag;
@@ -23,6 +24,7 @@ import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -45,7 +47,7 @@ public class PostService {
 	private final TagPostRepository tagPostRepository;
 	private final PhotoRepository photoRepository;
 	private final FollowRepository followRepository;
-	private final UsersProfileRepository usersProfileRepository;
+	private final ArchivePostRepository archivePostRepository;
 	private final S3Service s3Service;
 	private final PostDeletionFacade postDeletionFacade;
 
@@ -199,21 +201,36 @@ public class PostService {
 	 * 특정 게시물 상세정보 읽기 API
 	 */
 	@Transactional(readOnly = true)
-	public PostInfoResponse postInfo(String nickname, Long postId) {
+	public PostInfoResponse postInfo(String username, Long postId) {
 		// post - writer 정보 가져오기
-		Post post = postRepository.findPostAndWriterById(postId)
+		Post post = postRepository.findPostAndUser(postId)
 			.orElseThrow(() -> new CustomException("게시물을 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 		User writer = post.getUser();
 
-		// 읽기 권한 확인
-		boolean followingStatus = isFollower(nickname, writer, post.getBoundary());
+		// 읽기 권환 확인
+		if (post.isTempSaved()) {
+			throw new CustomException("임시저장한 게시물은 조회할 수 없습니다.", ErrorCode.NOT_FOUND);
+		}
+
+		if (post.isClosed() && post.notWrittenBy(username)) {
+			throw new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username,
+			post.getUser()) && post.notWrittenBy(username)) {
+			throw new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY);
+		}
+
+		boolean followingStatus = isFollower(username, writer, post.getBoundary());
 		int followerCount = followRepository.countFollowersByUserNickname(writer.getNickname());
+
+		List<Post> savedPost = postRepository.findPostsInArchive(username);
 
 		// 태그 TagPost - Tag 조회
 		List<TagPost> tagPosts = tagPostRepository.findTagPostAndTagByPost(post);
 		List<Tag> tags = tagPosts.stream().map(TagPost::getTag).collect(Collectors.toList());
 
-		return PostInfoResponse.of(post, nickname, followingStatus, followerCount, tags);
+		return PostInfoResponse.of(post, username, followingStatus, followerCount, savedPost, tags);
 	}
 
 	@Transactional
