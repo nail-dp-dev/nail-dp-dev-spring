@@ -35,8 +35,8 @@ public class JwtUtil {
 	public static final String AUTHORIZATION_KEY = "auth";
 
 	public static final String BEARER_PREFIX = "Bearer ";
-	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 10;
-	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 30;//1000 * 60 * 60L * 24 * 7;
+	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30;
+	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60L * 24 * 7;
 
 	@Value("${jwt.secret.key}") // Base64 Encode 한 SecretKey
 	private String secretKey;
