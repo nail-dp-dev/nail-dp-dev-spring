@@ -112,7 +112,9 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 	// 아카이브 내 게시물 좋아요 조회
 	@Query("select p from Post p join ArchivePost ap on p.id = ap.post.id"
 		+ " join PostLike pl on p.id = pl.post.id "
+		+ " join Users u on pl.user.id = u.id"
 		+ " where ap.archive.id = :archiveId"
+		+ " and u.nickname = :myNickname"
 		+ " and p.tempSave = false"
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
