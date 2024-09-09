@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.backend.naildp.entity.User;
+import com.backend.naildp.exception.TokenNotValidateException;
 import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
 import com.backend.naildp.repository.UserRepository;
 
@@ -45,36 +46,29 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		String tokenValue = jwtUtil.getTokenFromRequest(req);
-		log.info("Token from request: {}", tokenValue);
+		try {
+			String tokenValue = jwtUtil.getTokenFromRequest(req);
+			log.info("Token from request: {}", tokenValue);
 
-		log.info("1");
+			if (StringUtils.hasText(tokenValue)) {
+				// JWT 토큰 substring
+				tokenValue = jwtUtil.substringToken(tokenValue);
+				log.info(tokenValue);
 
-		if (StringUtils.hasText(tokenValue)) {
-			log.info("2");
+				if (!jwtUtil.validateToken(tokenValue)) {
+					refreshAccessToken(req, res);
+				}
 
-			// JWT 토큰 substring
-			tokenValue = jwtUtil.substringToken(tokenValue);
-			log.info(tokenValue);
-
-			if (!jwtUtil.validateToken(tokenValue)) {
-				log.info("3");
-
-				log.error("Token Error");
-				refreshAccessToken(req, res);
-				return;
-			}
-
-			Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
-
-			try {
+				Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
 				setAuthentication(info.getSubject());
-			} catch (Exception e) {
-				throw e;
 			}
-		}
 
-		filterChain.doFilter(req, res);
+			filterChain.doFilter(req, res);
+
+		} catch (ExpiredJwtException | TokenNotValidateException e) {
+			log.error("JWT 처리 중 예외 발생", e);
+			throw e;
+		}
 	}
 
 	public void refreshAccessToken(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -107,25 +101,19 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 				}
 			}
 		}
-		jwtUtil.substringToken(refreshTokenFromCookie);
-		log.info("refreshToken = " + refreshTokenFromCookie);
-
 		// Redis 에서 Refresh Token 추출
 		String refreshTokenFromRedis = redisUtil.getRefreshToken(findUser.getNickname());
-		jwtUtil.substringToken(refreshTokenFromRedis);
 		log.info("refreshTokenFromRedis: {}", refreshTokenFromRedis);
 
 		if (refreshTokenFromRedis == null || !refreshTokenFromRedis.equals(refreshTokenFromCookie)) {
-			res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "리프레시 토큰이 유효하지 않거나 만료되었습니다.");
-			return;
+			throw new TokenNotValidateException("리프레시 토큰이 유효하지 않거나 만료되었습니다.");
 		}
 		log.info("5 ");
 
 		// 리프레시 토큰 유효성 검증
 		if (!jwtUtil.validateToken(refreshTokenFromCookie)) {
 			redisUtil.deleteRefreshToken(findUser.getNickname());
-			res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "리프레시 토큰이 만료되었습니다.");
-			return;
+			throw new TokenNotValidateException("리프레시 토큰이 만료되었습니다.");
 		}
 		log.info("6 ");
 
