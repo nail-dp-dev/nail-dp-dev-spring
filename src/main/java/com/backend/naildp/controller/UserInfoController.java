@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.naildp.dto.userInfo.ProfileRequestDto;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.exception.ApiResponse;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;

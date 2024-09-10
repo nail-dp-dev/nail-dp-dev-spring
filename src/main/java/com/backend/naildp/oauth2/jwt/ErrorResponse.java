@@ -1,4 +1,4 @@
-package com.backend.naildp.jwt;
+package com.backend.naildp.oauth2.jwt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

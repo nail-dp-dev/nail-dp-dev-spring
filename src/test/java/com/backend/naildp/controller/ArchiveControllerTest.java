@@ -1,30 +1,24 @@
 package com.backend.naildp.controller;
 
-import static org.mockito.BDDMockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.backend.naildp.common.Boundary;
-import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveBoundaryRequestDto;
 import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.ArchiveService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -44,27 +38,28 @@ public class ArchiveControllerTest {
 
 	private User user;
 
-	@BeforeEach
-	public void setup() {
-		MockitoAnnotations.openMocks(this);
-
-		user = User.builder()
-			.nickname("testUser")
-			.phoneNumber("010-1234-5678")
-			.role(UserRole.USER)
-			.agreement(true)
-			.build();
-
-		given(userDetails.getUser()).willReturn(user);
-
-		SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-		securityContext.setAuthentication(new TestingAuthenticationToken(userDetails, null, "ROLE_USER"));
-		SecurityContextHolder.setContext(securityContext);
-
-	}
+	// @BeforeEach
+	// public void setup() {
+	// 	MockitoAnnotations.openMocks(this);
+	//
+	// 	user = User.builder()
+	// 		.nickname("testUser")
+	// 		.phoneNumber("010-1234-5678")
+	// 		.role(UserRole.USER)
+	// 		.agreement(true)
+	// 		.build();
+	//
+	// 	given(userDetails.getUser()).willReturn(user);
+	//
+	// 	SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+	// 	securityContext.setAuthentication(new TestingAuthenticationToken(userDetails, null, "ROLE_USER"));
+	// 	SecurityContextHolder.setContext(securityContext);
+	//
+	// }
 
 	@Test
 	@DisplayName("아카이브 생성 성공")
+	@WithMockUser(username = "testUser", roles = {"USER"})
 	void testCreateArchiveSuccessfully() throws Exception {
 		// Given
 		CreateArchiveRequestDto requestDto = new CreateArchiveRequestDto("My Arch", Boundary.ALL);

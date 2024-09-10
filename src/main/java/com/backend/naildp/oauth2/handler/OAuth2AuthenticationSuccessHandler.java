@@ -1,4 +1,4 @@
-package com.backend.naildp.oauth2;
+package com.backend.naildp.oauth2.handler;
 
 import java.io.IOException;
 
@@ -7,8 +7,9 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import com.backend.naildp.common.CookieUtil;
-import com.backend.naildp.jwt.JwtUtil;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.RedisUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +24,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private final CookieUtil cookieUtil;
 	private final JwtUtil jwtUtil;
-	//private static final String signupUri = "/sign-up";
+	private final RedisUtil redisUtil;
 	private static final String homeUri = "http://localhost:3000";
 
 	@Override
@@ -34,13 +35,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		// 유저 정보가 있는 경우(JWT 토큰을 생성하여 쿠키에 추가)
 		String token = jwtUtil.createToken(userDetails.getUser().getNickname(), userDetails.getUser().getRole());
-		jwtUtil.addJwtToCookie(token, response);
+		jwtUtil.addJwtToCookie(token, "Authorization", response);
+		jwtUtil.addJwtToCookie(jwtUtil.createRefreshToken(), "refreshToken", response);
 
-		if (userDetails == null) {
-			// return UriComponentsBuilder.fromUriString(targetUrl)
-			// 	.queryParam("error", "Login failed")
-			// 	.build().toUriString();
-		}
+		redisUtil.saveRefreshToken(userDetails.getUser().getNickname(), jwtUtil.createRefreshToken());
 
 		getRedirectStrategy().sendRedirect(request, response, homeUri);
 	}

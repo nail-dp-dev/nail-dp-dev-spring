@@ -1,4 +1,4 @@
-package com.backend.naildp.jwt;
+package com.backend.naildp.oauth2.jwt;
 
 import java.io.IOException;
 
@@ -9,7 +9,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.FilterChain;
@@ -55,7 +55,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 		UserRole role = ((UserDetailsImpl)authResult.getPrincipal()).getUser().getRole();
 
 		String token = jwtUtil.createToken(username, role);
-		jwtUtil.addJwtToCookie(token, response);
+		jwtUtil.addJwtToCookie(token, "", response);
 	}
 
 	@Override

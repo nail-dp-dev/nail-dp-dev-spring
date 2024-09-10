@@ -1,6 +1,7 @@
 package com.backend.naildp.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.AuthService;
 import com.backend.naildp.validation.ValidationSequence;
 
@@ -26,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
 
 	private final AuthService authService;
-	// private final KakaoService kakaoService;
 
 	@PostMapping("/auth/signup")
 	public ResponseEntity<ApiResponse<?>> signupUser(@Valid @RequestBody LoginRequestDto loginRequestDto,
@@ -57,7 +58,8 @@ public class AuthController {
 	}
 
 	@GetMapping("/auth/logout")
-	public ResponseEntity<ApiResponse<?>> logoutUser(HttpServletRequest req, HttpServletResponse res) {
-		return authService.logoutUser(req, res);
+	public ResponseEntity<ApiResponse<?>> logoutUser(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		HttpServletRequest req, HttpServletResponse res) {
+		return authService.logoutUser(userDetails.getUser().getNickname(), req, res);
 	}
 }

@@ -72,7 +72,7 @@ class CommentServiceTest {
 		assertTrue(contents.hasNext());
 		assertEquals(pageSize, contents.getNumberOfElements());
 		assertThat(contents).extracting(CommentInfoResponse::getProfileUrl)
-			.containsOnly("/assets/img/profile/basic/basic_1.png");
+			.containsOnly("default");
 	}
 
 	@DisplayName("댓글 조회 테스트 - 댓글수보다 페이지가 클때")
@@ -93,7 +93,7 @@ class CommentServiceTest {
 		assertFalse(contents.hasNext());
 		assertNotEquals(pageSize, contents.getNumberOfElements());
 		assertThat(contents).extracting(CommentInfoResponse::getProfileUrl)
-			.containsOnly("/assets/img/profile/basic/basic_1.png");
+			.containsOnly("default");
 	}
 
 	@DisplayName("댓글 조회 테스트 - 댓글이 없을때")

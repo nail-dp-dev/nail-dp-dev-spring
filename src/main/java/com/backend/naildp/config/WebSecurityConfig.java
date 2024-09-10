@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,14 +16,18 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.backend.naildp.jwt.ExceptionHandlerFilter;
-import com.backend.naildp.jwt.JwtAuthenticationFilter;
-import com.backend.naildp.jwt.JwtAuthorizationFilter;
-import com.backend.naildp.jwt.JwtUtil;
 import com.backend.naildp.oauth2.CustomOAuth2UserService;
-import com.backend.naildp.oauth2.OAuth2AuthenticationFailureHandler;
-import com.backend.naildp.oauth2.OAuth2AuthenticationSuccessHandler;
-import com.backend.naildp.security.UserDetailsServiceImpl;
+import com.backend.naildp.oauth2.handler.CustomAccessDeniedHandler;
+import com.backend.naildp.oauth2.handler.CustomAuthenticationEntryPoint;
+import com.backend.naildp.oauth2.handler.OAuth2AuthenticationFailureHandler;
+import com.backend.naildp.oauth2.handler.OAuth2AuthenticationSuccessHandler;
+import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
+import com.backend.naildp.oauth2.jwt.ExceptionHandlerFilter;
+import com.backend.naildp.oauth2.jwt.JwtAuthenticationFilter;
+import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.RedisUtil;
+import com.backend.naildp.repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity // Spring Security 지원을 가능하게 함
@@ -32,6 +37,8 @@ public class WebSecurityConfig {
 
 	private final JwtUtil jwtUtil;
 	private final UserDetailsServiceImpl userDetailsService;
+	private final RedisUtil redisUtil;
+	private final UserRepository userRepository;
 	private final AuthenticationConfiguration authenticationConfiguration;
 
 	private final ExceptionHandlerFilter exceptionHandlerFilter;
@@ -40,13 +47,15 @@ public class WebSecurityConfig {
 	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
-	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService,
-		AuthenticationConfiguration authenticationConfiguration, ExceptionHandlerFilter exceptionHandlerFilter,
-		CustomOAuth2UserService customOAuth2UserService,
+	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService, RedisUtil redisUtil,
+		UserRepository userRepository, AuthenticationConfiguration authenticationConfiguration,
+		ExceptionHandlerFilter exceptionHandlerFilter, CustomOAuth2UserService customOAuth2UserService,
 		OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
 		OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
+		this.redisUtil = redisUtil;
+		this.userRepository = userRepository;
 		this.authenticationConfiguration = authenticationConfiguration;
 		this.exceptionHandlerFilter = exceptionHandlerFilter;
 		this.customOAuth2UserService = customOAuth2UserService;
@@ -68,7 +77,13 @@ public class WebSecurityConfig {
 
 	@Bean
 	public JwtAuthorizationFilter jwtAuthorizationFilter() {
-		return new JwtAuthorizationFilter(jwtUtil, userDetailsService);
+		return new JwtAuthorizationFilter(jwtUtil, userDetailsService, redisUtil, userRepository);
+	}
+
+	@Bean
+	public WebSecurityCustomizer webSecurityCustomizer() {
+		return web -> web.ignoring()
+			.requestMatchers("/error", "/favicon.ico");
 	}
 
 	@Bean
@@ -92,33 +107,34 @@ public class WebSecurityConfig {
 
 		http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 		// 기본 설정인 Session 방식은 사용하지 않고 JWT 방식을 사용하기 위한 설정
-		http.sessionManagement((sessionManagement) ->
-			sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-		);
+		http.sessionManagement(
+			(sessionManagement) -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		http.anonymous(AbstractHttpConfigurer::disable);
 
-		http.authorizeHttpRequests((authorizeHttpRequests) ->
-			authorizeHttpRequests
-				.requestMatchers("/").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-				.requestMatchers("/auth/**").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-				.requestMatchers("/home").permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-				.anyRequest().authenticated() // 그 외 모든 요청 인증처리
+		http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/")
+			.permitAll()
+			.requestMatchers("/auth/**")
+			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+			.requestMatchers("/home")
+			.permitAll()
+			.anyRequest()
+			.authenticated() // 그 외 모든 요청 인증처리
 
 		);
 
-		http.oauth2Login(oauth2Configurer -> oauth2Configurer
-			.userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
-				.userService(customOAuth2UserService))
+		http.oauth2Login(oauth2Configurer -> oauth2Configurer.userInfoEndpoint(
+				userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService))
 			.successHandler(oAuth2AuthenticationSuccessHandler)
-			.failureHandler(oAuth2AuthenticationFailureHandler)
-		); // 해당 서비스 로직을 타도록 설정)
+			.failureHandler(oAuth2AuthenticationFailureHandler));
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);
 		// http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
+		http.exceptionHandling((exceptions) -> exceptions.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+			.accessDeniedHandler(new CustomAccessDeniedHandler()));
 		return http.build();
 	}
 }

@@ -56,14 +56,15 @@ class FollowServiceUnitTest {
 		User followingUser = createUserByNickname(followingNickname);
 		Follow follow = new Follow(followerUser, followingUser);
 
-		when(followRepository.findFollowByFollowerNicknameAndFollowingNickname(eq(followerNickname), eq(followingNickname)))
+		when(followRepository.findFollowByFollowerNicknameAndFollowingNickname(eq(followingNickname),
+			eq(followerNickname)))
 			.thenReturn(Optional.of(follow));
 
 		//when
 		Long followId = followService.followUser(followingNickname, followerNickname);
 
 		//then
-		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followerNickname, followingNickname);
+		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followingNickname, followerNickname);
 		verify(userRepository, never()).findByNickname(anyString());
 		verify(followRepository, never()).saveAndFlush(any());
 	}
@@ -78,7 +79,8 @@ class FollowServiceUnitTest {
 		User followingUser = createUserByNickname(followingNickname);
 		Follow follow = new Follow(followerUser, followingUser);
 
-		when(followRepository.findFollowByFollowerNicknameAndFollowingNickname(eq(followerNickname), eq(followingNickname)))
+		when(followRepository.findFollowByFollowerNicknameAndFollowingNickname(eq(followingNickname),
+			eq(followerNickname)))
 			.thenReturn(Optional.empty());
 		when(userRepository.findByNickname(eq(followerNickname))).thenReturn(Optional.of(followerUser));
 		when(userRepository.findByNickname(eq(followingNickname))).thenReturn(Optional.of(followingUser));
@@ -88,7 +90,7 @@ class FollowServiceUnitTest {
 		Long followId = followService.followUser(followingNickname, followerNickname);
 
 		//then
-		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followerNickname, followingNickname);
+		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followingNickname, followerNickname);
 		verify(userRepository, times(2)).findByNickname(anyString());
 		verify(followRepository).saveAndFlush(any());
 	}

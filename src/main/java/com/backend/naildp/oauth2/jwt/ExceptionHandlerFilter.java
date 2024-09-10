@@ -1,4 +1,4 @@
-package com.backend.naildp.jwt;
+package com.backend.naildp.oauth2.jwt;
 
 import java.io.IOException;
 
@@ -8,6 +8,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.backend.naildp.exception.TokenNotValidateException;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
 		FilterChain filterChain) throws ServletException, IOException {
 		try {
 			filterChain.doFilter(request, response);
-		} catch (TokenNotValidateException ex) {
+		} catch (TokenNotValidateException | ExpiredJwtException ex) {
 			setErrorResponse(HttpStatus.UNAUTHORIZED, response, ex);
 		}
 
