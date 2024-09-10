@@ -186,7 +186,7 @@ public class AuthControllerTest {
 	@DisplayName("로그아웃 성공")
 	public void testLogoutUser() throws Exception {
 		// given
-		given(authService.logoutUser(any(HttpServletRequest.class), any(HttpServletResponse.class)))
+		given(authService.logoutUser(anyString(), any(HttpServletRequest.class), any(HttpServletResponse.class)))
 			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그아웃 성공", 2000)));
 
 		// when & then

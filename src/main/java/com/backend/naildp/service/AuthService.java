@@ -140,8 +140,11 @@ public class AuthService {
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "jwt토큰 검증 확인", 2000));
 	}
 
-	public ResponseEntity<ApiResponse<?>> logoutUser(HttpServletRequest req, HttpServletResponse res) {
+	public ResponseEntity<ApiResponse<?>> logoutUser(String nickname, HttpServletRequest req, HttpServletResponse res) {
+		redisUtil.deleteRefreshToken(nickname);
 		cookieUtil.deleteCookie(JwtUtil.AUTHORIZATION_HEADER, req, res);
+		cookieUtil.deleteCookie("refreshToken", req, res);
+
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그아웃 성공", 2000));
 	}
 }
