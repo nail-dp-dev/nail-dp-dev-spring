@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 
 services:
   redis:
@@ -8,11 +8,14 @@ services:
     container_name: redis
 
   app:
+    platform: linux/amd64
     build:
-      context: .정
+      context: .
       dockerfile: ./Dockerfile
+    image: minjik0525/ndp-back:latest
     ports:
       - "8080:8080"
     depends_on:
       - redis
     container_name: ndp
+
