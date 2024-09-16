@@ -1,5 +1,6 @@
 package com.backend.naildp.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,6 +48,9 @@ public class WebSecurityConfig {
 	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
+	@Value("${spring.server.domain}")
+	private String domain;
+
 	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService, RedisUtil redisUtil,
 		UserRepository userRepository, AuthenticationConfiguration authenticationConfiguration,
 		ExceptionHandlerFilter exceptionHandlerFilter, CustomOAuth2UserService customOAuth2UserService,
@@ -92,8 +96,7 @@ public class WebSecurityConfig {
 
 		configuration.addAllowedOrigin("http://127.0.0.1:3000");
 		configuration.addAllowedOrigin("http://localhost:3000");
-		configuration.addAllowedOrigin("http://3.35.167.102:3000");
-		configuration.addAllowedOrigin("http://3.36.54.132:3000");
+		configuration.addAllowedOrigin(domain + ":3000");
 
 		configuration.addAllowedHeader("*");
 		configuration.addAllowedMethod("*");
@@ -117,19 +120,29 @@ public class WebSecurityConfig {
 
 		http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/")
 			.permitAll()
-			.requestMatchers("/auth/**")
+			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-			.requestMatchers("/home")
-			.permitAll()
+			.requestMatchers("/api/home").permitAll()
 			.anyRequest()
 			.authenticated() // 그 외 모든 요청 인증처리
 
 		);
 
-		http.oauth2Login(oauth2Configurer -> oauth2Configurer.userInfoEndpoint(
-				userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService))
+		http.oauth2Login(oauth2Configurer -> oauth2Configurer
+			.authorizationEndpoint(authorizationEndpointConfig ->
+				authorizationEndpointConfig
+					.baseUri("/api/oauth2/authorization")
+			)
+
+			.redirectionEndpoint(redirectionEndpointConfig ->
+				redirectionEndpointConfig
+					.baseUri("/api/login/oauth2/code/*")
+			)
+			.userInfoEndpoint(userInfoEndpointConfig ->
+				userInfoEndpointConfig.userService(customOAuth2UserService))
 			.successHandler(oAuth2AuthenticationSuccessHandler)
-			.failureHandler(oAuth2AuthenticationFailureHandler));
+			.failureHandler(oAuth2AuthenticationFailureHandler)
+		);
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

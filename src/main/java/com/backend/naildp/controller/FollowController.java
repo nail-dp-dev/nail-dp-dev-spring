@@ -16,7 +16,7 @@ import com.backend.naildp.service.FollowService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class FollowController {
 

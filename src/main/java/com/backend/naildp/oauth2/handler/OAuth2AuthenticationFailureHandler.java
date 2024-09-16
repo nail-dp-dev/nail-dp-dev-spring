@@ -2,6 +2,7 @@ package com.backend.naildp.oauth2.handler;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -16,7 +17,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
-	private static final String SIGNUP_URI = "http://localhost:3000/sign-up";
+
+	@Value("${spring.server.domain}")
+	private static String domain;
+	private static final String SIGNUP_URI = domain + "/sign-up";
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
