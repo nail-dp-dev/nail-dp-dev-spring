@@ -46,7 +46,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		log.info("444444444");
 
 		log.info(homeUri);
-		getRedirectStrategy().sendRedirect(request, response, "http://3.37.12.43");
+		getRedirectStrategy().sendRedirect(request, response, domain);
 	}
 
 	private UserDetailsImpl getOAuth2UserPrincipal(Authentication authentication) {
