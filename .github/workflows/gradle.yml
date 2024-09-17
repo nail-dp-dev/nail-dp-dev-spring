@@ -62,3 +62,49 @@ jobs:
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: DockerFile
+        push: true
+        tags: minijik0525/ndp-back:latest
+        
+    - name: Deploy 1
+      uses: appleboy/ssh-action@master
+      env:
+          APP: "preonb"
+          COMPOSE: "/home/ubuntu/compose/docker-compose.yml"
+      with:
+        host: ${{ secrets.REMOTE_IP }}
+        username: ${{ secrets.REMOTE_SSH_ID }}
+        key: ${{ secrets.REMOTE_SSH_KEY }}
+        port: ${{ secrets.REMOTE_SSH_PORT }}
+        envs: APP, COMPOSE
+        script_stop: true
+        script: |
+            sudo apt update && sudo apt-get install -y \
+            apt-transport-https ca-certificates curl gnupg-agent software-properties-common \
+            docker-ce
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.28.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+
+            sudo usermod -aG docker ${{ secrets.REMOTE_SSH_ID }}
+            newgrp docker
+
+            mkdir -p /home/${{ secrets.REMOTE_SSH_ID }}/compose
+            cd /home/${{ secrets.REMOTE_SSH_ID }}/compose
+            echo ${{ secrets.COMPOSE }} | base64 --decode > ./docker-compose.yml  
+            echo ${{ secrets.NGINX_CONF}} | base64 --decode > ./nginx.conf 
+
+            sudo docker-compose -f /home/ubuntu/compose/docker-compose.yml down --rmi all
+            sudo docker-compose -f /home/ubuntu/compose/docker-compose.yml up -d 
