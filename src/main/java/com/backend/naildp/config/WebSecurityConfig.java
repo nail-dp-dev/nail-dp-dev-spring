@@ -97,6 +97,7 @@ public class WebSecurityConfig {
 		configuration.addAllowedOrigin("http://127.0.0.1:3000");
 		configuration.addAllowedOrigin("http://localhost:3000");
 		configuration.addAllowedOrigin(domain + ":3000");
+		configuration.addAllowedOrigin(domain);
 
 		configuration.addAllowedHeader("*");
 		configuration.addAllowedMethod("*");
