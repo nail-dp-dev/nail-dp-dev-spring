@@ -100,7 +100,7 @@ jobs:
    
       with:
         host: ${{ secrets.REMOTE_IP_2 }}
-        username: ${{ secrets.REMOTE_SSH_ID_2 }}
+        username: ${{ secrets.REMOTE_SSH_ID }}
         key: ${{ secrets.REMOTE_SSH_KEY }}
         port: ${{ secrets.REMOTE_SSH_PORT }}
         envs: APP, COMPOSE
