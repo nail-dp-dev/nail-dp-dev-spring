@@ -26,9 +26,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	private final CookieUtil cookieUtil;
 	private final JwtUtil jwtUtil;
 	private final RedisUtil redisUtil;
-	@Value("${spring.server.domain}")
 	private static String domain;
-	private static final String homeUri = domain;
+
+	@Value("${spring.server.domain}")
+	public void setDomain(String valueDomain) {
+		domain = valueDomain;
+	}
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -45,7 +48,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		redisUtil.saveRefreshToken(userDetails.getUser().getNickname(), jwtUtil.createRefreshToken());
 		log.info("444444444");
 
-		log.info(homeUri);
+		log.info(domain);
 		getRedirectStrategy().sendRedirect(request, response, domain);
 	}
 

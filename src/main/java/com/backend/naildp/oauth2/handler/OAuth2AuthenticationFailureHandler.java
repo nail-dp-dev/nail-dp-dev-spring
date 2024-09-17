@@ -18,9 +18,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-	@Value("${spring.server.domain}")
 	private static String domain;
-	private static final String SIGNUP_URI = domain + "/sign-up";
+
+	@Value("${spring.server.domain}")
+	public void setDomain(String valueDomain) {
+		domain = valueDomain;
+	}
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
@@ -28,7 +31,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
 		if (exception instanceof SignUpRequiredException) {
 			// 회원가입이 필요한 경우 signup 페이지로 리다이렉트
-			getRedirectStrategy().sendRedirect(request, response, SIGNUP_URI);
+			getRedirectStrategy().sendRedirect(request, response, domain + "/sign-up");
 		} else {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
