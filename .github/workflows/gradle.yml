@@ -47,8 +47,8 @@ jobs:
         context: .
         file: Dockerfile
         push: true
-        tags: minijik0525/ndp-back:latest
-    
+        tags: minjik0525/ndp-back:latest
+        
   deploy:
     runs-on: ubuntu-latest
 
