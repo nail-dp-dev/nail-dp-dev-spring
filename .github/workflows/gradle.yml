@@ -127,14 +127,14 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/download/1.28.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-          sudo usermod -aG docker ${{ secrets.REMOTE_SSH_ID_1 }}
+          sudo usermod -aG docker ${{ secrets.REMOTE_SSH_ID }}
           newgrp docker
 
-          mkdir -p /home/${{ secrets.REMOTE_SSH_ID_1 }}/compose
-          cd /home/${{ secrets.REMOTE_SSH_ID_1 }}/compose
+          mkdir -p /home/${{ secrets.REMOTE_SSH_ID }}/compose
+          cd /home/${{ secrets.REMOTE_SSH_ID }}/compose
           echo ${{ secrets.COMPOSE }} | base64 --decode > ./docker-compose.yml  
           echo ${{ secrets.NGINX_CONF}} | base64 --decode > ./nginx.conf 
 
-          sudo docker-compose -f /home/${{ secrets.REMOTE_SSH_ID_1 }}/compose/docker-compose.yml down --rmi all
-          sudo docker-compose -f /home/${{ secrets.REMOTE_SSH_ID_1 }}/compose/docker-compose.yml up -d
+          sudo docker-compose -f /home/${{ secrets.REMOTE_SSH_ID }}/compose/docker-compose.yml down --rmi all
+          sudo docker-compose -f /home/${{ secrets.REMOTE_SSH_ID }}/compose/docker-compose.yml up -d
 
