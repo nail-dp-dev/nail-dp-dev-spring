@@ -45,7 +45,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		redisUtil.saveRefreshToken(userDetails.getUser().getNickname(), jwtUtil.createRefreshToken());
 		log.info("444444444");
 
-		getRedirectStrategy().sendRedirect(request, response, homeUri);
+		log.info(homeUri);
+		getRedirectStrategy().sendRedirect(request, response, "http://3.37.12.43");
 	}
 
 	private UserDetailsImpl getOAuth2UserPrincipal(Authentication authentication) {
