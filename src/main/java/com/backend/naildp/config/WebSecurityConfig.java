@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.backend.naildp.oauth2.CustomAuthorizationRequestRepository;
 import com.backend.naildp.oauth2.CustomOAuth2UserService;
 import com.backend.naildp.oauth2.handler.CustomAccessDeniedHandler;
 import com.backend.naildp.oauth2.handler.CustomAuthenticationEntryPoint;
@@ -153,5 +154,10 @@ public class WebSecurityConfig {
 		http.exceptionHandling((exceptions) -> exceptions.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
 			.accessDeniedHandler(new CustomAccessDeniedHandler()));
 		return http.build();
+	}
+
+	@Bean
+	public CustomAuthorizationRequestRepository customAuthorizationRequestRepository() {
+		return new CustomAuthorizationRequestRepository();
 	}
 }
