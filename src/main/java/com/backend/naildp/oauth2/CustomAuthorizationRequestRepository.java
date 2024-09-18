@@ -33,28 +33,24 @@ public class CustomAuthorizationRequestRepository
 			return;
 		}
 
-		// OAuth2AuthorizationRequest와 상태 값(state)을 쿠키에 저장하는 로직
 		CookieUtil.addStateCookie(response, AUTHORIZATION_REQUEST_COOKIE_NAME,
 			CookieUtil.serialize(authorizationRequest),
-			COOKIE_EXPIRE_SECONDS, true, true);
+			COOKIE_EXPIRE_SECONDS, true);
 
 		String state = authorizationRequest.getState();
 		CookieUtil.addStateCookie(response, OAUTH2_STATE_COOKIE_NAME,
 			state,
-			COOKIE_EXPIRE_SECONDS, true, true);
+			COOKIE_EXPIRE_SECONDS, true);
 	}
 
 	@Override
 	public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
 		HttpServletResponse response) {
-		// OAuth2AuthorizationRequest 및 상태 값을 제거
-		return this.loadAuthorizationRequest(request);
+		OAuth2AuthorizationRequest authorizationRequest = this.loadAuthorizationRequest(request);
+		if (authorizationRequest != null) {
+			CookieUtil.deleteCookie(AUTHORIZATION_REQUEST_COOKIE_NAME, request, response);
+			CookieUtil.deleteCookie(OAUTH2_STATE_COOKIE_NAME, request, response);
+		}
+		return authorizationRequest;
 	}
-
-	public void removeAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
-		// 쿠키에서 AuthorizationRequest 및 상태 값을 삭제하는 로직
-		CookieUtil.deleteCookie(AUTHORIZATION_REQUEST_COOKIE_NAME, request, response);
-		CookieUtil.deleteCookie(OAUTH2_STATE_COOKIE_NAME, request, response);
-	}
-
 }
