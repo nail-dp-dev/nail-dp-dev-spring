@@ -112,6 +112,11 @@ public class WebSecurityConfig {
 	}
 
 	@Bean
+	public CustomAuthorizationRequestRepository customAuthorizationRequestRepository() {
+		return new CustomAuthorizationRequestRepository();
+	}
+
+	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		// CSRF 설정
 		http.csrf((csrf) -> csrf.disable());
@@ -137,6 +142,8 @@ public class WebSecurityConfig {
 			.authorizationEndpoint(authorizationEndpointConfig -> {
 				log.info("Configuring OAuth2 authorization endpoint...");
 				authorizationEndpointConfig.baseUri("/api/oauth2/authorization");
+				authorizationEndpointConfig.authorizationRequestRepository(customAuthorizationRequestRepository());
+
 			})
 			.redirectionEndpoint(redirectionEndpointConfig -> {
 				log.info("Configuring OAuth2 redirection endpoint...");
@@ -158,10 +165,5 @@ public class WebSecurityConfig {
 		http.exceptionHandling((exceptions) -> exceptions.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
 			.accessDeniedHandler(new CustomAccessDeniedHandler()));
 		return http.build();
-	}
-
-	@Bean
-	public CustomAuthorizationRequestRepository customAuthorizationRequestRepository() {
-		return new CustomAuthorizationRequestRepository();
 	}
 }
