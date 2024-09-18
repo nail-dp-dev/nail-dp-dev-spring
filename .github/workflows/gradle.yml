@@ -50,6 +50,7 @@ jobs:
         tags: minjik0525/ndp-back:latest
         
   deploy1:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -88,7 +89,9 @@ jobs:
             sudo docker-compose -f /home/ubuntu/compose/docker-compose.yml up -d 
 
   deploy2:
+    needs: build
     runs-on: ubuntu-latest
+    
     steps:
     - uses: actions/checkout@v4      
 
