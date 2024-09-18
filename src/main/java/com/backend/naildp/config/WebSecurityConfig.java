@@ -31,6 +31,9 @@ import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.oauth2.jwt.RedisUtil;
 import com.backend.naildp.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Configuration
 @EnableWebSecurity // Spring Security 지원을 가능하게 함
 @EnableMethodSecurity
@@ -131,17 +134,18 @@ public class WebSecurityConfig {
 		);
 
 		http.oauth2Login(oauth2Configurer -> oauth2Configurer
-			.authorizationEndpoint(authorizationEndpointConfig ->
-				authorizationEndpointConfig
-					.baseUri("/api/oauth2/authorization")
-			)
-
-			.redirectionEndpoint(redirectionEndpointConfig ->
-				redirectionEndpointConfig
-					.baseUri("/api/login/oauth2/code/*")
-			)
-			.userInfoEndpoint(userInfoEndpointConfig ->
-				userInfoEndpointConfig.userService(customOAuth2UserService))
+			.authorizationEndpoint(authorizationEndpointConfig -> {
+				log.info("Configuring OAuth2 authorization endpoint...");
+				authorizationEndpointConfig.baseUri("/api/oauth2/authorization");
+			})
+			.redirectionEndpoint(redirectionEndpointConfig -> {
+				log.info("Configuring OAuth2 redirection endpoint...");
+				redirectionEndpointConfig.baseUri("/api/login/oauth2/code/*");
+			})
+			.userInfoEndpoint(userInfoEndpointConfig -> {
+				log.info("Configuring OAuth2 user info endpoint...");
+				userInfoEndpointConfig.userService(customOAuth2UserService);
+			})
 			.successHandler(oAuth2AuthenticationSuccessHandler)
 			.failureHandler(oAuth2AuthenticationFailureHandler)
 		);

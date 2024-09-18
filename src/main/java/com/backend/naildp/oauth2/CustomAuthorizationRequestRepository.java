@@ -22,10 +22,21 @@ public class CustomAuthorizationRequestRepository
 	@Override
 	public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
 
-		log.info("oauth2authorizationRequest111111");
-		return CookieUtil.getStateCookie(request, AUTHORIZATION_REQUEST_COOKIE_NAME)
+		log.info("OAuth2 redirect request received. Checking state value...");
+
+		OAuth2AuthorizationRequest authorizationRequest = CookieUtil.getStateCookie(request,
+				AUTHORIZATION_REQUEST_COOKIE_NAME)
 			.map(cookie -> CookieUtil.deserialize(cookie, OAuth2AuthorizationRequest.class))
 			.orElse(null);
+
+		if (authorizationRequest == null) {
+			log.error("Authorization request not found in the session or cookies.");
+		} else {
+			log.info("Authorization request and state value found: {}", authorizationRequest.getState());
+		}
+
+		return authorizationRequest;
+
 	}
 
 	@Override
