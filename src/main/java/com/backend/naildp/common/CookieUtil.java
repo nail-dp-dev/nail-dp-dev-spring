@@ -88,13 +88,17 @@ public class CookieUtil {
 	}
 
 	public static void addStateCookie(HttpServletResponse response, String name, String value, int maxAge,
-		boolean httpOnly) {
+		boolean httpOnly, String sameSite) {
 		Cookie cookie = new Cookie(name, value);
 		cookie.setPath("/");
 		cookie.setHttpOnly(httpOnly);
 		cookie.setMaxAge(maxAge);
-		// cookie.setSameSite(sameSite);
 		response.addCookie(cookie);
+
+		String cookieHeader = String.format("%s=%s; Max-Age=%d; Path=/; SameSite=%s",
+			name, value, maxAge, sameSite);
+
+		response.addHeader("Set-Cookie", cookieHeader);
 	}
 
 	public static String serialize(Object object) {
