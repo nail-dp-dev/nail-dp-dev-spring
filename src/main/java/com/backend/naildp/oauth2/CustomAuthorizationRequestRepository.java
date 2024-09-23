@@ -22,8 +22,6 @@ public class CustomAuthorizationRequestRepository
 	@Override
 	public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
 
-		log.info("OAuth2 redirect request received. Checking state value...");
-
 		OAuth2AuthorizationRequest authorizationRequest = CookieUtil.getStateCookie(request,
 				AUTHORIZATION_REQUEST_COOKIE_NAME)
 			.map(cookie -> CookieUtil.deserialize(cookie, OAuth2AuthorizationRequest.class))
@@ -42,7 +40,6 @@ public class CustomAuthorizationRequestRepository
 	@Override
 	public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request,
 		HttpServletResponse response) {
-		log.info("oauth2authorizationRequest222222");
 
 		if (authorizationRequest == null) {
 			CookieUtil.deleteCookie(AUTHORIZATION_REQUEST_COOKIE_NAME, request, response);
@@ -63,7 +60,6 @@ public class CustomAuthorizationRequestRepository
 	@Override
 	public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
 		HttpServletResponse response) {
-		log.info("oauth2authorizationRequest222222");
 
 		OAuth2AuthorizationRequest authorizationRequest = this.loadAuthorizationRequest(request);
 		if (authorizationRequest != null) {

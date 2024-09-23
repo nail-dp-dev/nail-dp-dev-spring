@@ -56,11 +56,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			System.out.println("지원하지않음.");
 			throw new OAuth2AuthenticationException("지원하지 않는 소셜로그인입니다.");
 		}
-		log.info("111111111");
 
 		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
 			oAuth2UserInfo.getProvider()).orElse(null);
-		log.info("222222222");
 
 		if (socialUser == null) {
 			log.info("userInfo 쿠키 생성");
@@ -69,7 +67,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			throw new SignUpRequiredException("회원가입이 필요합니다.");
 
 		} else {
-			cookieUtil.deleteCookie("userInfo", request, response);
+			CookieUtil.deleteCookie("userInfo", request, response);
 			return new UserDetailsImpl(socialUser.getUser(), oAuth2User.getAttributes());
 
 		}
