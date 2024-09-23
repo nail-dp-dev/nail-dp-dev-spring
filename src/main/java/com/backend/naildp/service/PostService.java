@@ -2,6 +2,7 @@ package com.backend.naildp.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -16,7 +17,6 @@ import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
-import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.Tag;
@@ -31,7 +31,6 @@ import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
 import com.backend.naildp.repository.TagRepository;
 import com.backend.naildp.repository.UserRepository;
-import com.backend.naildp.repository.UsersProfileRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,8 +78,8 @@ public class PostService {
 		List<TagRequestDto> tags = postRequestDto.getTags();
 		for (TagRequestDto tag : tags) {
 			String tagName = tag.getTagName().toLowerCase();
-			Tag existingTag = tagRepository.findByName(tagName)
-				.orElseGet(() -> tagRepository.save(new Tag(tagName)));
+			validateTagName(tagName);
+			Tag existingTag = tagRepository.findByName(tagName).orElseGet(() -> tagRepository.save(new Tag(tagName)));
 			tagPostRepository.save(new TagPost(existingTag, post));
 		}
 		fileRequestDtos.stream().map(fileRequestDto -> new Photo(post, fileRequestDto)).forEach(photoRepository::save);
@@ -357,9 +356,8 @@ public class PostService {
 	}
 
 	private boolean isRequestEmpty(TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {
-		return tempPostRequestDto.getPostContent().isBlank()
-			&& tempPostRequestDto.getTags().isEmpty()
-			&& (files == null || files.isEmpty());
+		return tempPostRequestDto.getPostContent().isBlank() && tempPostRequestDto.getTags().isEmpty() && (files == null
+			|| files.isEmpty());
 	}
 
 	private int getSize(List<?> list) {
@@ -369,6 +367,14 @@ public class PostService {
 	private void validateUser(Post post, String nickname) {
 		if (!post.getUser().getNickname().equals(nickname)) {
 			throw new CustomException("본인이 작성한 게시글만 수정할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
+	}
+
+	public void validateTagName(String tagName) {
+		Pattern validTagNamePattern = Pattern.compile("^[a-zA-Z0-9가-힣]+$");
+
+		if (tagName == null || tagName.trim().isEmpty() || !validTagNamePattern.matcher(tagName).matches()) {
+			throw new CustomException("태그는 알파벳, 숫자, 한글만 포함될 수 있습니다.", ErrorCode.INVALID_FORM);
 		}
 	}
 
