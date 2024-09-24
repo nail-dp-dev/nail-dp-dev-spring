@@ -17,7 +17,7 @@ import com.backend.naildp.service.PostLikeService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostLikeController {
 

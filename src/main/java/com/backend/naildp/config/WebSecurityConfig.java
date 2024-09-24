@@ -1,5 +1,6 @@
 package com.backend.naildp.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.backend.naildp.oauth2.CustomAuthorizationRequestRepository;
 import com.backend.naildp.oauth2.CustomOAuth2UserService;
 import com.backend.naildp.oauth2.handler.CustomAccessDeniedHandler;
 import com.backend.naildp.oauth2.handler.CustomAuthenticationEntryPoint;
@@ -29,6 +31,9 @@ import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.oauth2.jwt.RedisUtil;
 import com.backend.naildp.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Configuration
 @EnableWebSecurity // Spring Security 지원을 가능하게 함
 @EnableMethodSecurity
@@ -46,6 +51,9 @@ public class WebSecurityConfig {
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
+	@Value("${spring.server.domain}")
+	private String domain;
 
 	public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService, RedisUtil redisUtil,
 		UserRepository userRepository, AuthenticationConfiguration authenticationConfiguration,
@@ -92,12 +100,20 @@ public class WebSecurityConfig {
 
 		configuration.addAllowedOrigin("http://127.0.0.1:3000");
 		configuration.addAllowedOrigin("http://localhost:3000");
+		configuration.addAllowedOrigin(domain + ":3000");
+		configuration.addAllowedOrigin(domain);
+
 		configuration.addAllowedHeader("*");
 		configuration.addAllowedMethod("*");
 		configuration.setAllowCredentials(true);
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
+	}
+
+	@Bean
+	public CustomAuthorizationRequestRepository customAuthorizationRequestRepository() {
+		return new CustomAuthorizationRequestRepository();
 	}
 
 	@Bean
@@ -114,19 +130,32 @@ public class WebSecurityConfig {
 
 		http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/")
 			.permitAll()
-			.requestMatchers("/auth/**")
+			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-			.requestMatchers("/home")
-			.permitAll()
+			.requestMatchers("/api/home").permitAll()
 			.anyRequest()
 			.authenticated() // 그 외 모든 요청 인증처리
 
 		);
 
-		http.oauth2Login(oauth2Configurer -> oauth2Configurer.userInfoEndpoint(
-				userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService))
+		http.oauth2Login(oauth2Configurer -> oauth2Configurer
+			.authorizationEndpoint(authorizationEndpointConfig -> {
+				log.info("Configuring OAuth2 authorization endpoint...");
+				authorizationEndpointConfig.baseUri("/api/oauth2/authorization");
+				authorizationEndpointConfig.authorizationRequestRepository(customAuthorizationRequestRepository());
+
+			})
+			.redirectionEndpoint(redirectionEndpointConfig -> {
+				log.info("Configuring OAuth2 redirection endpoint...");
+				redirectionEndpointConfig.baseUri("/api/login/oauth2/code/*");
+			})
+			.userInfoEndpoint(userInfoEndpointConfig -> {
+				log.info("Configuring OAuth2 user info endpoint...");
+				userInfoEndpointConfig.userService(customOAuth2UserService);
+			})
 			.successHandler(oAuth2AuthenticationSuccessHandler)
-			.failureHandler(oAuth2AuthenticationFailureHandler));
+			.failureHandler(oAuth2AuthenticationFailureHandler)
+		);
 
 		// 필터 관리
 		http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

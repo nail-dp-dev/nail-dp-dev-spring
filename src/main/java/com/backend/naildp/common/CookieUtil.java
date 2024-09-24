@@ -3,6 +3,8 @@ package com.backend.naildp.common;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Base64;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -17,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class CookieUtil {
+	static Gson gson = new Gson();
 
 	public void setUserInfoCookie(HttpServletResponse response, SocialUserInfoDto userInfo) {
-		Gson gson = new Gson();
 		String userInfoJson = gson.toJson(userInfo);
 
 		try {
@@ -57,7 +59,7 @@ public class CookieUtil {
 		throw new NullPointerException("쿠키가 존재하지 않습니다.");
 	}
 
-	public void deleteCookie(String cookieName, HttpServletRequest req, HttpServletResponse res) {
+	public static void deleteCookie(String cookieName, HttpServletRequest req, HttpServletResponse res) {
 		Cookie[] cookies = req.getCookies();
 		if (cookies != null) {
 			for (Cookie cookie : cookies) {
@@ -71,5 +73,41 @@ public class CookieUtil {
 			}
 
 		}
+	}
+
+	public static Optional<Cookie> getStateCookie(HttpServletRequest request, String name) {
+		Cookie[] cookies = request.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals(name)) {
+					return Optional.of(cookie);
+				}
+			}
+		}
+		return Optional.empty();
+	}
+
+	public static void addStateCookie(HttpServletResponse response, String name, String value, int maxAge,
+		boolean httpOnly, String sameSite) {
+		Cookie cookie = new Cookie(name, value);
+		cookie.setPath("/");
+		cookie.setHttpOnly(httpOnly);
+		cookie.setMaxAge(maxAge);
+		response.addCookie(cookie);
+
+		String cookieHeader = String.format("%s=%s; Max-Age=%d; Path=/; SameSite=%s",
+			name, value, maxAge, sameSite);
+
+		response.addHeader("Set-Cookie", cookieHeader);
+	}
+
+	public static String serialize(Object object) {
+		String jsonString = gson.toJson(object);
+		return Base64.getUrlEncoder().encodeToString(jsonString.getBytes());
+	}
+
+	public static <T> T deserialize(Cookie cookie, Class<T> cls) {
+		String decodedValue = new String(Base64.getUrlDecoder().decode(cookie.getValue()));
+		return gson.fromJson(decodedValue, cls);
 	}
 }

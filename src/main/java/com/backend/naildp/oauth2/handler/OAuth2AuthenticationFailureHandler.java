@@ -2,6 +2,7 @@ package com.backend.naildp.oauth2.handler;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -16,7 +17,13 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
-	private static final String SIGNUP_URI = "http://localhost:3000/sign-up";
+
+	private static String domain;
+
+	@Value("${spring.server.domain}")
+	public void setDomain(String valueDomain) {
+		domain = valueDomain;
+	}
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
@@ -24,8 +31,9 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
 		if (exception instanceof SignUpRequiredException) {
 			// 회원가입이 필요한 경우 signup 페이지로 리다이렉트
-			getRedirectStrategy().sendRedirect(request, response, SIGNUP_URI);
+			getRedirectStrategy().sendRedirect(request, response, domain + "/sign-up");
 		} else {
+
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 

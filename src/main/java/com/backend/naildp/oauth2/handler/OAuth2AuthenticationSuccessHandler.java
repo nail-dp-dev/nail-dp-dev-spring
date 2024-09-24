@@ -2,6 +2,7 @@ package com.backend.naildp.oauth2.handler;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	private final CookieUtil cookieUtil;
 	private final JwtUtil jwtUtil;
 	private final RedisUtil redisUtil;
-	private static final String homeUri = "http://localhost:3000";
+	private static String domain;
+
+	@Value("${spring.server.domain}")
+	public void setDomain(String valueDomain) {
+		domain = valueDomain;
+	}
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -40,7 +46,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		redisUtil.saveRefreshToken(userDetails.getUser().getNickname(), jwtUtil.createRefreshToken());
 
-		getRedirectStrategy().sendRedirect(request, response, homeUri);
+		getRedirectStrategy().sendRedirect(request, response, domain);
 	}
 
 	private UserDetailsImpl getOAuth2UserPrincipal(Authentication authentication) {
