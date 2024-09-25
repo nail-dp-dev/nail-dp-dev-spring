@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +20,7 @@ import org.springframework.data.domain.Sort;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
@@ -55,10 +55,10 @@ class CommentServiceUnitTest {
 	@Test
 	void 임시저장_게시물에_댓글_등록_실패_테스트() {
 		//given
-		User user = createUserByNickname("nickname");
-		Post tempSavedPost = createPost(user, true, Boundary.ALL);
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		Post post = createPost(user, true, Boundary.ALL);
 
-		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(tempSavedPost));
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
 
 		//when
 		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("임시저장인 게시물에 댓글 등록시 예외 발생");
@@ -68,59 +68,31 @@ class CommentServiceUnitTest {
 			() -> commentService.registerComment(1L, commentRegisterDto, "nickname"));
 	}
 
-	@DisplayName("비공개 게시물에 작성자가 아닌 사용자가 댓글 등록시 예외 발생")
 	@Test
 	void 비공개_게시물_댓글_등록_실패_테스트() {
 		//given
-		String userNickname = "nickname";
-		User writer = createUserByNickname("writer");
-		Post privatePost = createPost(writer, false, Boundary.NONE);
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		Post post = createPost(user, false, Boundary.NONE);
 
-		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(privatePost));
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
 
 		//when
 		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("비공개 게시물에 댓글 등록시 예외 발생");
 
 		//then
 		Assertions.assertThrows(CustomException.class,
-			() -> commentService.registerComment(1L, commentRegisterDto, userNickname));
+			() -> commentService.registerComment(1L, commentRegisterDto, "nickname"));
 	}
 
-	@DisplayName("비공개 게시물에 작성자가 댓글 등록 테스트")
 	@Test
-	void registerCommentInPrivatePostByWriter() {
+	void 팔로우_게시물_댓글_등록_실패_테스트() {
 		//given
-		String writerNickname = "writer";
-		User writer = createUserByNickname(writerNickname);
-		Post privatePost = createPost(writer, false, Boundary.NONE);
-		Comment comment = new Comment(writer, privatePost, "댓글 등록");
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(writer, false, Boundary.FOLLOW);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.ofNullable(privatePost));
-		when(userRepository.findByNickname(eq(writerNickname))).thenReturn(Optional.ofNullable(writer));
-		when(commentRepository.save(any(Comment.class))).thenReturn(comment);
-
-		//when
-		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("댓글");
-		commentService.registerComment(1L, commentRegisterDto, writerNickname);
-
-		//then
-		verify(postRepository).findPostAndUser(anyLong());
-		verify(userRepository).findByNickname(eq(writerNickname));
-		verify(commentRepository).save(any(Comment.class));
-
-		verify(followRepository, never()).existsByFollowerNicknameAndFollowing(anyString(), any(User.class));
-	}
-
-	@DisplayName("팔로우 공개 게시물에 팔로워가 아닌 사용자가 댓글 등록시 예외 발생")
-	@Test
-	void registerCommentExceptionByNotFollower() {
-		//given
-		User notFollowedUser = createUserByNickname("notFollowedUser");
-		User writer = createUserByNickname("writer");
-		Post postOpenedForFollower = createPost(writer, false, Boundary.FOLLOW);
-
-		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(postOpenedForFollower));
-		given(followRepository.existsByFollowerNicknameAndFollowing(eq(notFollowedUser.getNickname()), eq(writer)))
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
+		given(followRepository.existsByFollowerNicknameAndFollowing(eq(user.getNickname()), eq(writer)))
 			.willReturn(false);
 
 		//when
@@ -128,68 +100,20 @@ class CommentServiceUnitTest {
 
 		//then
 		Assertions.assertThrows(CustomException.class,
-			() -> commentService.registerComment(1L, commentRegisterDto, notFollowedUser.getNickname()));
+			() -> commentService.registerComment(1L, commentRegisterDto, user.getNickname()));
 	}
 
-	@DisplayName("팔로우 공개 게시물에 팔로워의 댓글 등록 테스트")
 	@Test
-	void registerCommentByFollower() {
+	void 댓글_등록_테스트() {
 		//given
-		User followerUser = createUserByNickname("followerUser");
-		User writer = createUserByNickname("writer");
-		Post postOpenedForFollower = createPost(writer, false, Boundary.FOLLOW);
-		Comment comment = new Comment(followerUser, postOpenedForFollower, "댓글 등록 성공");
+		User commenter = new User(new LoginRequestDto("commenter", "phoneNumber", true), UserRole.USER);
+		User postWriter = new User(new LoginRequestDto("postWriter", "writerPhoneNumber", true), UserRole.USER);
+		Post post = createPost(postWriter, false, Boundary.FOLLOW);
+		Comment comment = new Comment(commenter, post, "댓글 등록 성공");
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.ofNullable(postOpenedForFollower));
-		when(followRepository.existsByFollowerNicknameAndFollowing(eq(followerUser.getNickname()), eq(writer)))
-			.thenReturn(true);
-		when(userRepository.findByNickname(anyString())).thenReturn(Optional.ofNullable(followerUser));
-		when(commentRepository.save(any(Comment.class))).thenReturn(comment);
-
-		//when
-		commentService.registerComment(1L, new CommentRegisterDto("댓글 등록 성공"), followerUser.getNickname());
-
-		//then
-		verify(postRepository).findPostAndUser(1L);
-		verify(followRepository).existsByFollowerNicknameAndFollowing(followerUser.getNickname(), writer);
-		verify(userRepository).findByNickname(followerUser.getNickname());
-		verify(commentRepository).save(any(Comment.class));
-	}
-
-	@DisplayName("팔로우 공개 게시물에 작성자의 댓글 등록 테스트")
-	@Test
-	void registerCommentByWriter() {
-		//given
-		User writer = createUserByNickname("writer");
-		Post postOpenedForFollower = createPost(writer, false, Boundary.FOLLOW);
-		Comment comment = new Comment(writer, postOpenedForFollower, "댓글 등록 성공");
-
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.ofNullable(postOpenedForFollower));
-		when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), eq(writer)))
-			.thenReturn(false);
-		when(userRepository.findByNickname(anyString())).thenReturn(Optional.ofNullable(writer));
-		when(commentRepository.save(any(Comment.class))).thenReturn(comment);
-
-		//when
-		commentService.registerComment(1L, new CommentRegisterDto("댓글 등록 성공"), writer.getNickname());
-
-		//then
-		verify(postRepository).findPostAndUser(1L);
-		verify(followRepository).existsByFollowerNicknameAndFollowing(writer.getNickname(), writer);
-		verify(userRepository).findByNickname(writer.getNickname());
-		verify(commentRepository).save(any(Comment.class));
-	}
-
-	@DisplayName("전체 공개 게시물에 댓글 등록 테스트")
-	@Test
-	void registerCommentInPublicPostByNotFollower() {
-		//given
-		User commenter = createUserByNickname("commenter");
-		User postWriter = createUserByNickname("postWriter");
-		Post postOpenedForAllUser = createPost(postWriter, false, Boundary.ALL);
-		Comment comment = new Comment(commenter, postOpenedForAllUser, "댓글 등록 성공");
-
-		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(postOpenedForAllUser));
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
+		given(followRepository.existsByFollowerNicknameAndFollowing(eq(commenter.getNickname()), eq(postWriter)))
+			.willReturn(true);
 		given(userRepository.findByNickname(eq(commenter.getNickname()))).willReturn(Optional.of(commenter));
 		given(commentRepository.save(any())).willReturn(comment);
 
@@ -199,17 +123,15 @@ class CommentServiceUnitTest {
 
 		//then
 		verify(postRepository).findPostAndUser(1L);
-		verify(userRepository).findByNickname(commenter.getNickname());
+		verify(followRepository).existsByFollowerNicknameAndFollowing(commenter.getNickname(), postWriter);
 		verify(commentRepository).save(any(Comment.class));
-
-		verify(followRepository, never()).existsByFollowerNicknameAndFollowing(anyString(), any(User.class));
 	}
 
 	@Test
 	void 다른_작성자가_댓글_수정시_예외_발생() {
 		//given
-		User user = createUserByNickname("nickname");
-		User writer = createUserByNickname("writerNickname");
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
 		Post post = createPost(writer, false, Boundary.FOLLOW);
 		Comment comment = new Comment(user, post, "comment");
 		CommentRegisterDto commentModifyDto = new CommentRegisterDto("modify comment");
@@ -228,8 +150,8 @@ class CommentServiceUnitTest {
 	@Test
 	void 댓글_수정_성공_테스트() {
 		//given
-		User user = createUserByNickname("nickname");
-		User writer = createUserByNickname("writerNickname");
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
 		Post post = createPost(writer, false, Boundary.FOLLOW);
 		Comment comment = new Comment(user, post, "comment");
 		CommentRegisterDto commentModifyDto = new CommentRegisterDto("modify comment");
@@ -246,8 +168,8 @@ class CommentServiceUnitTest {
 	@Test
 	void 다른_작성자_댓글_삭제시_예외_발생() {
 		//given
-		User user = createUserByNickname("nickname");
-		User writer = createUserByNickname("writerNickname");
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
 		Post post = createPost(writer, false, Boundary.FOLLOW);
 		Comment comment = new Comment(user, post, "comment");
 
@@ -265,8 +187,8 @@ class CommentServiceUnitTest {
 	@Test
 	void 댓글_삭제_성공_테스트() {
 		//given
-		User user = createUserByNickname("nickname");
-		User writer = createUserByNickname("writerNickname");
+		User user = new User(new LoginRequestDto("nickname", "phoneNumber", true), UserRole.USER);
+		User writer = new User(new LoginRequestDto("writerNickname", "writerPhoneNumber", true), UserRole.USER);
 		Post post = createPost(writer, false, Boundary.FOLLOW);
 		Comment comment = new Comment(user, post, "comment");
 
@@ -302,15 +224,6 @@ class CommentServiceUnitTest {
 		assertEquals(-1L, response.getCursorId());
 		assertFalse(contents.hasNext());
 		assertEquals(0, contents.getNumberOfElements());
-	}
-
-	private User createUserByNickname(String nickname) {
-		return User.builder()
-			.nickname(nickname)
-			.phoneNumber("ph")
-			.agreement(true)
-			.role(UserRole.USER)
-			.build();
 	}
 
 	private Post createPost(User user, boolean tempSave, Boundary boundary) {
