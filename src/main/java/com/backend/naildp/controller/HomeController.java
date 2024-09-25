@@ -17,8 +17,8 @@ import com.backend.naildp.service.PostInfoService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping
 @RequiredArgsConstructor
+@RequestMapping("/api/")
 public class HomeController {
 
 	private final PostInfoService postInfoService;

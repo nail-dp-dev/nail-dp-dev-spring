@@ -25,7 +25,7 @@ import com.backend.naildp.service.UserInfoService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserInfoController {
 
