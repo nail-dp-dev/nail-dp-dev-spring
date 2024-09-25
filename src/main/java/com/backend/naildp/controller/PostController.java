@@ -29,7 +29,6 @@ import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.PostService;
 import com.backend.naildp.validation.ValidationSequence;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +42,7 @@ public class PostController {
 
 	@PostMapping()
 	ResponseEntity<ApiResponse<?>> uploadPost(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@Valid @RequestPart(value = "content") PostRequestDto postRequestDto,
+		@Validated(ValidationSequence.class) @RequestPart(value = "content") PostRequestDto postRequestDto,
 		@RequestPart(value = "photos", required = true) List<MultipartFile> files) {
 
 		if (files == null) {
@@ -79,7 +78,7 @@ public class PostController {
 
 	@PostMapping("/temp")
 	ResponseEntity<ApiResponse<?>> tempSavePost(@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestPart(value = "content", required = false) TempPostRequestDto tempPostRequestDto,
+		@Validated(ValidationSequence.class) @RequestPart(value = "content", required = false) TempPostRequestDto tempPostRequestDto,
 		@RequestPart(value = "photos", required = false) List<MultipartFile> files) {
 		postService.tempSavePost(userDetails.getUser().getNickname(), tempPostRequestDto, files);
 

@@ -2,7 +2,6 @@ package com.backend.naildp.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -319,7 +318,7 @@ public class PostService {
 		if (tags != null && !tags.isEmpty()) {
 			for (TagRequestDto tag : tags) {
 				String tagName = tag.getTagName().toLowerCase();
-				validateTagName(tagName);
+				// validateTagName(tagName);
 				Tag existingTag = tagRepository.findByName(tagName)
 					.orElseGet(() -> tagRepository.save(new Tag(tagName)));
 				tagPostRepository.save(new TagPost(existingTag, post));
@@ -366,12 +365,12 @@ public class PostService {
 		return list == null ? 0 : list.size();
 	}
 
-	public void validateTagName(String tagName) {
-		Pattern validTagNamePattern = Pattern.compile("^[a-zA-Z0-9가-힣]+$");
-
-		if (tagName == null || tagName.trim().isEmpty() || !validTagNamePattern.matcher(tagName).matches()) {
-			throw new CustomException("태그는 알파벳, 숫자, 한글만 포함될 수 있습니다.", ErrorCode.INVALID_FORM);
-		}
-	}
+	// public void validateTagName(String tagName) {
+	// 	Pattern validTagNamePattern = Pattern.compile("^[a-zA-Z0-9가-힣]+$");
+	//
+	// 	if (tagName == null || tagName.trim().isEmpty() || !validTagNamePattern.matcher(tagName).matches()) {
+	// 		throw new CustomException("태그는 알파벳, 숫자, 한글만 포함될 수 있습니다.", ErrorCode.INVALID_FORM);
+	// 	}
+	// }
 
 }
