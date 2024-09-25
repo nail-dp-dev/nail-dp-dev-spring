@@ -110,17 +110,17 @@ public class UserInfoService {
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 업로드하면 바로 해당 사진으로 썸네일 설정
-		UsersProfile currentUsersProfile = usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(nickname)
-			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		// UsersProfile currentUsersProfile = usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(nickname)
+		// 	.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Profile currentProfile = currentUsersProfile.getProfile();
+		Profile currentProfile = profileRepository.findProfileByProfileUrl(user.getThumbnailUrl())
+			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		if (checkProfileType(currentProfile)) {
 			// CUSTOMIZATION, AUTO 가 아니면 usersProfile delete
-			usersProfileRepository.delete(currentUsersProfile);
+			usersProfileRepository.deleteByProfileIdAndUserNickname(currentProfile.getId(), nickname);
 
 		}
-		currentProfile.updateThumbnail(false);
 
 		// 프로필 true 포함 4개 이상일 때 업로드 -> 가장 오래된 업로드 이미지 삭제
 		int profileNum = usersProfileRepository.countByUserNicknameAndProfileProfileType(nickname,
@@ -143,7 +143,6 @@ public class UserInfoService {
 
 		Profile newProfile = Profile.builder()
 			.profileUrl(fileRequestDto.getFileUrl())
-			.thumbnail(true)
 			.name(fileRequestDto.getFileName())
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
@@ -181,16 +180,17 @@ public class UserInfoService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		UsersProfile usersProfile = usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(nickname)
+		Profile currentProfile = profileRepository.findProfileByProfileUrl(user.getThumbnailUrl())
 			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Profile currentProfile = usersProfile.getProfile();
+		// UsersProfile usersProfile = usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(nickname)
+		// 	.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		Profile changingProfile = profileRepository.findProfileByProfileUrl(profileRequestDto.getProfileUrl())
 			.orElseThrow(() -> new CustomException("변경할 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		if (checkProfileType(currentProfile)) {
-			usersProfileRepository.delete(usersProfile);
+			usersProfileRepository.deleteByProfileIdAndUserNickname(currentProfile.getId(), nickname);
 		}
 		if (checkProfileType(changingProfile)) {
 			UsersProfile newUsersProfile = UsersProfile.builder()
@@ -200,8 +200,6 @@ public class UserInfoService {
 			usersProfileRepository.save(newUsersProfile);
 		}
 
-		currentProfile.updateThumbnail(false);
-		changingProfile.updateThumbnail(true);
 		user.thumbnailUrlUpdate(profileRequestDto.getProfileUrl());
 
 	}
