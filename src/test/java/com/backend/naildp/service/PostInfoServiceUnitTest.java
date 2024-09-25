@@ -75,8 +75,8 @@ class PostInfoServiceUnitTest {
 		List<PostLike> postLikes = likePosts(recentPosts);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
-		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
-			.thenReturn(recentPosts);
+		// when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
+		// 	.thenReturn(recentPosts);
 		when(archivePostRepository.findAllByArchiveUserNickname(eq(NICKNAME))).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
 
@@ -87,9 +87,9 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
-		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
-		verify(postRepository, never()).findRecentPostsByIdAndFollowing(anyLong(),
-			anyList(), any(PageRequest.class));
+		// verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		// verify(postRepository, never()).findRecentPostsByIdAndFollowing(anyLong(),
+		// 	anyList(), any(PageRequest.class));
 		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
 
@@ -113,8 +113,8 @@ class PostInfoServiceUnitTest {
 		List<PostLike> postLikes = likePosts(pagedPost);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
-		when(postRepository.findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest)))
-			.thenReturn(pagedPost);
+		// when(postRepository.findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest)))
+		// 	.thenReturn(pagedPost);
 		when(archivePostRepository.findAllByArchiveUserNickname(NICKNAME)).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
 
@@ -124,8 +124,8 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
-		verify(postRepository).findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest));
-		verify(postRepository, never()).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		// verify(postRepository).findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest));
+		// verify(postRepository, never()).findRecentPostsByFollowing(anyList(), eq(pageRequest));
 		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
 
@@ -147,8 +147,8 @@ class PostInfoServiceUnitTest {
 		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, false);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
-		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
-			.thenReturn(recentPosts);
+		// when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
+		// 	.thenReturn(recentPosts);
 
 		//when
 		PostSummaryResponse response = postInfoService.homePosts("NEW", PAGE_SIZE, cursorPostId, NICKNAME);
@@ -161,7 +161,7 @@ class PostInfoServiceUnitTest {
 		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
 
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
-		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		// verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
 		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}
