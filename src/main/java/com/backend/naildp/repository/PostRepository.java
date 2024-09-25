@@ -18,13 +18,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 	Slice<Post> findPostsByBoundaryAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
 
 	@Query("select p from Post p where p.tempSave = false"
-		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user in :following))")
-	Slice<Post> findRecentPostsByFollowing(@Param("following") List<User> following, PageRequest pageRequest);
+		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and (p.user in :following or p.user.nickname = :nickname)))")
+	Slice<Post> findRecentPostsByFollowing(@Param("following") List<User> following, @Param("nickname") String nickname,
+		PageRequest pageRequest);
 
 	@Query("select p from Post p where p.id < :id and p.tempSave = false"
-		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user in :following))")
+		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and (p.user in :following or p.user.nickname = :nickname)))")
 	Slice<Post> findRecentPostsByIdAndFollowing(@Param("id") Long oldestPostId,
-		@Param("following") List<User> following, PageRequest pageRequest);
+		@Param("following") List<User> following, @Param("nickname") String nickname, PageRequest pageRequest);
 
 	Slice<Post> findPostsByIdBeforeAndBoundaryAndTempSaveFalse(Long id, Boundary boundary, PageRequest pageRequest);
 
