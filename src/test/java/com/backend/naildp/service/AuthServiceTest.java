@@ -33,6 +33,7 @@ import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.RedisUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -57,6 +58,8 @@ class AuthServiceTest {
 	ProfileRepository profileRepository;
 	@Mock
 	JwtUtil jwtUtil;
+	@Mock
+	private RedisUtil redisUtil;
 
 	@Mock
 	private HttpServletRequest req;
@@ -91,7 +94,6 @@ class AuthServiceTest {
 		// given
 		given(userRepository.findByNickname(loginRequestDto.getNickname())).willReturn(Optional.empty());
 		given(cookieUtil.getUserInfoFromCookie(req)).willReturn(kakaoUserInfoDto);
-		doNothing().when(cookieUtil).deleteCookie("userInfo", req, res);
 		given(jwtUtil.createToken(any(), any(UserRole.class))).willReturn(anyString());
 
 		// when
@@ -105,6 +107,7 @@ class AuthServiceTest {
 		verify(profileRepository).save(any(Profile.class));
 		verify(usersProfileRepository).save(any(UsersProfile.class));
 		verify(cookieUtil).deleteCookie("userInfo", req, res);
+
 	}
 
 	@Test
