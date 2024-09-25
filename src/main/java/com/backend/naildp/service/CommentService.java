@@ -44,11 +44,12 @@ public class CommentService {
 			throw new CustomException("임시저장한 게시물에는 댓글을 등록할 수 없습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
 
-		if (post.isClosed()) {
+		if (post.isClosed() && post.notWrittenBy(username)) {
 			throw new CustomException("비공개 게시물에는 댓글을 등록할 수 없습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
 
-		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username, user)) {
+		if (post.isOpenedForFollower() && !followRepository.existsByFollowerNicknameAndFollowing(username, user)
+			&& post.notWrittenBy(username)) {
 			throw new CustomException("팔로워만 댓글을 등록할 수 있습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
 
