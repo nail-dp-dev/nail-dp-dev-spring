@@ -4,16 +4,19 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.backend.naildp.common.Boundary;
+import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveBoundaryRequestDto;
 import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
@@ -38,35 +41,26 @@ public class ArchiveControllerTest {
 
 	private User user;
 
-	// @BeforeEach
-	// public void setup() {
-	// 	MockitoAnnotations.openMocks(this);
-	//
-	// 	user = User.builder()
-	// 		.nickname("testUser")
-	// 		.phoneNumber("010-1234-5678")
-	// 		.role(UserRole.USER)
-	// 		.agreement(true)
-	// 		.build();
-	//
-	// 	given(userDetails.getUser()).willReturn(user);
-	//
-	// 	SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-	// 	securityContext.setAuthentication(new TestingAuthenticationToken(userDetails, null, "ROLE_USER"));
-	// 	SecurityContextHolder.setContext(securityContext);
-	//
-	// }
+	@BeforeEach
+	public void setUp() {
+
+		User user = User.builder().nickname("testUser").phoneNumber("pn").role(UserRole.USER).agreement(true).build();
+		UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+		SecurityContextHolder.getContext().setAuthentication(
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+
+	}
 
 	@Test
 	@DisplayName("아카이브 생성 성공")
-	@WithMockUser(username = "testUser", roles = {"USER"})
 	void testCreateArchiveSuccessfully() throws Exception {
 		// Given
 		CreateArchiveRequestDto requestDto = new CreateArchiveRequestDto("My Arch", Boundary.ALL);
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(post("/archive").with(csrf())
+		mockMvc.perform(post("/api/archive").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 
@@ -83,7 +77,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(post("/archive").with(csrf())
+		mockMvc.perform(post("/api/archive").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest())
@@ -99,7 +93,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(post("/archive").with(csrf())
+		mockMvc.perform(post("/api/archive").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest())
@@ -115,7 +109,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(post("/archive").with(csrf())
+		mockMvc.perform(post("/api/archive").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest())
@@ -131,7 +125,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(patch("/archive/{archiveId}/name", 1L).with(csrf())
+		mockMvc.perform(patch("/api/archive/{archiveId}/name", 1L).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isOk())
@@ -147,7 +141,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// When & Then
-		mockMvc.perform(patch("/archive/{archiveId}/name", 1L).with(csrf())
+		mockMvc.perform(patch("/api/archive/{archiveId}/name", 1L).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest())
@@ -163,7 +157,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(patch("/archive/{archiveId}/name", 1L).with(csrf())
+		mockMvc.perform(patch("/api/archive/{archiveId}/name", 1L).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest())
@@ -179,7 +173,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(patch("/archive/{archiveId}/boundary", 1L).with(csrf())
+		mockMvc.perform(patch("/api/archive/{archiveId}/boundary", 1L).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isOk())
@@ -195,7 +189,7 @@ public class ArchiveControllerTest {
 		String requestBody = objectMapper.writeValueAsString(requestDto);
 
 		// Then
-		mockMvc.perform(patch("/archive/{archiveId}/boundary", 1L).with(csrf())
+		mockMvc.perform(patch("/api/archive/{archiveId}/boundary", 1L).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest())
