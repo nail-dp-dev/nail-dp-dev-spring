@@ -47,7 +47,7 @@ class CommentLikeControllerUnitTest {
 			.thenThrow(new CustomException("임시저장한 게시물에 댓글을 등록할 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		//when
-		ResultActions resultActions = mvc.perform(post("/posts/{postId}/comment/{commentId}/like", 1L, 2L));
+		ResultActions resultActions = mvc.perform(post("/api/posts/{postId}/comment/{commentId}/like", 1L, 2L));
 
 		//then
 		resultActions.andExpect(status().isOk())
@@ -65,7 +65,7 @@ class CommentLikeControllerUnitTest {
 			.thenThrow(new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY));
 
 		//when
-		ResultActions resultActions = mvc.perform(post("/posts/{postId}/comment/{commentId}/like", 1L, 2L));
+		ResultActions resultActions = mvc.perform(post("/api/posts/{postId}/comment/{commentId}/like", 1L, 2L));
 
 		//then
 		resultActions.andExpect(status().isOk())
@@ -83,7 +83,7 @@ class CommentLikeControllerUnitTest {
 			.thenThrow(new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY));
 
 		//when
-		ResultActions resultActions = mvc.perform(post("/posts/{postId}/comment/{commentId}/like", 1L, 2L));
+		ResultActions resultActions = mvc.perform(post("/api/posts/{postId}/comment/{commentId}/like", 1L, 2L));
 
 		//then
 		resultActions.andExpect(status().isOk())
@@ -102,7 +102,7 @@ class CommentLikeControllerUnitTest {
 			.thenReturn(commentLikeId);
 
 		//when
-		ResultActions resultActions = mvc.perform(post("/posts/{postId}/comment/{commentId}/like", 1L, 2L));
+		ResultActions resultActions = mvc.perform(post("/api/posts/{postId}/comment/{commentId}/like", 1L, 2L));
 
 		//then
 		resultActions.andExpect(status().isOk())
@@ -120,7 +120,7 @@ class CommentLikeControllerUnitTest {
 		doNothing().when(commentLikeService).cancelCommentLike(anyLong(), anyLong(), anyString());
 
 		//when
-		ResultActions resultActions = mvc.perform(delete("/posts/{postId}/comment/{commentId}/like", 1L, 2L));
+		ResultActions resultActions = mvc.perform(delete("/api/posts/{postId}/comment/{commentId}/like", 1L, 2L));
 
 		//then
 		resultActions.andExpect(status().isOk())
@@ -138,7 +138,7 @@ class CommentLikeControllerUnitTest {
 		when(commentLikeService.countCommentLikes(anyLong(), anyLong(), anyString())).thenReturn(likeCountResponse);
 
 		//when
-		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment/{commentId}/like", 1L, 2L));
+		ResultActions resultActions = mvc.perform(get("/api/posts/{postId}/comment/{commentId}/like", 1L, 2L));
 
 		//then
 		resultActions.andExpect(status().isOk())
