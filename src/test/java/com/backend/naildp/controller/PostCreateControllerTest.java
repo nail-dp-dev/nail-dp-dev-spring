@@ -11,14 +11,12 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -62,20 +60,11 @@ public class PostCreateControllerTest {
 
 	@BeforeEach
 	public void setup() {
-		MockitoAnnotations.openMocks(this);
+		User user = User.builder().nickname("testUser").phoneNumber("pn").role(UserRole.USER).agreement(true).build();
+		UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
-		user = User.builder()
-			.nickname("testUser")
-			.phoneNumber("010-1234-5678")
-			.role(UserRole.USER)
-			.agreement(true)
-			.build();
-
-		given(userDetails.getUser()).willReturn(user);
-
-		SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-		securityContext.setAuthentication(new TestingAuthenticationToken(userDetails, null, "ROLE_USER"));
-		SecurityContextHolder.setContext(securityContext);
+		SecurityContextHolder.getContext().setAuthentication(
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
 
 	}
 
@@ -90,7 +79,7 @@ public class PostCreateControllerTest {
 		willDoNothing().given(postService)
 			.uploadPost(anyString(), any(PostRequestDto.class), any(List.class));
 
-		mockMvc.perform(multipart("/posts")
+		mockMvc.perform(multipart("/api/posts")
 				.file(content)
 				.file(photos)
 				.with(csrf())
@@ -109,7 +98,7 @@ public class PostCreateControllerTest {
 		willDoNothing().given(postService)
 			.uploadPost(anyString(), any(PostRequestDto.class), any(List.class));
 
-		mockMvc.perform(multipart("/posts")
+		mockMvc.perform(multipart("/api/posts")
 				.file(content)
 				.with(csrf())
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -126,7 +115,7 @@ public class PostCreateControllerTest {
 		MockMultipartFile photos = new MockMultipartFile("photos", "photo.jpg", "image/jpeg",
 			"photo content".getBytes());
 
-		mockMvc.perform(multipart("/posts")
+		mockMvc.perform(multipart("/api/posts")
 				.file(content)
 				.file(photos)
 				.with(csrf())
@@ -143,7 +132,7 @@ public class PostCreateControllerTest {
 		MockMultipartFile photos = new MockMultipartFile("photos", "photo.jpg", "image/jpeg",
 			"photo content".getBytes());
 
-		mockMvc.perform(multipart("/posts")
+		mockMvc.perform(multipart("/api/posts")
 				.file(content)
 				.file(photos)
 				.with(csrf())
@@ -163,7 +152,7 @@ public class PostCreateControllerTest {
 
 		willDoNothing().given(postService).editPost(anyString(), any(PostRequestDto.class), any(List.class), anyLong());
 
-		mockMvc.perform(multipart("/posts/{postId}", 1L)
+		mockMvc.perform(multipart("/api/posts/{postId}", 1L)
 				.file(content)
 				.file(photos)
 				.with(request -> {
@@ -184,7 +173,7 @@ public class PostCreateControllerTest {
 
 		willDoNothing().given(postService).editPost(anyString(), any(PostRequestDto.class), any(List.class), anyLong());
 
-		mockMvc.perform(multipart("/posts/{postId}", 1L)
+		mockMvc.perform(multipart("/api/posts/{postId}", 1L)
 				.with(request -> {
 					request.setMethod("PATCH");
 					return request;
@@ -209,7 +198,7 @@ public class PostCreateControllerTest {
 
 		given(postService.getEditingPost("testUser", 1L)).willReturn(editPostResponseDto);
 
-		mockMvc.perform(get("/posts/edit/{postId}", 1L).with(csrf())
+		mockMvc.perform(get("/api/posts/edit/{postId}", 1L).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.postContent").value("content"))
@@ -246,7 +235,7 @@ public class PostCreateControllerTest {
 		when(postService.postInfo(anyString(), anyLong())).thenReturn(response);
 
 		//then
-		mockMvc.perform(get("/posts/{postId}", 1L)
+		mockMvc.perform(get("/api/posts/{postId}", 1L)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("특정 게시물 상세정보 조회"))
@@ -265,7 +254,7 @@ public class PostCreateControllerTest {
 		when(postService.postInfo(anyString(), anyLong())).thenThrow(exception);
 
 		//then
-		mockMvc.perform(get("/posts/{postId}", 1L)
+		mockMvc.perform(get("/api/posts/{postId}", 1L)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value(exception.getMessage()))
@@ -289,7 +278,7 @@ public class PostCreateControllerTest {
 
 		//when
 		ResultActions resultActions = mockMvc.perform(
-			patch("/posts/{postId}/closer", postId)
+			patch("/api/posts/{postId}/closer", postId)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(request)
 				.with(csrf()));
@@ -317,7 +306,7 @@ public class PostCreateControllerTest {
 
 		//when
 		ResultActions resultActions = mockMvc.perform(
-			patch("/posts/{postId}/closer", postId)
+			patch("/api/posts/{postId}/closer", postId)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(request)
 				.with(csrf()));

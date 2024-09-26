@@ -39,7 +39,7 @@ class PostLikeControllerUnitTest {
 
 		when(postLikeService.likeByPostId(anyLong(), anyString())).thenReturn(resultId);
 
-		mvc.perform(post("/posts/{postId}/likes", 3L).with(csrf()))
+		mvc.perform(post("/api/posts/{postId}/likes", 3L).with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
@@ -58,7 +58,7 @@ class PostLikeControllerUnitTest {
 		when(postLikeService.likeByPostId(anyLong(), anyString()))
 			.thenThrow(new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		mvc.perform(post("/posts/{postId}/likes", 3L).with(csrf()))
+		mvc.perform(post("/api/posts/{postId}/likes", 3L).with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
@@ -75,7 +75,7 @@ class PostLikeControllerUnitTest {
 
 		doNothing().when(postLikeService).unlikeByPostId(anyLong(), anyString());
 
-		mvc.perform(delete("/posts/{postId}/likes", 3L).with(csrf()))
+		mvc.perform(delete("/api/posts/{postId}/likes", 3L).with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
@@ -95,7 +95,7 @@ class PostLikeControllerUnitTest {
 		doThrow(new CustomException(errorMessage, ErrorCode.NOT_FOUND))
 			.when(postLikeService).unlikeByPostId(anyLong(), anyString());
 
-		mvc.perform(delete("/posts/{postId}/likes", 3L).with(csrf()))
+		mvc.perform(delete("/api/posts/{postId}/likes", 3L).with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
