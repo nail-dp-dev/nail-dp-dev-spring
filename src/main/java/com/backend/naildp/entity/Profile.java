@@ -28,9 +28,6 @@ public class Profile extends BaseEntity {
 	private String profileUrl;
 
 	@Column(nullable = false)
-	private Boolean thumbnail;
-
-	@Column(nullable = false)
 	private String name;
 
 	@Enumerated(value = EnumType.STRING)
@@ -38,15 +35,10 @@ public class Profile extends BaseEntity {
 	private ProfileType profileType;
 
 	@Builder
-	public Profile(String profileUrl, String name, boolean thumbnail, ProfileType profileType) {
+	public Profile(String profileUrl, String name, ProfileType profileType) {
 		this.profileUrl = profileUrl;
 		this.name = name;
-		this.thumbnail = thumbnail;
 		this.profileType = profileType;
-	}
-
-	public void updateThumbnail(Boolean thumbnail) {
-		this.thumbnail = thumbnail;
 	}
 
 }
