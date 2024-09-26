@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.oauth2.CustomAuthorizationRequestRepository;
 import com.backend.naildp.oauth2.CustomOAuth2UserService;
 import com.backend.naildp.oauth2.handler.CustomAccessDeniedHandler;
@@ -52,6 +53,8 @@ public class WebSecurityConfig {
 	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
+	private final CookieUtil cookieutil;
+
 	@Value("${spring.server.domain}")
 	private String domain;
 
@@ -59,7 +62,7 @@ public class WebSecurityConfig {
 		UserRepository userRepository, AuthenticationConfiguration authenticationConfiguration,
 		ExceptionHandlerFilter exceptionHandlerFilter, CustomOAuth2UserService customOAuth2UserService,
 		OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
-		OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler) {
+		OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler, CookieUtil cookieutil) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
 		this.redisUtil = redisUtil;
@@ -69,6 +72,7 @@ public class WebSecurityConfig {
 		this.customOAuth2UserService = customOAuth2UserService;
 		this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
 		this.oAuth2AuthenticationFailureHandler = oAuth2AuthenticationFailureHandler;
+		this.cookieutil = cookieutil;
 	}
 
 	@Bean
@@ -113,7 +117,7 @@ public class WebSecurityConfig {
 
 	@Bean
 	public CustomAuthorizationRequestRepository customAuthorizationRequestRepository() {
-		return new CustomAuthorizationRequestRepository();
+		return new CustomAuthorizationRequestRepository(cookieutil);
 	}
 
 	@Bean

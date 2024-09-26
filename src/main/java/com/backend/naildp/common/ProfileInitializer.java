@@ -26,7 +26,6 @@ public class ProfileInitializer {
 				String name = baseName + i;
 				Profile profile = Profile.builder()
 					.name(name)
-					.thumbnail(false)
 					.profileType(profileType)
 					.profileUrl(profileUrl)
 					.build();

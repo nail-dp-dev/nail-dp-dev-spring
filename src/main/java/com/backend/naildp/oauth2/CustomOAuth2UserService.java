@@ -67,7 +67,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			throw new SignUpRequiredException("회원가입이 필요합니다.");
 
 		} else {
-			CookieUtil.deleteCookie("userInfo", request, response);
+			cookieUtil.deleteCookie("userInfo", request, response);
 			return new UserDetailsImpl(socialUser.getUser(), oAuth2User.getAttributes());
 
 		}

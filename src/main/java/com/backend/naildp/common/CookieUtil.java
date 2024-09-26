@@ -59,7 +59,7 @@ public class CookieUtil {
 		throw new NullPointerException("쿠키가 존재하지 않습니다.");
 	}
 
-	public static void deleteCookie(String cookieName, HttpServletRequest req, HttpServletResponse res) {
+	public void deleteCookie(String cookieName, HttpServletRequest req, HttpServletResponse res) {
 		Cookie[] cookies = req.getCookies();
 		if (cookies != null) {
 			for (Cookie cookie : cookies) {
@@ -75,7 +75,7 @@ public class CookieUtil {
 		}
 	}
 
-	public static Optional<Cookie> getStateCookie(HttpServletRequest request, String name) {
+	public Optional<Cookie> getStateCookie(HttpServletRequest request, String name) {
 		Cookie[] cookies = request.getCookies();
 		if (cookies != null) {
 			for (Cookie cookie : cookies) {
@@ -87,7 +87,7 @@ public class CookieUtil {
 		return Optional.empty();
 	}
 
-	public static void addStateCookie(HttpServletResponse response, String name, String value, int maxAge,
+	public void addStateCookie(HttpServletResponse response, String name, String value, int maxAge,
 		boolean httpOnly, String sameSite) {
 		Cookie cookie = new Cookie(name, value);
 		cookie.setPath("/");
@@ -101,12 +101,12 @@ public class CookieUtil {
 		response.addHeader("Set-Cookie", cookieHeader);
 	}
 
-	public static String serialize(Object object) {
+	public String serialize(Object object) {
 		String jsonString = gson.toJson(object);
 		return Base64.getUrlEncoder().encodeToString(jsonString.getBytes());
 	}
 
-	public static <T> T deserialize(Cookie cookie, Class<T> cls) {
+	public <T> T deserialize(Cookie cookie, Class<T> cls) {
 		String decodedValue = new String(Base64.getUrlDecoder().decode(cookie.getValue()));
 		return gson.fromJson(decodedValue, cls);
 	}
