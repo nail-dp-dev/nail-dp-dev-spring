@@ -315,10 +315,15 @@ public class ArchiveService {
 			if (archive.notEqualsNickname(nickname)) {
 				throw new CustomException("본인의 아카이브에만 접근할 수 있습니다.", ErrorCode.USER_MISMATCH);
 			}
-		});
 
-		archivePostRepository.deleteAllByPostIdAndArchiveId(unsaveRequestDto.getPostId(),
-			unsaveRequestDto.getArchiveId());
+			archivePostRepository.deleteByPostIdAndArchiveId(unsaveRequestDto.getPostId(), archiveId);
+
+			archivePostRepository.findFirstByArchiveIdOrderByLastModifiedDateDesc(archiveId)
+				.ifPresentOrElse(
+					archivePost -> archive.updateImgUrl(archivePost.getPost().getPhotos().get(0).getPhotoUrl()),
+					() -> archive.updateImgUrl(null)
+				);
+		});
 	}
 
 	@Transactional

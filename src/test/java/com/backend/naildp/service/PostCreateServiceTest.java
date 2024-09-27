@@ -8,12 +8,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -170,7 +168,6 @@ class PostCreateServiceTest {
 		Photo photo1 = new Photo(post, fileRequestDto1);
 		Photo photo2 = new Photo(post, fileRequestDto2);
 
-		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 		given(tagRepository.findByName(anyString())).willAnswer(invocation -> {
 			String tagName = invocation.getArgument(0);
@@ -186,7 +183,6 @@ class PostCreateServiceTest {
 		postService.editPost(nickname, postRequestDto, files, postId);
 
 		// then
-		verify(userRepository, times(1)).findByNickname(nickname);
 		verify(postRepository, times(1)).findById(postId);
 		verify(tagPostRepository, times(1)).deleteAllByPostId(postId);
 		verify(tagRepository, times(2)).findByName(anyString());
@@ -226,7 +222,6 @@ class PostCreateServiceTest {
 		post.addPhoto(new Photo(post, new FileRequestDto("file1", 12345L, "fileUrl1")));
 		post.addPhoto(new Photo(post, new FileRequestDto("file2", 12345L, "fileUrl2")));
 
-		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
 		// then
@@ -275,7 +270,6 @@ class PostCreateServiceTest {
 		post.addTagPost(tagPost1);
 		post.addTagPost(tagPost2);
 
-		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 		given(photoRepository.findAllByPostId(postId)).willReturn(List.of(photo1, photo2));
 

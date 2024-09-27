@@ -54,15 +54,13 @@ class FollowServiceUnitTest {
 		String followingNickname = "following";
 		User followerUser = createUserByNickname(followerNickname);
 		User followingUser = createUserByNickname(followingNickname);
-		Follow follow = new Follow(followerUser, followingUser);
+		Follow follow = new Follow(followingUser, followerUser);
 
 		when(followRepository.findFollowByFollowerNicknameAndFollowingNickname(eq(followingNickname),
 			eq(followerNickname)))
 			.thenReturn(Optional.of(follow));
-
 		//when
-		Long followId = followService.followUser(followingNickname, followerNickname);
-
+		Long followId = followService.followUser(followerNickname, followingNickname);
 		//then
 		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followingNickname, followerNickname);
 		verify(userRepository, never()).findByNickname(anyString());
@@ -77,7 +75,7 @@ class FollowServiceUnitTest {
 		String followingNickname = "following";
 		User followerUser = createUserByNickname(followerNickname);
 		User followingUser = createUserByNickname(followingNickname);
-		Follow follow = new Follow(followerUser, followingUser);
+		Follow follow = new Follow(followingUser, followerUser);
 
 		when(followRepository.findFollowByFollowerNicknameAndFollowingNickname(eq(followingNickname),
 			eq(followerNickname)))
@@ -87,7 +85,7 @@ class FollowServiceUnitTest {
 		when(followRepository.saveAndFlush(any(Follow.class))).thenReturn(follow);
 
 		//when
-		Long followId = followService.followUser(followingNickname, followerNickname);
+		Long followId = followService.followUser(followerNickname, followingNickname);
 
 		//then
 		verify(followRepository).findFollowByFollowerNicknameAndFollowingNickname(followingNickname, followerNickname);

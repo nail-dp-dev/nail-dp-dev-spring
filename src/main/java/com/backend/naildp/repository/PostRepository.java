@@ -91,7 +91,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by  ap.lastModifiedDate desc ")
 	Slice<Post> findArchivePostsByFollow(@Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
@@ -104,7 +104,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by ap.lastModifiedDate desc ")
 	Slice<Post> findArchivePostsByIdAndFollow(@Param("id") Long id, @Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
@@ -120,7 +120,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by pl.lastModifiedDate desc ")
 	Slice<Post> findLikedArchivePostsByFollow(@Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
@@ -136,7 +136,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by  pl.lastModifiedDate desc ")
 	Slice<Post> findLikedArchivePostsByIdAndFollow(@Param("id") Long id, @Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
