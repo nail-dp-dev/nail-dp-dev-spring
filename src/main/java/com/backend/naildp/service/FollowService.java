@@ -23,35 +23,33 @@ public class FollowService {
 	private final UserRepository userRepository;
 
 	@Transactional
-	public Long followUser(String followingNickname, String authenticationUsername) {
+	public Long followUser(String followTargetNickname, String username) {
 		// 자기 자신은 팔로워 안됨
-		if (followingNickname.equals(authenticationUsername)) {
+		if (followTargetNickname.equals(username)) {
 			throw new CustomException("팔로우는 다른 사용자만 가능합니다.", ErrorCode.USER_MISMATCH);
 		}
 
-		// 팔로워 관계인지 확인
 		Optional<Follow> followOptional = followRepository.findFollowByFollowerNicknameAndFollowingNickname(
-		authenticationUsername, followingNickname);
+		username, followTargetNickname);
 
-		// 맞다면 그냥 리턴
 		if (followOptional.isPresent()) {
 			return followOptional.get().getId();
 		}
 
 		// 없으면 저장 후 리턴
-		User followingUser = userRepository.findByNickname(followingNickname)
+		User followTargetUser = userRepository.findByNickname(followTargetNickname)
 			.orElseThrow(() -> new CustomException("해당 닉네임을 가진 사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-		User followerUser = userRepository.findByNickname(authenticationUsername)
+		User user = userRepository.findByNickname(username)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-		return followRepository.saveAndFlush(new Follow(followerUser, followingUser)).getId();
+		return followRepository.saveAndFlush(new Follow(user, followTargetUser)).getId();
 	}
 
 	@Transactional
-	public void unfollowUser(String userNickname, String authenticationUsername) {
-		followRepository.deleteByFollowerNicknameAndFollowingNickname(authenticationUsername, userNickname);
+	public void unfollowUser(String followTargetNickname, String username) {
+		followRepository.deleteByFollowerNicknameAndFollowingNickname(username, followTargetNickname);
 	}
 
-	public int countFollower(String nickname) {
-		return followRepository.countFollowersByUserNickname(nickname);
+	public int countFollower(String username) {
+		return followRepository.countFollowersByUserNickname(username);
 	}
 }
