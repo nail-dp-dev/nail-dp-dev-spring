@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.entity.Archive;
 
-public interface ArchiveRepository extends JpaRepository<Archive, Long> {
+public interface ArchiveRepository extends JpaRepository<Archive, Long>, ArchiveSearchRepository {
 	// 내 아카이브 조회
 	@Query(
 		"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "

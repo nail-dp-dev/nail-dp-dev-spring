@@ -23,6 +23,16 @@ public class UserArchiveResponseDto {
 	private Boolean isVideo;
 	private Boolean isLock;
 
+	// @QueryProjection
+	// public UserArchiveResponseDto userArchiveResponseDto(Long id, String archiveName, Boundary boundary,
+	// 	String archiveImgUrl, Long postCount) {
+	// 	this.archiveId = id;
+	// 	this.archiveName = archiveName;
+	// 	this.boundary = boundary;
+	// 	this.archiveImgUrl = archiveImgUrl;
+	// 	this.postCount = postCount;
+	// }
+
 	public static UserArchiveResponseDto userArchiveResponseDto(ArchiveMapping archive) {
 		UserArchiveResponseDtoBuilder builder = UserArchiveResponseDto.builder()
 			.archiveId(archive.getId())
