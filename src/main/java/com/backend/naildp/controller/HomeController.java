@@ -43,7 +43,7 @@ public class HomeController {
 	@GetMapping("/posts/like")
 	public ResponseEntity<?> likedPost(@AuthenticationPrincipal UserDetails userDetails,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostLikeId") long postLikeId) {
+		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long postLikeId) {
 		PostSummaryResponse likedPostsResponses = postInfoService.findLikedPost(userDetails.getUsername(), size,
 			postLikeId);
 		return ResponseEntity.ok(ApiResponse.successResponse(likedPostsResponses, "좋아요 체크한 게시물 조회", 2000));

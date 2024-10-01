@@ -69,9 +69,9 @@ public class PostInfoService {
 		// 좋아요한 게시글 조회
 		List<User> followingUsers = followRepository.findFollowingUserByFollowerNickname(nickname);
 		Slice<PostLike> postLikes = getOpenedPostLikes(cursorId, nickname, followingUsers, pageRequest);
-		Slice<Post> likedPosts = postLikes.map(PostLike::getPost);
+		// Slice<Post> likedPosts = postLikes.map(PostLike::getPost);
 
-		if (likedPosts.isEmpty()) {
+		if (postLikes.isEmpty()) {
 			log.info("좋아요한 게시물이 없다.");
 			return PostSummaryResponse.createEmptyResponse();
 		}
@@ -81,7 +81,7 @@ public class PostInfoService {
 		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
 
 		// return new PostSummaryResponse(likedPosts, savedPosts);
-		return PostSummaryResponse.createLikedPostSummary(likedPosts, savedPosts);
+		return PostSummaryResponse.createLikedPostSummaryV2(postLikes, savedPosts);
 	}
 
 	private PageRequest createPageRequest(int size, String id) {

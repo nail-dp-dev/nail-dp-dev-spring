@@ -9,6 +9,7 @@ import org.springframework.data.domain.SliceImpl;
 import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.dto.archive.UserArchiveResponseDto;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.repository.ArchiveMapping;
 
 import lombok.AllArgsConstructor;
@@ -65,6 +66,13 @@ public class PostSummaryResponse {
 		log.info("PostSummaryResponse 응답");
 		return new PostSummaryResponse(oldestPostLikeId,
 			likedPostSlice.map(post -> HomePostResponse.likedPostResponse(post, savedPosts)));
+	}
+
+	public static PostSummaryResponse createLikedPostSummaryV2(Slice<PostLike> postLikeSlice, List<Post> savedPosts) {
+		log.info("PostSummaryResponse 좋아요 게시물 응답 V2");
+		Long oldestPostLikeId = postLikeSlice.getContent().get(postLikeSlice.getNumberOfElements() - 1).getId();
+		return new PostSummaryResponse(oldestPostLikeId,
+			postLikeSlice.map(PostLike::getPost).map(post -> HomePostResponse.likedPostResponse(post, savedPosts)));
 	}
 
 	public static PostSummaryResponse createFollowArchiveSummary(Slice<ArchiveMapping> followingArchives) {
