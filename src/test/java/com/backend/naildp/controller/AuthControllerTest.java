@@ -14,15 +14,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
+import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -75,7 +80,7 @@ public class AuthControllerTest {
 			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "회원가입 완료", 2001)));
 
 		// when & then
-		mockMvc.perform(post("/auth/signup")
+		mockMvc.perform(post("/api/auth/signup")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(loginRequestDto)))
 			.andExpect(status().isOk())
@@ -83,23 +88,6 @@ public class AuthControllerTest {
 			.andExpect(jsonPath("$.code").value(2001))
 			.andDo(print());
 	}
-
-	// @Test
-	// @DisplayName("카카오 로그인 성공")
-	// public void testKakaoLogin() throws Exception {
-	// 	// given
-	// 	String code = "authCode";
-	// 	given(kakaoService.kakaoLogin(eq(code), any(HttpServletRequest.class), any(HttpServletResponse.class)))
-	// 		.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그인이 완료되었습니다", 2000)));
-	//
-	// 	// when & then
-	// 	mockMvc.perform(get("/auth/kakao")
-	// 			.param("code", code))
-	// 		.andExpect(status().isOk())
-	// 		.andExpect(jsonPath("$.message").value("로그인이 완료되었습니다"))
-	// 		.andExpect(jsonPath("$.code").value(2000))
-	// 		.andDo(print());
-	// }
 
 	@Test
 	@DisplayName("닉네임 중복 확인 성공")
@@ -109,7 +97,7 @@ public class AuthControllerTest {
 			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "사용 가능한 닉네임입니다", 2000)));
 
 		// when & then
-		mockMvc.perform(post("/auth/nickname")
+		mockMvc.perform(post("/api/auth/nickname")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(nicknameRequestDto)))
 			.andExpect(status().isOk())
@@ -126,7 +114,7 @@ public class AuthControllerTest {
 		nicknameRequestDto.setNickname("");
 
 		// when & then
-		mockMvc.perform(post("/auth/nickname")
+		mockMvc.perform(post("/api/auth/nickname")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(nicknameRequestDto)))
 			.andExpect(status().isBadRequest())
@@ -142,7 +130,7 @@ public class AuthControllerTest {
 		invalidNicknameRequest.setNickname("alswl!@#");
 
 		// when & then
-		mockMvc.perform(post("/auth/nickname")
+		mockMvc.perform(post("/api/auth/nickname")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(invalidNicknameRequest)))
 			.andExpect(status().isBadRequest())
@@ -158,7 +146,7 @@ public class AuthControllerTest {
 			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "사용 가능한 전화번호입니다", 2000)));
 
 		// when & then
-		mockMvc.perform(post("/auth/phone")
+		mockMvc.perform(post("/api/auth/phone")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(phoneNumberRequestDto)))
 			.andExpect(status().isOk())
@@ -175,7 +163,7 @@ public class AuthControllerTest {
 			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "jwt토큰 검증 확인", 2000)));
 
 		// when & then
-		mockMvc.perform(get("/auth/cookie"))
+		mockMvc.perform(get("/api/auth/cookie"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("jwt토큰 검증 확인"))
 			.andExpect(jsonPath("$.code").value(2000))
@@ -185,12 +173,19 @@ public class AuthControllerTest {
 	@Test
 	@DisplayName("로그아웃 성공")
 	public void testLogoutUser() throws Exception {
+
+		User user = User.builder().nickname("testUser").phoneNumber("pn").role(UserRole.USER).agreement(true).build();
+		UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+		SecurityContextHolder.getContext().setAuthentication(
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+
 		// given
 		given(authService.logoutUser(anyString(), any(HttpServletRequest.class), any(HttpServletResponse.class)))
 			.willReturn(ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그아웃 성공", 2000)));
 
 		// when & then
-		mockMvc.perform(get("/auth/logout"))
+		mockMvc.perform(get("/api/auth/logout"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("로그아웃 성공"))
 			.andExpect(jsonPath("$.code").value(2000))

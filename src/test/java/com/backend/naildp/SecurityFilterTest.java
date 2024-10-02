@@ -81,8 +81,8 @@ public class SecurityFilterTest {
 	@Test
 	@DisplayName("보호된 엔드포인트 테스트 - 인증 없이 접근 시")
 	public void securityTest2() throws Exception {
-		mockMvc.perform(get("/protected"))
-			.andExpect(status().isForbidden()) // 403
+		mockMvc.perform(get("/api/protected"))
+			.andExpect(status().isUnauthorized()) // 401
 			.andDo(print());
 	}
 
@@ -91,7 +91,7 @@ public class SecurityFilterTest {
 	@WithMockUser(username = "testuser", roles = {"USER"})
 	public void securityTest3() throws Exception {
 
-		mockMvc.perform(get("/protected"))
+		mockMvc.perform(get("/api/protected"))
 			.andExpect(status().isOk()) // 인증된 경우 200 OK 예상
 			.andDo(print());
 

@@ -7,13 +7,8 @@ import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,15 +28,13 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.QPhoto;
-import com.backend.naildp.entity.QPost;
-import com.backend.naildp.entity.QTag;
-import com.backend.naildp.entity.QTagPost;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.BooleanOperation;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -98,6 +91,17 @@ public class TagSearchRepositoryTest {
 		Post postB = createPostByUser(writer, "B", List.of("bb"), false, Boundary.ALL);
 		Post postC = createPostByUser(writer, "C", List.of("cc"), false, Boundary.ALL);
 
+		createPostByUser(writer, "", List.of("d"), false, Boundary.ALL);
+		createPostByUser(writer, "", List.of("e"), false, Boundary.ALL);
+
+		createPostByUser(writer, "", List.of("de"), false, Boundary.ALL);
+		createPostByUser(writer, "", List.of("df"), false, Boundary.ALL);
+		createPostByUser(writer, "", List.of("eg"), false, Boundary.ALL);
+		createPostByUser(writer, "", List.of("eh"), false, Boundary.ALL);
+
+		createPostByUser(writer, "", List.of("ad"), false, Boundary.ALL);
+		createPostByUser(writer, "", List.of("ae"), false, Boundary.ALL);
+
 		for (int i = 0; i < 1; i++) {
 			em.persist(new PostLike(postLiker, post1));
 		}
@@ -124,6 +128,45 @@ public class TagSearchRepositoryTest {
 
 		em.flush();
 		em.clear();
+	}
+
+	@DisplayName("키워드 리스트를 포함하는 태그 이름 조회 테스트")
+	@Test
+	void findTagsContainingAnyOfKeyword() {
+		//given
+		List<String> keywords = List.of("d", "e");
+
+		BooleanBuilder builder = new BooleanBuilder();
+		for (String keyword : keywords) {
+			builder.or(tag.name.startsWithIgnoreCase(keyword));
+		}
+
+		CaseBuilder caseBuilder = new CaseBuilder();
+		NumberExpression<Integer> startWithAnyKeyword = caseBuilder.when(builder).then(1)
+			.otherwise(0);
+
+		//when
+		List<TagPost> tagPosts = queryFactory
+			.select(tagPost)
+			.from(tagPost)
+			.join(tagPost.post, post).fetchJoin().join(tagPost.tag, tag).fetchJoin()
+			.where(post.tempSave.isFalse()
+				.and(usernamePermitted(USER_NICKNAME))
+				.and(keywordContainedInTag(keywords))
+			)
+			.orderBy(tag.name.length().asc(), startWithAnyKeyword.desc(), tag.name.asc())
+			.fetch();
+		List<String> tagNames = tagPosts.stream().map(TagPost::getTag).map(Tag::getName).toList();
+
+		//then
+		for (String tagName : tagNames) {
+			System.out.println("tagName = " + tagName);
+		}
+		Assertions.assertThat(tagNames).allSatisfy(tagName -> {
+			// keywords 의 요소 중 하나라도 tagName 에 포함되는지 확인
+			Assertions.assertThat(keywords).anySatisfy(keyword -> Assertions.assertThat(tagName).contains(keyword));
+		});
+
 	}
 
 	@DisplayName("키워드로 연관 태그 검색시 오름차순으로 10개까지 정렬")
@@ -172,8 +215,16 @@ public class TagSearchRepositoryTest {
 		assertThat(tagPosts).extracting(TagPost::getTag).extracting(Tag::getName).containsExactlyElementsOf(keywords);
 	}
 
-	private BooleanExpression keywordContainedInTag(String keyword) {
-		return tag.name.like(keyword + "%");
+	private BooleanBuilder keywordContainedInTag(List<String> keywords) {
+		if (keywords.isEmpty()) {
+			return null;
+		}
+
+		BooleanBuilder builder = new BooleanBuilder();
+
+		keywords.forEach(keyword -> builder.or(tag.name.containsIgnoreCase(keyword)));
+
+		return builder;
 	}
 
 	private BooleanExpression usernamePermitted(String usernameCond) {

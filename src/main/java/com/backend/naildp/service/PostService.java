@@ -16,7 +16,6 @@ import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.dto.post.TempPostRequestDto;
-import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.Tag;
@@ -31,7 +30,6 @@ import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
 import com.backend.naildp.repository.TagRepository;
 import com.backend.naildp.repository.UserRepository;
-import com.backend.naildp.repository.UsersProfileRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,28 +72,22 @@ public class PostService {
 
 		postRepository.save(post);
 
+		updateTags(postRequestDto.getTags(), post);
+
 		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
 
-		List<TagRequestDto> tags = postRequestDto.getTags();
-		for (TagRequestDto tag : tags) {
-			String tagName = tag.getTagName().toLowerCase();
-			Tag existingTag = tagRepository.findByName(tagName)
-				.orElseGet(() -> tagRepository.save(new Tag(tagName)));
-			tagPostRepository.save(new TagPost(existingTag, post));
-		}
 		fileRequestDtos.stream().map(fileRequestDto -> new Photo(post, fileRequestDto)).forEach(photoRepository::save);
 	}
 
 	@Transactional
 	public void editPost(String nickname, PostRequestDto postRequestDto, List<MultipartFile> files, Long postId) {
 
-		User user = userRepository.findByNickname(nickname)
-			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		validateUser(post, nickname);
+		if (post.notWrittenBy(nickname)) {
+			throw new CustomException("게시글 수정은 작성자만 할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
 
 		if (getSize(files) + getSize(post.getPhotos()) - getSize(postRequestDto.getDeletedFileUrls()) > 10) {
 			throw new CustomException("업로드 가능한 파일 수는 10개 입니다.", ErrorCode.INVALID_FORM);
@@ -107,12 +99,14 @@ public class PostService {
 			|| files.isEmpty())) {
 			throw new CustomException("파일을 첨부해주세요.", ErrorCode.INVALID_FORM);
 		}
+
 		post.update(postRequestDto);
 
 		tagPostRepository.deleteAllByPostId(postId);
 
-		updateTagsAndFiles(postRequestDto.getTags(), files, post);
+		updateTags(postRequestDto.getTags(), post);
 
+		updateFiles(files, post);
 		deleteFileUrls(postRequestDto.getDeletedFileUrls());
 
 	}
@@ -121,13 +115,12 @@ public class PostService {
 	@Transactional(readOnly = true)
 	public EditPostResponseDto getEditingPost(String nickname, Long postId) {
 
-		User user = userRepository.findByNickname(nickname)
-			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		validateUser(post, nickname);
+		if (post.notWrittenBy(nickname)) {
+			throw new CustomException("게시글 수정은 작성자만 할 수 있습니다.", ErrorCode.USER_MISMATCH);
+		}
 
 		List<Photo> photos = photoRepository.findAllByPostId(postId);
 
@@ -193,7 +186,9 @@ public class PostService {
 			postRepository.save(post);
 		}
 
-		updateTagsAndFiles(tempPostRequestDto.getTags(), files, post);
+		updateTags(tempPostRequestDto.getTags(), post);
+
+		updateFiles(files, post);
 	}
 
 	/**
@@ -318,16 +313,21 @@ public class PostService {
 
 	}
 
-	private void updateTagsAndFiles(List<TagRequestDto> tags, List<MultipartFile> files, Post post) {
+	// 태그 업데이트 메서드
+	private void updateTags(List<TagRequestDto> tags, Post post) {
 		if (tags != null && !tags.isEmpty()) {
 			for (TagRequestDto tag : tags) {
 				String tagName = tag.getTagName().toLowerCase();
+				// validateTagName(tagName);
 				Tag existingTag = tagRepository.findByName(tagName)
 					.orElseGet(() -> tagRepository.save(new Tag(tagName)));
 				tagPostRepository.save(new TagPost(existingTag, post));
 			}
 		}
+	}
 
+	// 파일 업데이트 메서드
+	private void updateFiles(List<MultipartFile> files, Post post) {
 		if (files != null && !files.isEmpty()) {
 			List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(files);
 			fileRequestDtos.stream()
@@ -357,19 +357,20 @@ public class PostService {
 	}
 
 	private boolean isRequestEmpty(TempPostRequestDto tempPostRequestDto, List<MultipartFile> files) {
-		return tempPostRequestDto.getPostContent().isBlank()
-			&& tempPostRequestDto.getTags().isEmpty()
-			&& (files == null || files.isEmpty());
+		return tempPostRequestDto.getPostContent().isBlank() && tempPostRequestDto.getTags().isEmpty() && (files == null
+			|| files.isEmpty());
 	}
 
 	private int getSize(List<?> list) {
 		return list == null ? 0 : list.size();
 	}
 
-	private void validateUser(Post post, String nickname) {
-		if (!post.getUser().getNickname().equals(nickname)) {
-			throw new CustomException("본인이 작성한 게시글만 수정할 수 있습니다.", ErrorCode.USER_MISMATCH);
-		}
-	}
+	// public void validateTagName(String tagName) {
+	// 	Pattern validTagNamePattern = Pattern.compile("^[a-zA-Z0-9가-힣]+$");
+	//
+	// 	if (tagName == null || tagName.trim().isEmpty() || !validTagNamePattern.matcher(tagName).matches()) {
+	// 		throw new CustomException("태그는 알파벳, 숫자, 한글만 포함될 수 있습니다.", ErrorCode.INVALID_FORM);
+	// 	}
+	// }
 
 }

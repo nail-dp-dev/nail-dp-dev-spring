@@ -18,13 +18,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 	Slice<Post> findPostsByBoundaryAndTempSaveFalse(Boundary boundary, PageRequest pageRequest);
 
 	@Query("select p from Post p where p.tempSave = false"
-		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user in :following))")
-	Slice<Post> findRecentPostsByFollowing(@Param("following") List<User> following, PageRequest pageRequest);
+		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and (p.user in :following or p.user.nickname = :nickname)))")
+	Slice<Post> findRecentPostsByFollowing(@Param("following") List<User> following, @Param("nickname") String nickname,
+		PageRequest pageRequest);
 
 	@Query("select p from Post p where p.id < :id and p.tempSave = false"
-		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and p.user in :following))")
+		+ " and (p.boundary = 'ALL' or (p.boundary = 'FOLLOW' and (p.user in :following or p.user.nickname = :nickname)))")
 	Slice<Post> findRecentPostsByIdAndFollowing(@Param("id") Long oldestPostId,
-		@Param("following") List<User> following, PageRequest pageRequest);
+		@Param("following") List<User> following, @Param("nickname") String nickname, PageRequest pageRequest);
 
 	Slice<Post> findPostsByIdBeforeAndBoundaryAndTempSaveFalse(Long id, Boundary boundary, PageRequest pageRequest);
 
@@ -90,7 +91,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by  ap.lastModifiedDate desc ")
 	Slice<Post> findArchivePostsByFollow(@Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
@@ -103,7 +104,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by ap.lastModifiedDate desc ")
 	Slice<Post> findArchivePostsByIdAndFollow(@Param("id") Long id, @Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
@@ -119,7 +120,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by pl.lastModifiedDate desc ")
 	Slice<Post> findLikedArchivePostsByFollow(@Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,
@@ -135,7 +136,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		+ " and (p.boundary = 'ALL'"
 		+ " or (p.boundary = 'FOLLOW' and p.user.nickname in :followingNickname)"
 		+ " or(p.boundary = 'NONE' and p.user.nickname = :myNickname)) "
-		+ " order by  p.createdDate desc ")
+		+ " order by  pl.lastModifiedDate desc ")
 	Slice<Post> findLikedArchivePostsByIdAndFollow(@Param("id") Long id, @Param("myNickname") String myNickname,
 		@Param("archiveId") Long archiveId,
 		@Param("followingNickname") List<String> followingNickname,

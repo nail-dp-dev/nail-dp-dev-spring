@@ -88,7 +88,6 @@ class UserInfoServiceUnitTest {
 			.profileType(ProfileType.CUSTOMIZATION)
 			.name("name")
 			.profileUrl("alswl.profileUrl.jpg")
-			.thumbnail(true)
 			.build();
 
 		usersProfile1 = UsersProfile.builder().user(user1).profile(profile1).build();
@@ -117,8 +116,7 @@ class UserInfoServiceUnitTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(new ArrayList<>());
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
+		given(profileRepository.findProfileByProfileUrl(user1.getNickname())).willReturn(Optional.of(profile1));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -145,8 +143,7 @@ class UserInfoServiceUnitTest {
 		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(new ArrayList<>());
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
+		given(profileRepository.findProfileByProfileUrl(user1.getNickname())).willReturn(Optional.of(profile1));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -171,8 +168,7 @@ class UserInfoServiceUnitTest {
 			List.of(archivePost1, archivePost2));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
 			new ArrayList<>(List.of(user2.getNickname(), "user3")));
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
+		given(profileRepository.findProfileByProfileUrl(user1.getNickname())).willReturn(Optional.of(profile1));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -195,8 +191,7 @@ class UserInfoServiceUnitTest {
 			List.of(archivePost1));
 		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
 			new ArrayList<>(List.of(user2.getNickname())));
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
+		given(profileRepository.findProfileByProfileUrl(user1.getNickname())).willReturn(Optional.of(profile1));
 		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
 		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
 
@@ -244,15 +239,16 @@ class UserInfoServiceUnitTest {
 	@Test
 	@DisplayName("프로필 업로드 성공 - 4개 이상")
 	void testUploadProfile1() {
+		String profileUrl = "alswl.profileUrl.jpg";
+
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
-			Optional.of(usersProfile1));
+		given(profileRepository.findProfileByProfileUrl(profileUrl)).willReturn(Optional.of(profile1));
 		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(4);
 		given(usersProfileRepository.findFirstByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(
 			Optional.of(usersProfile1));
 		given(s3Service.saveFile(any(MultipartFile.class))).willReturn(new FileRequestDto("file1", 12345L, "fileUrl1"));
 
-		userInfoService.uploadProfile("nickname", mock(MultipartFile.class));
+		userInfoService.uploadProfile(user1.getNickname(), mock(MultipartFile.class));
 
 		verify(usersProfileRepository, times(1)).delete(any(UsersProfile.class));
 		verify(profileRepository, times(1)).delete(any(Profile.class));
@@ -264,13 +260,14 @@ class UserInfoServiceUnitTest {
 	@Test
 	@DisplayName("프로필 업로드 성공 - 3개 이하")
 	void testUploadProfile2() {
+		String profileUrl = "alswl.profileUrl.jpg";
+
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
-			Optional.of(usersProfile1));
+		given(profileRepository.findProfileByProfileUrl(profileUrl)).willReturn(Optional.of(profile1));
 		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(3);
 		given(s3Service.saveFile(any(MultipartFile.class))).willReturn(new FileRequestDto("file1", 12345L, "fileUrl1"));
 
-		userInfoService.uploadProfile("testNickname", mock(MultipartFile.class));
+		userInfoService.uploadProfile(user1.getNickname(), mock(MultipartFile.class));
 
 		verify(profileRepository, times(1)).save(any(Profile.class));
 		verify(usersProfileRepository, times(1)).save(any(UsersProfile.class));
@@ -279,9 +276,9 @@ class UserInfoServiceUnitTest {
 	@Test
 	@DisplayName("프로필 업로드 실패 - 현재 프로필")
 	void testUploadProfile_ProfileNotFound() {
+		String profileUrl = "alswl.profileUrl22.jpg";
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
-			Optional.empty());
+		given(profileRepository.findProfileByProfileUrl(profileUrl)).willReturn(Optional.of(profile1));
 
 		CustomException exception = assertThrows(CustomException.class, () -> {
 			userInfoService.uploadProfile("testNickname", mock(MultipartFile.class));
@@ -325,102 +322,97 @@ class UserInfoServiceUnitTest {
 	@DisplayName("프로필 변경 성공 - CUSTOM -> CUSTOM")
 	void testChangeProfile1() {
 		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder().profileUrl("changingProfileURl").build();
+		user1.thumbnailUrlUpdate("currentProfileURl");
 
 		Profile currentProfile = Profile.builder()
 			.profileUrl("currentProfileURl")
 			.name("currentProfileURl")
-			.thumbnail(true)
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		UsersProfile usersProfile = UsersProfile.builder().user(user1).profile(currentProfile).build();
 
 		Profile changingProfile = Profile.builder()
-			.thumbnail(false)
 			.profileUrl("changingProfileURl")
 			.name("changingProfileURl")
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
-			Optional.of(usersProfile));
-		given(profileRepository.findProfileByProfileUrl(anyString())).willReturn(Optional.of(changingProfile));
+		given(profileRepository.findProfileByProfileUrl("currentProfileURl")).willReturn(Optional.of(currentProfile));
+		given(profileRepository.findProfileByProfileUrl("changingProfileURl")).willReturn(Optional.of(changingProfile));
 
-		userInfoService.changeProfile("testNickname", profileRequestDto);
+		userInfoService.changeProfile(user1.getNickname(), profileRequestDto);
 
-		verify(usersProfileRepository, times(0)).delete(usersProfile);
-		verify(usersProfileRepository, times(0)).save(any(UsersProfile.class));
-		assertThat(currentProfile.getThumbnail()).isFalse();
-		assertThat(changingProfile.getThumbnail()).isTrue();
+		verify(usersProfileRepository, never()).delete(usersProfile);
+		verify(usersProfileRepository, never()).save(any(UsersProfile.class));
+		assertThat(user1.getThumbnailUrl()).isEqualTo("changingProfileURl");
+
 	}
 
 	@Test
 	@DisplayName("프로필 변경 성공 - BASIC -> CUSTOM")
 	void testChangeProfile2() {
 		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder().profileUrl("changingProfileURl").build();
+		user1.thumbnailUrlUpdate("currentProfileURl");
 
 		Profile currentProfile = Profile.builder()
 			.profileUrl("currentProfileURl")
 			.name("currentProfileURl")
-			.thumbnail(true)
 			.profileType(ProfileType.BASIC)
 			.build();
 
 		UsersProfile usersProfile = UsersProfile.builder().user(user1).profile(currentProfile).build();
 
 		Profile changingProfile = Profile.builder()
-			.thumbnail(false)
 			.profileUrl("changingProfileURl")
 			.name("changingProfileURl")
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
-			Optional.of(usersProfile));
-		given(profileRepository.findProfileByProfileUrl(anyString())).willReturn(Optional.of(changingProfile));
+		given(profileRepository.findProfileByProfileUrl("currentProfileURl")).willReturn(Optional.of(currentProfile));
+		given(profileRepository.findProfileByProfileUrl("changingProfileURl")).willReturn(Optional.of(changingProfile));
 
-		userInfoService.changeProfile("testNickname", profileRequestDto);
+		userInfoService.changeProfile(user1.getNickname(), profileRequestDto);
 
-		verify(usersProfileRepository, times(1)).delete(usersProfile);
-		verify(usersProfileRepository, times(0)).save(any(UsersProfile.class));
-		assertThat(currentProfile.getThumbnail()).isFalse();
-		assertThat(changingProfile.getThumbnail()).isTrue();
+		verify(usersProfileRepository, times(1)).deleteByProfileIdAndUserNickname(currentProfile.getId(),
+			user1.getNickname());
+		verify(usersProfileRepository, never()).save(any(UsersProfile.class));
+		assertThat(user1.getThumbnailUrl()).isEqualTo("changingProfileURl");
+
 	}
 
 	@Test
 	@DisplayName("프로필 변경 성공 - CUSTOM -> BASIC")
 	void testChangeProfile3() {
 		ProfileRequestDto profileRequestDto = ProfileRequestDto.builder().profileUrl("changingProfileURl").build();
+		user1.thumbnailUrlUpdate("currentProfileURl");
 
 		Profile currentProfile = Profile.builder()
 			.profileUrl("currentProfileURl")
 			.name("currentProfileURl")
-			.thumbnail(true)
 			.profileType(ProfileType.CUSTOMIZATION)
 			.build();
 
 		UsersProfile usersProfile = UsersProfile.builder().user(user1).profile(currentProfile).build();
 
 		Profile changingProfile = Profile.builder()
-			.thumbnail(false)
 			.profileUrl("changingProfileURl")
 			.name("changingProfileURl")
 			.profileType(ProfileType.BASIC)
 			.build();
 
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findByUserNicknameAndProfileThumbnailTrue(anyString())).willReturn(
-			Optional.of(usersProfile));
-		given(profileRepository.findProfileByProfileUrl(anyString())).willReturn(Optional.of(changingProfile));
+		given(profileRepository.findProfileByProfileUrl("currentProfileURl")).willReturn(Optional.of(currentProfile));
+		given(profileRepository.findProfileByProfileUrl("changingProfileURl")).willReturn(Optional.of(changingProfile));
 
-		userInfoService.changeProfile("testNickname", profileRequestDto);
+		userInfoService.changeProfile(user1.getNickname(), profileRequestDto);
 
-		verify(usersProfileRepository, times(0)).delete(usersProfile);
+		verify(usersProfileRepository, never()).delete(usersProfile);
 		verify(usersProfileRepository, times(1)).save(any(UsersProfile.class));
-		assertThat(currentProfile.getThumbnail()).isFalse();
-		assertThat(changingProfile.getThumbnail()).isTrue();
+		assertThat(user1.getThumbnailUrl()).isEqualTo("changingProfileURl");
+
 	}
 }
 
