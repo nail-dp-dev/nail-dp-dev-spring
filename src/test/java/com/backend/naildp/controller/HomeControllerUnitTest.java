@@ -28,7 +28,7 @@ import org.springframework.util.MultiValueMap;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
-import com.backend.naildp.service.PostInfoService;
+import com.backend.naildp.service.post.PostInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
