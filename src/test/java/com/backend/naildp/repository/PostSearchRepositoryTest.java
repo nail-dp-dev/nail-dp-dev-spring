@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
@@ -274,54 +275,108 @@ public class PostSearchRepositoryTest {
 		assertThat(likedPosts).extracting(Post::getUser).extracting(User::getNickname).containsOnly(writerNickname);
 	}
 
-	private BooleanExpression usernamePermitted(String usernameCond) {
+	@DisplayName("회원이 NEW 게시물을 처음으로 조회")
+	@Test
+	void userFindNewestPostSlice() {
+		//given
+		String username = "nickname";
+		Long cursorPostId = null;
+		int pageSize = 40;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
 
-		return post.boundary.eq(Boundary.ALL)
-			.or(post.boundary.eq(Boundary.FOLLOW).and(
-				user.nickname.eq(usernameCond).or(
-					JPAExpressions
-						.select(follow)
-						.from(follow)
-						.where(follow.follower.nickname.eq(usernameCond)
-							.and(follow.following.eq(post.user))).isNotNull()))
-			);
+		//when
+		Slice<Post> newestPostSlice = postRepository.findNewestPostSlice(username, cursorPostId, pageRequest);
+
+		//then
+		assertThat(newestPostSlice).extracting(Post::getBoundary).contains(Boundary.ALL, Boundary.FOLLOW);
+		assertThat(newestPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
+		assertThat(newestPostSlice.hasNext()).isFalse();
+		assertThat(newestPostSlice).hasSize(pageSize);
 	}
 
-	private BooleanExpression containsInPost(String keyword) {
-		if (!StringUtils.hasText(keyword)) {
-			return null;
-		}
+	@DisplayName("회원이 NEW 게시물 조회 - 커서 기반 페이지네이션")
+	@Test
+	void userFindNewestPostSliceWithCursorPost() {
+		//given
+		String username = "nickname";
+		int pageSize = 40;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+		Post newestPost = queryFactory
+			.selectFrom(post)
+			.where(post.tempSave.isFalse().and(post.boundary.eq(Boundary.ALL)))
+			.orderBy(post.createdDate.desc())
+			.limit(1)
+			.fetchOne();
+		em.clear();
 
-		return post.postContent.contains(keyword).or(
-			JPAExpressions
-				.select(tagPost.tag.name)
-				.from(tagPost)
-				.where(tagPost.post.eq(post))
-				.contains(keyword)
-		);
+		//when
+		Slice<Post> newestPostSliceByCursor = postRepository.findNewestPostSlice(username, newestPost.getId(), pageRequest);
+
+		//then
+		assertThat(newestPostSliceByCursor).hasSize(pageSize - 1);
+		assertThat(newestPostSliceByCursor.hasNext()).isFalse();
+
+		assertThat(newestPostSliceByCursor).extracting(Post::getBoundary).contains(Boundary.ALL, Boundary.FOLLOW);
+		assertThat(newestPostSliceByCursor).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSliceByCursor).extracting(Post::getTempSave).containsOnly(false);
 	}
 
-	private BooleanExpression lessThanCursor(String cursor) {
-		if (!StringUtils.hasText(cursor)) {
-			return null;
-		}
+	@DisplayName("회원이 아닌 사용자가 최신 게시물 조회시 전체 공개인 게시물만 조회할 수 있다.")
+	@Test
+	void anonymousFindNewestPost() {
+		//given
+		String username = null;
+		Long cursorPostId = null;
+		int pageSize = 30;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
 
-		DateTimeTemplate<String> stringDateTimeTemplate = Expressions.dateTimeTemplate(String.class,
-			"DATE_FORMAT({0}, '%y%m%d%H%i%s')", post.createdDate);
+		//when
+		Slice<Post> newestPostSlice = postRepository.findNewestPostSlice(username, cursorPostId, pageRequest);
 
-		return StringExpressions.lpad(post.postLikes.size().stringValue(), 6, '0')
-			.concat(StringExpressions.lpad(stringDateTimeTemplate.stringValue(), 12, '0')
-				.concat(StringExpressions.lpad(post.id.stringValue(), 8, '0')))
-			.lt(cursor);
+		//then
+		assertThat(newestPostSlice).extracting(Post::getBoundary).contains(Boundary.ALL);
+		assertThat(newestPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
+		assertThat(newestPostSlice.hasNext()).isFalse();
+		assertThat(newestPostSlice).hasSize(pageSize);
 	}
 
-	private String generatedCursor(LocalDateTime createdDate, int postLikeCount, Long postId) {
-		return String.format("%06d", postLikeCount) + createdDate.toString()
-			.substring(2, 19)
-			.replace("T", "")
-			.replace("-", "")
-			.replace(":", "")
-			+ String.format("%08d", postId);
+	@DisplayName("회원이 아닌 사용자가 최신 게시물 조회시 전체 공개인 게시물만 조회할 수 있다. - 커서 기반 페이징")
+	@Test
+	void anonymousFindNewestPostWithCursorPost() {
+		//given
+		String username = null;
+		Post newestPost = queryFactory
+			.selectFrom(post)
+			.where(post.tempSave.isFalse().and(post.boundary.eq(Boundary.ALL)))
+			.orderBy(post.createdDate.desc())
+			.limit(1)
+			.fetchOne();
+		Long cursorPostId = newestPost.getId();
+		int pageSize = 30;
+		PageRequest pageRequest = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		em.clear();
+
+		//when
+		Slice<Post> newestPostSlice = postRepository.findNewestPostSlice(username, cursorPostId, pageRequest);
+
+		//then
+		assertThat(newestPostSlice).hasSize(pageSize - 1);
+		assertThat(newestPostSlice.hasNext()).isFalse();
+
+		assertThat(newestPostSlice).extracting(Post::getBoundary).contains(Boundary.ALL);
+		assertThat(newestPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
 	}
 
 	private User createUserByNickname(String nickname) {

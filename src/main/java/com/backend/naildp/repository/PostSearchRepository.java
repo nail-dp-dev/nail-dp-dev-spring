@@ -13,4 +13,6 @@ public interface PostSearchRepository {
 	List<Post> findPostsInArchive(String username);
 
 	List<Post> findLikedPosts(String username);
+
+	Slice<Post> findNewestPostSlice(String username, Long cursorPostId, Pageable pageable);
 }

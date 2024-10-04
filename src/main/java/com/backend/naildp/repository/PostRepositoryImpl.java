@@ -71,6 +71,31 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.fetch();
 	}
 
+	@Override
+	public Slice<Post> findNewestPostSlice(String username, Long cursorPostId, Pageable pageable) {
+		List<Post> newestPosts = queryFactory
+			.selectFrom(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(isBeforeCursorPost(cursorPostId))
+			)
+			.orderBy(post.createdDate.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		return new SliceImpl<>(newestPosts, pageable, hasNext(newestPosts, pageable.getPageSize()));
+	}
+
+	private BooleanExpression isBeforeCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		return post.createdDate.before(
+			JPAExpressions.select(post.createdDate).from(post).where(post.id.eq(cursorPostId)));
+	}
+
 	private boolean hasNext(List<Post> posts, int size) {
 		if (posts.size() > size) {
 			posts.remove(size);
@@ -81,7 +106,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 
 	private BooleanExpression isAllowedToViewPosts(String usernameCond) {
 		if (!Strings.hasText(usernameCond)) {
-			return null;
+			return post.boundary.eq(Boundary.ALL);
 		}
 
 		return post.boundary.eq(Boundary.ALL)
