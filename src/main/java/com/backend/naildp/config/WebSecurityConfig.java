@@ -136,6 +136,8 @@ public class WebSecurityConfig {
 			.permitAll()
 			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+			.requestMatchers("/ws-stomp/**")
+			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 			.requestMatchers("/api/home").permitAll()
 			.requestMatchers("api/chat/**").permitAll()
 			.anyRequest()
