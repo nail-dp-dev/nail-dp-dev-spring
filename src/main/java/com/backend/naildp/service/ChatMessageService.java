@@ -1,7 +1,5 @@
 package com.backend.naildp.service;
 
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
@@ -18,17 +16,8 @@ public class ChatMessageService {
 
 	public ChatMessage createChatMessage(ChatMessageDto chatMessageDto) {
 		ChatMessage chatMessage = ChatMessage.builder()
-			.content(
-				chatMessageDto.getContent().stream()
-					.map(contentDTO -> ChatMessage.Content.builder()
-						.type(contentDTO.getType())
-						.value(contentDTO.getValue())
-						.build()
-					).collect(Collectors.toList())
-			)
-			.status(chatMessageDto.getStatus())
-			.userId(chatMessageDto.getUserId())
-			.chatRoomId(chatMessageDto.getChatRoomId())
+			.content(chatMessageDto.getContent())
+			.sender(chatMessageDto.getSender())
 			.mention(chatMessageDto.getMention())
 			.build();
 

@@ -2,10 +2,13 @@ package com.backend.naildp.entity.mongo;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.backend.naildp.dto.chat.ChatMessageDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,25 +24,25 @@ public class ChatMessage {
 	@Id
 	private String id;
 
-	private List<Content> content;
+	private List<String> content;
 
-	private Boolean status;
+	private Boolean status = false;
 
 	@CreatedDate
 	private LocalDateTime createdAt;
 
-	private Long userId;
+	private String sender;
 
-	private Long chatRoomId;
+	private UUID chatRoomId;
 
-	private Boolean mention;
+	private List<String> mention;
 
-	@Getter
-	@Builder
-	@AllArgsConstructor
-	public static class Content {
-		private String type; // text or media
-		private String value;
+	private String messageType;
 
+	public ChatMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
+		this.chatRoomId = chatRoomId;
+		this.content = chatMessageDto.getContent();
+		this.sender = chatMessageDto.getSender();
+		this.mention = chatMessageDto.getMention();
 	}
 }

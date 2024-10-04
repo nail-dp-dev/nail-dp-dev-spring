@@ -12,15 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessageDto {
-	private List<ContentDto> content;
-	private Boolean status;
-	private Long userId;
-	private Long chatRoomId;
-	private Boolean mention;
-
-	@Getter
-	public static class ContentDto {
-		private String type;
-		private String value;
-	}
+	private List<String> content;
+	private String sender;
+	private List<String> mention;
+	private String messsageType;
 }
