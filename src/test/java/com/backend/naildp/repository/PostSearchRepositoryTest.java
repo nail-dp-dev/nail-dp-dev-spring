@@ -2,10 +2,11 @@ package com.backend.naildp.repository;
 
 import static com.backend.naildp.entity.QFollow.*;
 import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QTagPost.*;
+import static com.backend.naildp.entity.QPostLike.*;
 import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,7 +22,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
@@ -34,16 +34,19 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.QPost;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringExpressions;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import io.jsonwebtoken.lang.Strings;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
@@ -377,6 +380,83 @@ public class PostSearchRepositoryTest {
 			.extracting(User::getNickname)
 			.contains("writer", "writerNotFollowed", "writerUsingTags");
 		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
+	}
+
+	@DisplayName("자정부터 현시각까지 좋아요수 많은 순서대로 게시물 조회")
+	@Test
+	void trendPost() {
+		//given
+		User liker = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
+			.setParameter("nickname", "nickname")
+			.getSingleResult();
+		List<Post> publicPostFromWriter = findPostByNicknameAndBoundary("writer", Boundary.ALL);
+		addPostLike(liker, publicPostFromWriter, 3);
+		List<Post> followPostFromWriter = findPostByNicknameAndBoundary("writer", Boundary.FOLLOW);
+		addPostLike(liker, followPostFromWriter, 2);
+		List<Post> publicPostFromWriterNotFollowed = findPostByNicknameAndBoundary("writerNotFollowed", Boundary.ALL);
+		addPostLike(liker, publicPostFromWriterNotFollowed, 1);
+
+		em.flush();
+		em.clear();
+
+		String username = "nickname";
+		int pageSize = 40;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		NumberPath<Long> likeCount =
+			Expressions.numberPath(Long.class, "likeCount");
+
+		List<Tuple> tuples = queryFactory
+			.select(post,
+				ExpressionUtils.as(JPAExpressions.select(postLike.count())
+						.from(postLike)
+						.where(postLike.post.eq(post), postLike.createdDate.between(LocalDate.now().atStartOfDay(), LocalDateTime.now())),
+					"likeCount")
+			)
+			.from(post)
+			.where(isAllowedToViewPosts(username))
+			.orderBy(likeCount.desc())
+			.offset(pageRequest.getPageNumber())
+			.limit(pageRequest.getPageSize())
+			.fetch();
+
+		//then
+		for (Tuple tuple : tuples) {
+			Post post = tuple.get(QPost.post);
+			System.out.println("post.getId() = " + post.getId());
+			System.out.println("tuple.get(likeCount) = " + tuple.get(likeCount));
+		}
+	}
+
+	private void addPostLike(User liker, List<Post> publicPostFromWriter, double likeCount) {
+		publicPostFromWriter.forEach(post -> {
+			for (int i = 0; i < likeCount; i++) {
+				em.persist(new PostLike(liker, post));
+			}
+		});
+	}
+
+	private List<Post> findPostByNicknameAndBoundary(String writerNickname, Boundary boundary) {
+		return queryFactory.selectFrom(post)
+			.where(post.user.nickname.eq(writerNickname).and(post.boundary.eq(boundary)))
+			.fetch();
+	}
+
+	private BooleanExpression isAllowedToViewPosts(String usernameCond) {
+		if (!Strings.hasText(usernameCond)) {
+			return post.boundary.eq(Boundary.ALL);
+		}
+
+		return post.boundary.eq(Boundary.ALL)
+			.or(post.boundary.eq(Boundary.FOLLOW).and(
+				user.nickname.eq(usernameCond).or(
+					JPAExpressions
+						.select(follow)
+						.from(follow)
+						.where(follow.follower.nickname.eq(usernameCond)
+							.and(follow.following.eq(post.user))).isNotNull()))
+			);
 	}
 
 	private User createUserByNickname(String nickname) {
