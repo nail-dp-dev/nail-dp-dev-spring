@@ -30,23 +30,17 @@ public class PostLikeService {
 
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
+
 		User user = userRepository.findUserByNickname(username)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Optional<PostLike> optionalPostLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(
-			username, postId);
+		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(username, postId)
+			.orElseGet(() -> postLikeRepository.save(new PostLike(user, post)));
+		post.addPostLike(postLike);
 
-		if (optionalPostLike.isPresent()) {
-			return optionalPostLike.get().getId();
-		}
-
-		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
-		post.addPostLike(savedPostLike);
-
-		return savedPostLike.getId();
+		return postLike.getId();
 	}
 
 	@Transactional
