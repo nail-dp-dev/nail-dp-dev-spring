@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.backend.naildp.JwtUtilTest;
 import com.backend.naildp.common.CookieUtil;
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
+import com.backend.naildp.common.ProviderType;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.google.gson.Gson;
 
 import jakarta.servlet.http.Cookie;
@@ -39,13 +40,13 @@ public class CookieUtilTest {
 	@InjectMocks
 	private CookieUtil cookieUtil;
 
-	private KakaoUserInfoDto userInfo;
+	private SocialUserInfoDto userInfo;
 	private Gson gson;
 
 	@BeforeEach
 	public void setUp() {
-		userInfo = new KakaoUserInfoDto(123L, "alswl123@naver.com",
-			"http://naver.com/profile.jpg");
+		userInfo = new SocialUserInfoDto("123L", "alswl123@naver.com",
+			"http://naver.com/profile.jpg", ProviderType.kakao);
 		gson = new Gson();
 	}
 
@@ -76,7 +77,7 @@ public class CookieUtilTest {
 		given(req.getCookies()).willReturn(new Cookie[] {cookie});
 
 		// when
-		KakaoUserInfoDto result = cookieUtil.getUserInfoFromCookie(req);
+		SocialUserInfoDto result = cookieUtil.getUserInfoFromCookie(req);
 
 		// then
 		assertNotNull(result);
@@ -100,5 +101,5 @@ public class CookieUtilTest {
 			"userInfo".equals(argument.getName()) && argument.getMaxAge() == 0
 		));
 	}
-	
+
 }

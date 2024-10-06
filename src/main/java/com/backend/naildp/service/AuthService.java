@@ -10,10 +10,10 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -21,8 +21,9 @@ import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.jwt.JwtAuthorizationFilter;
-import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.RedisUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -44,30 +45,37 @@ public class AuthService {
 	private final SocialLoginRepository socialLoginRepository;
 	private final ProfileRepository profileRepository;
 	private final JwtUtil jwtUtil;
+	private final RedisUtil redisUtil;
 	private final JwtAuthorizationFilter jwtAuthorizationFilter;
 	private final UsersProfileRepository usersProfileRepository;
 
 	@Transactional
 	public ResponseEntity<ApiResponse<?>> signupUser(LoginRequestDto loginRequestDto, HttpServletRequest req,
 		HttpServletResponse res) {
+		log.info("회원가입");
 		Optional<User> findUser = userRepository.findByNickname(loginRequestDto.getNickname());
 		if (findUser.isPresent()) {
 			throw new CustomException("이미 존재하는 사용자입니다.", ErrorCode.ALREADY_EXIST);
 		}
-		User user = new User(loginRequestDto, UserRole.USER);
+		User user = User.builder()
+			.nickname(loginRequestDto.getNickname())
+			.phoneNumber(loginRequestDto.getPhoneNumber())
+			.agreement(loginRequestDto.isAgreement())
+			.role(UserRole.USER)
+			.build();
 
 		userRepository.save(user);
 
-		KakaoUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
-		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(), user);
+		SocialUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
+		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(),
+			user);
 		socialLoginRepository.save(socialLogin);
 
 		if (userInfo.getProfileUrl() != null) {
 			Profile profile = Profile.builder()
 				.profileUrl(userInfo.getProfileUrl())
 				.name(userInfo.getProfileUrl())
-				.thumbnail(true)
-				.profileType(ProfileType.CUSTOMIZATION)
+				.profileType(ProfileType.AUTO)
 				.build();
 
 			UsersProfile usersProfile = UsersProfile.builder()
@@ -77,13 +85,16 @@ public class AuthService {
 
 			profileRepository.save(profile);
 			usersProfileRepository.save(usersProfile);
+			user.thumbnailUrlUpdate(userInfo.getProfileUrl());
 		}
 
 		cookieUtil.deleteCookie("userInfo", req, res);
 		log.info("쿠키 지우기");
 
 		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
-		jwtUtil.addJwtToCookie(createToken, res);
+		jwtUtil.addJwtToCookie(createToken, "Authorization", res);
+		jwtUtil.addJwtToCookie(jwtUtil.createRefreshToken(), "refreshToken", res);
+		redisUtil.saveRefreshToken(user.getNickname(), jwtUtil.createRefreshToken());
 
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "회원가입 완료되었습니다", 2001));
 	}
@@ -128,8 +139,11 @@ public class AuthService {
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "jwt토큰 검증 확인", 2000));
 	}
 
-	public ResponseEntity<ApiResponse<?>> logoutUser(HttpServletRequest req, HttpServletResponse res) {
+	public ResponseEntity<ApiResponse<?>> logoutUser(String nickname, HttpServletRequest req, HttpServletResponse res) {
+		redisUtil.deleteRefreshToken(nickname);
 		cookieUtil.deleteCookie(JwtUtil.AUTHORIZATION_HEADER, req, res);
+		cookieUtil.deleteCookie("refreshToken", req, res);
+
 		return ResponseEntity.ok().body(ApiResponse.successResponse(null, "로그아웃 성공", 2000));
 	}
 }

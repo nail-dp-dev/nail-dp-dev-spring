@@ -3,6 +3,7 @@ package com.backend.naildp.dto.home;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
@@ -26,18 +27,21 @@ public class HomePostResponse {
 	private Boolean like;
 	private Boolean saved;
 	private LocalDateTime createdDate;
+	private Boundary boundary;
 
 	public HomePostResponse(Post post, List<Post> savedPosts, List<Post> likedPosts) {
+
 		Photo photo = post.getPhotos().get(0);
 
-		postId = post.getId();
 		photoId = photo.getId();
 		photoUrl = photo.getPhotoUrl();
 		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
 		isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
+		postId = post.getId();
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
 		createdDate = post.getCreatedDate();
+		boundary = post.getBoundary();
 	}
 
 	public static HomePostResponse likedPostResponse(Post post, List<Post> savedPost) {
@@ -52,6 +56,7 @@ public class HomePostResponse {
 			.like(true)
 			.saved(savedPost.contains(post))
 			.createdDate(post.getCreatedDate())
+			.boundary(post.getBoundary())
 			.build();
 	}
 
@@ -67,6 +72,7 @@ public class HomePostResponse {
 			.like(false)
 			.saved(false)
 			.createdDate(post.getCreatedDate())
+			.boundary(post.getBoundary())
 			.build();
 	}
 }

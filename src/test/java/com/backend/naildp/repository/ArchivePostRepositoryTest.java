@@ -21,7 +21,6 @@ import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 
 import jakarta.persistence.EntityManager;
@@ -87,9 +86,7 @@ class ArchivePostRepositoryTest {
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
-		SocialLogin socialLogin = new SocialLogin(socialLoginId, "kakao", email, user);
 		em.persist(user);
-		em.persist(socialLogin);
 		return user;
 	}
 
@@ -104,7 +101,7 @@ class ArchivePostRepositoryTest {
 			FileRequestDto subPhotoFileRequestDto = new FileRequestDto("subName" + user.getNickname() + i, 1L,
 				"subUrl-" + user.getNickname() + i);
 			Photo photo1 = new Photo(post, thumbnailFileRequestDto);
-			Photo photo2 = new Photo(post,  subPhotoFileRequestDto);
+			Photo photo2 = new Photo(post, subPhotoFileRequestDto);
 			post.addPhoto(photo1);
 			post.addPhoto(photo2);
 			posts.add(post);

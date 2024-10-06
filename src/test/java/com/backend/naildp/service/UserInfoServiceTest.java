@@ -2,215 +2,139 @@ package com.backend.naildp.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
-import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.User;
-import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.ArchivePostRepository;
+import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.UserRepository;
-import com.backend.naildp.repository.UsersProfileRepository;
 
+@SpringBootTest
+@Transactional
 class UserInfoServiceTest {
-	@Mock
-	private UserRepository userRepository;
-	@Mock
-	private PostRepository postRepository;
-	@Mock
-	private ProfileRepository profileRepository;
-	@Mock
-	private ArchivePostRepository archivePostRepository;
-	@Mock
-	private FollowRepository followRepository;
-	@InjectMocks
+
+	@Autowired
 	private UserInfoService userInfoService;
-	@Mock
-	private UsersProfileRepository usersProfileRepository;
 
-	private User user1;
-	private User user2;
-	private Profile profile1;
-	private Post post1;
-	private Post post2;
-	private Post post3;
-	private Archive archive1;
-	private ArchivePost archivePost1;
-	private ArchivePost archivePost2;
-	private Follow follow1;
+	@Autowired
+	private UserRepository userRepository;
 
-	private int followerCount;
+	@Autowired
+	private ArchivePostRepository archivePostRepository;
 
-	private UsersProfile userProfile1;
-	private UsersProfile userProfile2;
+	@Autowired
+	private FollowRepository followRepository;
+
+	@Autowired
+	private PostRepository postRepository;
+
+	@Autowired
+	private ArchiveRepository archiveRepository;
+
+	private User myUser;
+	private User otherUser;
+	private Post post;
+	private ArchivePost archivePost;
 
 	@BeforeEach
 	void setUp() {
-		MockitoAnnotations.openMocks(this);
+		myUser = createUser("myUser");
+		otherUser = createUser("otherUser");
 
-		user1 = new User("alswl", "010-1234-5678", 1000L, UserRole.USER);
-		profile1 = Profile.builder()
-			.profileType(ProfileType.CUSTOMIZATION)
-			.name("name")
-			.profileUrl("alswl.profileUrl.jpg")
-			.thumbnail(true)
+		post = createPost(otherUser, Boundary.ALL);
+		Post myPost = createPost(myUser, Boundary.NONE);
+
+		Archive otherArchive = archiveRepository.save(new Archive(otherUser, "otherArchive", Boundary.ALL));
+
+		archivePostRepository.save(new ArchivePost(otherArchive, post));
+		archivePostRepository.save(new ArchivePost(otherArchive, myPost));
+
+	}
+
+	@Test
+	@DisplayName("다른 사용자 정보 가져오기 - 팔로우한 경우")
+	void getOtherUserInfo_Success() {
+		//given
+		followRepository.save(new Follow(myUser, otherUser));
+
+		//when
+		UserInfoResponseDto response = userInfoService.getOtherUserInfo(myUser.getNickname(), otherUser.getNickname());
+
+		//then
+		assertThat(response.getNickname()).isEqualTo(otherUser.getNickname());
+		assertThat(response.getPoint()).isEqualTo(null);
+		assertThat(response.getProfileUrl()).isEqualTo(otherUser.getThumbnailUrl());
+		assertThat(response.getPostsCount()).isEqualTo(1);
+		assertThat(response.getSaveCount()).isEqualTo(1);
+		assertThat(response.getFollowerCount()).isEqualTo(1);
+		assertThat(response.getFollowingCount()).isEqualTo(0);
+		assertThat(response.getFollowingStatus()).isTrue();
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 사용자 정보 조회")
+	void getOtherUserInfo_UserNotFound() {
+		//given
+		String notFoundUser = "notFoundUser";
+
+		//then
+		CustomException exception = assertThrows(CustomException.class,
+			() -> userInfoService.getOtherUserInfo(myUser.getNickname(), notFoundUser));
+
+		assertThat(exception.getMessage()).isEqualTo("nickname 으로 회원을 찾을 수 없습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
+	}
+
+	@Test
+	@DisplayName("다른 사용자 정보 가져오기 - 팔로우 아닌 경우")
+	void getOtherUserInfo_NoFollowers() {
+		followRepository.deleteAll();
+		// when
+		UserInfoResponseDto response = userInfoService.getOtherUserInfo(myUser.getNickname(), otherUser.getNickname());
+
+		// then
+		assertThat(response.getNickname()).isEqualTo(otherUser.getNickname());
+		assertThat(response.getPoint()).isEqualTo(null);
+		assertThat(response.getProfileUrl()).isEqualTo(otherUser.getThumbnailUrl());
+		assertThat(response.getPostsCount()).isEqualTo(1);
+		assertThat(response.getSaveCount()).isEqualTo(1);
+		assertThat(response.getFollowerCount()).isEqualTo(0);
+		assertThat(response.getFollowingCount()).isEqualTo(0);
+		assertThat(response.getFollowingStatus()).isFalse();
+	}
+
+	private User createUser(String postWriter) {
+		User user = User.builder().nickname(postWriter).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		userRepository.save(user);
+		return user;
+	}
+
+	private Post createPost(User postWriter, Boundary boundary) {
+		Post post = Post.builder()
+			.user(postWriter)
+			.postContent(postWriter.getNickname() + "content")
+			.tempSave(false)
+			.boundary(boundary)
 			.build();
-
-		userProfile1 = UsersProfile.builder()
-			.user(user1)
-			.profile(profile1)
-			.build();
-
-		post1 = new Post(user1, "alswl postContent", 0L, Boundary.ALL, false);
-
-		user2 = new User("jw", "010-9876-5432", 0L, UserRole.USER);
-		post2 = new Post(user2, "jw postContent", 0L, Boundary.ALL, false);
-		post3 = new Post(user2, "jw postContent", 0L, Boundary.ALL, true);
-
-		archive1 = new Archive(user1, "alswl archive", Boundary.ALL);
+		postRepository.save(post);
+		return post;
 	}
 
-	@DisplayName("저장한 포스트의 공개범위가 전체일 떄")
-	@Test
-	void testGetUserInfo_PostBoundaryAll() {
-		// Given
-		archivePost1 = new ArchivePost(archive1, post2);
-		followerCount = 0;
-
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
-			List.of(archivePost1));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
-		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
-		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
-
-		// When
-		UserInfoResponseDto userInfoResponseDto = userInfoService.getUserInfo("alswl");
-
-		// Then
-		assertThat(userInfoResponseDto.getNickname()).isEqualTo("alswl");
-		assertThat(userInfoResponseDto.getPoint()).isEqualTo(1000L);
-		assertThat(userInfoResponseDto.getProfileUrl()).isEqualTo("alswl.profileUrl.jpg");
-		assertThat(userInfoResponseDto.getPostsCount()).isEqualTo(1);
-		assertThat(userInfoResponseDto.getSaveCount()).isEqualTo(1);
-		assertThat(userInfoResponseDto.getFollowerCount()).isEqualTo(followerCount);
-	}
-
-	@DisplayName("저장한 포스트의 공개범위가 팔로워일 때_notFollowing")
-	@Test
-	void testGetUserInfo_PostBoundaryFollow1() {
-		// Given
-		post2 = new Post(user2, "jw postContent", 0L, Boundary.FOLLOW, false);
-		archivePost1 = new ArchivePost(archive1, post2);
-
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
-			List.of(archivePost1));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(Collections.emptyList());
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
-		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
-		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
-
-		// When
-		UserInfoResponseDto userInfoResponseDto = userInfoService.getUserInfo("alswl");
-
-		// Then
-		assertThat(userInfoResponseDto.getSaveCount()).isEqualTo(0);
-	}
-
-	@DisplayName("저장한 포스트의 공개범위가 팔로워일 때_Following")
-	@Test
-	void testGetUserInfo_PostBoundaryFollow2() {
-		// Given
-		post2 = new Post(user2, "jw postContent", 0L, Boundary.FOLLOW, false);
-		Post post4 = new Post(user2, "jw postContent", 0L, Boundary.FOLLOW, false);
-		archivePost1 = new ArchivePost(archive1, post2);
-		archivePost2 = new ArchivePost(archive1, post4);
-
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
-			List.of(archivePost1, archivePost2));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(
-			List.of(user2.getNickname(), "user3"));
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
-		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
-		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
-
-		// When
-		UserInfoResponseDto userInfoResponseDto = userInfoService.getUserInfo("alswl");
-
-		// Then
-		assertThat(userInfoResponseDto.getSaveCount()).isEqualTo(2);
-	}
-
-	@DisplayName("저장한 포스트의 공개범위가 비공개일 때")
-	@Test
-	void testGetUserInfo_PostBoundaryNone() {
-		// Given
-		post2 = new Post(user2, "jw postContent", 0L, Boundary.NONE, false);
-		archivePost1 = new ArchivePost(archive1, post2);
-		followerCount = 1;
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(archivePostRepository.findAllArchivePostsByUserNicknameAndTempSaveIsFalse("alswl")).willReturn(
-			List.of(archivePost1));
-		given(followRepository.findFollowingNicknamesByUserNickname("alswl")).willReturn(List.of(user2.getNickname()));
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.of(profile1.getProfileUrl()));
-		given(postRepository.countPostsByUserAndTempSaveIsFalse(user1)).willReturn(1);
-		given(followRepository.countFollowersByUserNickname("alswl")).willReturn(followerCount);
-
-		// When
-		UserInfoResponseDto userInfoResponseDto = userInfoService.getUserInfo("alswl");
-
-		// Then
-		assertThat(userInfoResponseDto.getSaveCount()).isEqualTo(0);
-	}
-
-	@Test
-	@DisplayName("사용자를 찾지 못할 때 예외 발생")
-	void testGetUserInfo_UserNotFound() {
-		// Given
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.empty());
-
-		// Then
-		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("user1"));
-	}
-
-	@Test
-	@DisplayName("설정된 프로필 썸네일이 없을 때 예외 발생")
-	void testGetUserInfo_NoProfileThumbnail() {
-		// Given
-		given(userRepository.findByNickname("alswl")).willReturn(Optional.of(user1));
-		given(usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(user1.getNickname())).willReturn(
-			Optional.empty());
-
-		// Then
-		assertThrows(CustomException.class, () -> userInfoService.getUserInfo("alswl"));
-	}
 }

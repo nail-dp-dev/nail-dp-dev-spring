@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +26,6 @@ import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 
 import jakarta.persistence.EntityManager;
@@ -80,110 +78,158 @@ class PostRepositoryTest {
 		log.info("========= 사전 데이터 끝 =========");
 	}
 
-	@DisplayName("전체공개이거나 팔로우 공개이고 임시저장이 아닌 게시물 페이징 조회 테스트")
+	@DisplayName("팔로워 사용자는 전체공개이거나 팔로워 공개 게시물을 조회할 수 있다.")
 	@Test
-	void offsetPagingPostsWithFollow() {
+	void readablePostByFollowerIsFollowAndAll() {
 		//given
-		int postCntOpened = TOTAL_POST_CNT * 3;
-		PageRequest pageRequest = PageRequest.of(0, postCntOpened, Sort.by(Sort.Direction.DESC, "id"));
-		List<Follow> follows = findFollowByFollowerNickname("jw");
-		List<User> followingsByJw = follows.stream().map(Follow::getFollowing).collect(Collectors.toList());
+		String followerUserNickname = "jw";
+		int readablePostCount = TOTAL_POST_CNT * 3;
+		PageRequest pageRequest = PageRequest.of(0, readablePostCount, Sort.by(Sort.Direction.DESC, "id"));
+		List<User> followings = findFollowByFollowerNickname(followerUserNickname).stream()
+			.map(Follow::getFollowing).toList();
 
 		//when
-		Slice<Post> recentPosts = postRepository.findRecentPostsByFollowing(followingsByJw, pageRequest);
+		Slice<Post> recentPosts = postRepository.findRecentPostsByFollowing(followings, followerUserNickname, pageRequest);
 
 		//then
-		assertThat(recentPosts.getSize()).isEqualTo(postCntOpened);
-		assertThat(recentPosts.getNumberOfElements()).isEqualTo(postCntOpened);
-		assertThat(recentPosts.getNumber()).isEqualTo(0);
-		assertThat(recentPosts.getSort().isSorted()).isTrue();
+		assertThat(recentPosts.getSize()).isEqualTo(readablePostCount);
+		assertThat(recentPosts.getNumberOfElements()).isEqualTo(readablePostCount);
 		assertThat(recentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
 		assertThat(recentPosts).extracting("tempSave").containsOnly(false);
 	}
 
-	@DisplayName("전체공개이거나 팔로우 공개이고 임시저장이 아닌 게시물 페이징 조회 테스트 - 두번째 호출부터")
+	@DisplayName("일반 사용자는 전체공개 게시물만 조회 가능")
 	@Test
-	void cursorPagingPostsWithFollow() {
+	void readablePostByNormalUserIsAll() {
 		//given
-		Post oldestPost = findOldestPost();
-		int postCntOpened = TOTAL_POST_CNT * 3;
-		long oldestPostId = oldestPost.getId() + 1;
-		System.out.println("oldestPostId = " + oldestPostId);
-
-		PageRequest pageRequest = PageRequest.of(0, postCntOpened, Sort.by(Sort.Direction.DESC, "id"));
-		List<Follow> follows = findFollowByFollowerNickname("jw");
-		List<User> followingsByJw = follows.stream().map(Follow::getFollowing).collect(Collectors.toList());
+		String normalUserNickname = "normal";
+		int readablePostCount = TOTAL_POST_CNT * 2;
+		PageRequest pageRequest = PageRequest.of(0, readablePostCount, Sort.by(Sort.Direction.DESC, "id"));
+		List<User> followings = findFollowByFollowerNickname(normalUserNickname).stream()
+			.map(Follow::getFollowing)
+			.toList();
 
 		//when
-		Slice<Post> secondRecentPosts = postRepository.findRecentPostsByIdAndFollowing(oldestPostId, followingsByJw,
-			pageRequest);
+		Slice<Post> recentPosts = postRepository.findRecentPostsByFollowing(followings, normalUserNickname, pageRequest);
 
 		//then
-		assertThat(secondRecentPosts.getSize()).isEqualTo(postCntOpened);
-		assertThat(secondRecentPosts.getNumberOfElements()).isEqualTo(postCntOpened);
-		assertThat(secondRecentPosts.getNumber()).isEqualTo(0);
-		assertThat(secondRecentPosts.getSort().isSorted()).isTrue();
+		assertThat(recentPosts.getSize()).isEqualTo(readablePostCount);
+		assertThat(recentPosts.getNumberOfElements()).isEqualTo(readablePostCount);
+		assertThat(recentPosts).extracting("boundary").containsOnly(Boundary.ALL);
+		assertThat(recentPosts).extracting("tempSave").containsOnly(false);
+	}
+
+	@DisplayName("게시물 작성자는 전체공개 게시물과 팔로잉하는 사용자의 팔로우 공개 게시물을 조회 가능")
+	@Test
+	void readablePostByWriterIsFollowAndAll() {
+		//given
+		String writerNickname = "mj";
+		int readablePostCnt = TOTAL_POST_CNT * 3;
+		PageRequest pageRequest = PageRequest.of(0, readablePostCnt, Sort.by(Sort.Direction.DESC, "id"));
+		List<User> followings = findFollowByFollowerNickname(writerNickname).stream()
+			.map(Follow::getFollowing).toList();
+
+		//when
+		Slice<Post> recentPosts = postRepository.findRecentPostsByFollowing(followings, writerNickname, pageRequest);
+
+		//then
+		assertThat(recentPosts.getSize()).isEqualTo(readablePostCnt);
+		assertThat(recentPosts.getNumberOfElements()).isEqualTo(readablePostCnt);
+		assertThat(recentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
+		assertThat(recentPosts).extracting("tempSave").containsOnly(false);
+	}
+
+	@DisplayName("팔로워 사용자는 전체공개이거나 팔로잉 사용자의 팔로워 공개 게시물을 조회할 수 있다. - 커서 페이징")
+	@Test
+	void readablePostByFollowerIsFollowAndAllWithUsingCursor() {
+		//given
+		String followerUserNickname = "jw";
+		int firstPageElementCount = 1;
+		int readablePostCount = TOTAL_POST_CNT * 3 - firstPageElementCount;
+		PageRequest firstPageRequest = PageRequest.of(0, firstPageElementCount, Sort.by(Sort.Direction.DESC, "id"));
+		PageRequest pageRequest = PageRequest.of(0, readablePostCount, Sort.by(Sort.Direction.DESC, "id"));
+		List<User> followings = findFollowByFollowerNickname(followerUserNickname).stream()
+			.map(Follow::getFollowing).toList();
+
+		//when
+		Long cursorPostId = postRepository.findRecentPostsByFollowing(followings, followerUserNickname, firstPageRequest)
+			.getContent().get(firstPageElementCount - 1).getId();
+		Slice<Post> secondRecentPosts = postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followings,
+			followerUserNickname, pageRequest);
+
+		//then
+		assertThat(secondRecentPosts.getSize()).isEqualTo(readablePostCount);
+		assertThat(secondRecentPosts.getNumberOfElements()).isEqualTo(readablePostCount);
 		assertThat(secondRecentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
 		assertThat(secondRecentPosts).extracting("tempSave").containsOnly(false);
 	}
 
-	@DisplayName("postId로 Post와 User 페치조인 테스트")
+	@DisplayName("일반 사용자는 전체공개 게시물을 조회할 수 있다. - 커서 페이징")
 	@Test
-	void findPostsAndWriter() {
+	void readablePostByNormalUserIsAllWithUsingCursor() {
 		//given
-		String nickname = "mj";
-		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
-			.setParameter("nickname", nickname)
-			.getSingleResult();
-		List<Post> posts = em.createQuery("select p from Post p join fetch p.user u where u = :user and p.tempSave = false",
-				Post.class)
-			.setParameter("user", user)
-			.getResultList();
+		String normalUserNickname = "normalUserNickname";
+		int firstPageElementCount = 1;
+		int readablePostCount = TOTAL_POST_CNT * 2 - firstPageElementCount;
+		PageRequest firstPageRequest = PageRequest.of(0, firstPageElementCount, Sort.by(Sort.Direction.DESC, "id"));
+		PageRequest pageRequest = PageRequest.of(0, readablePostCount, Sort.by(Sort.Direction.DESC, "id"));
+		List<User> followings = findFollowByFollowerNickname(normalUserNickname).stream()
+			.map(Follow::getFollowing).toList();
 
 		//when
-		List<Post> findPosts = posts.stream()
-			.map(post -> postRepository.findPostAndWriterById(post.getId()).orElseThrow())
-			.collect(Collectors.toList());
+		Long cursorPostId = postRepository.findRecentPostsByFollowing(followings, normalUserNickname, firstPageRequest)
+			.getContent().get(firstPageElementCount - 1).getId();
+		Slice<Post> secondRecentPosts = postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followings,
+			normalUserNickname, pageRequest);
 
 		//then
-		assertThat(findPosts).extracting("tempSave").containsOnly(false);
-		assertThat(findPosts).extracting("user").containsOnly(user);
+		assertThat(secondRecentPosts.getSize()).isEqualTo(readablePostCount);
+		assertThat(secondRecentPosts.getNumberOfElements()).isEqualTo(readablePostCount);
+		assertThat(secondRecentPosts).extracting("boundary").containsOnly(Boundary.ALL);
+		assertThat(secondRecentPosts).extracting("tempSave").containsOnly(false);
+	}
+
+	@DisplayName("게시물 작성자는 전체공개 게시물과 팔로잉하는 사용자의 팔로우 공개 게시물을 조회할 수 있다. - 커서 페이징")
+	@Test
+	void readablePostByWriterIsFollowAndAllWithUsingCursor() {
+		//given
+		String writerNickname = "mj";
+		int firstPageElementCount = 1;
+		int readablePostCount = TOTAL_POST_CNT * 2 - firstPageElementCount;
+		PageRequest firstPageRequest = PageRequest.of(0, firstPageElementCount, Sort.by(Sort.Direction.DESC, "id"));
+		PageRequest pageRequest = PageRequest.of(0, readablePostCount, Sort.by(Sort.Direction.DESC, "id"));
+		List<User> followings = findFollowByFollowerNickname(writerNickname).stream()
+			.map(Follow::getFollowing).toList();
+
+		//when
+		Long cursorPostId = postRepository.findRecentPostsByFollowing(followings, writerNickname, firstPageRequest)
+			.getContent().get(firstPageElementCount - 1).getId();
+		Slice<Post> secondRecentPosts = postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followings,
+			writerNickname, pageRequest);
+
+		//then
+		assertThat(secondRecentPosts.getSize()).isEqualTo(readablePostCount);
+		assertThat(secondRecentPosts.getNumberOfElements()).isEqualTo(readablePostCount);
+		assertThat(secondRecentPosts).extracting("boundary").containsOnly(Boundary.FOLLOW, Boundary.ALL);
+		assertThat(secondRecentPosts).extracting("tempSave").containsOnly(false);
 	}
 
 	private void createTestTempSavePostAndPhoto(User user) {
 		Post post = new Post(user, "임시저장 게시물 - " + user.getNickname(), 0L, Boundary.ALL, true);
-		FileRequestDto fileRequestDto1 = new FileRequestDto("임시저장 photo 1-", 1L, "임시저장 url 1");
-		FileRequestDto fileRequestDto2 = new FileRequestDto("임시저장 photo 2-", 1L, "임시저장 url 2");
-		Photo photo1 = new Photo(post, fileRequestDto1);
-		Photo photo2 = new Photo(post, fileRequestDto2);
-		post.addPhoto(photo1);
-		post.addPhoto(photo2);
 		posts.add(post);
-		photos.add(photo1);
-		photos.add(photo2);
 	}
 
 	private void createTestPostWithPhoto(int postCnt, User user, Boundary boundary) {
 		for (int i = 0; i < postCnt; i++) {
 			Post post = new Post(user, "" + i, 0L, boundary, false);
-			FileRequestDto fileRequestDto1 = new FileRequestDto("photo 1-" + user.getNickname() + i, 1L, "url 1-" + user.getNickname() + i);
-			FileRequestDto fileRequestDto2 = new FileRequestDto("photo 2-" + user.getNickname() + i, 1L, "url 2-" + user.getNickname() + i);
-			Photo photo1 = new Photo(post, fileRequestDto1);
-			Photo photo2 = new Photo(post, fileRequestDto2);
-			post.addPhoto(photo1);
-			post.addPhoto(photo2);
 			posts.add(post);
-			photos.add(photo1);
-			photos.add(photo2);
 		}
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
-		SocialLogin socialLogin = new SocialLogin(socialLoginId, "kakao", email, user);
 		em.persist(user);
-		em.persist(socialLogin);
 		return user;
 	}
 

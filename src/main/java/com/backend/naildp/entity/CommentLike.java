@@ -26,7 +26,15 @@ public class CommentLike {
 	private User user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "post_id")
+	@JoinColumn(name = "comment_id")
 	private Comment comment;
 
+	public CommentLike(User user, Comment comment) {
+		this.user = user;
+		this.comment = comment;
+	}
+
+	public boolean isLikedBy(String nickname) {
+		return user.equalsNickname(nickname);
+	}
 }

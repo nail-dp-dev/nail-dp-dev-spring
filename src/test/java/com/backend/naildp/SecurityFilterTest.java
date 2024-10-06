@@ -13,13 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.backend.naildp.jwt.JwtUtil;
-import com.backend.naildp.security.UserDetailsServiceImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.service.AuthService;
 
 @SpringBootTest(classes = NaildpApplication.class)
@@ -32,6 +34,12 @@ public class SecurityFilterTest {
 	private WebApplicationContext context;
 	@Autowired
 	private MockMvc mockMvc;
+
+	@MockBean
+	private OAuth2AuthorizedClientService authorizedClientService;
+
+	@MockBean
+	private ClientRegistrationRepository clientRegistrationRepository;
 
 	@MockBean
 	private AuthService authService;
@@ -73,8 +81,8 @@ public class SecurityFilterTest {
 	@Test
 	@DisplayName("보호된 엔드포인트 테스트 - 인증 없이 접근 시")
 	public void securityTest2() throws Exception {
-		mockMvc.perform(get("/protected"))
-			.andExpect(status().isForbidden()) // 403
+		mockMvc.perform(get("/api/protected"))
+			.andExpect(status().isUnauthorized()) // 401
 			.andDo(print());
 	}
 
@@ -83,7 +91,7 @@ public class SecurityFilterTest {
 	@WithMockUser(username = "testuser", roles = {"USER"})
 	public void securityTest3() throws Exception {
 
-		mockMvc.perform(get("/protected"))
+		mockMvc.perform(get("/api/protected"))
 			.andExpect(status().isOk()) // 인증된 경우 200 OK 예상
 			.andDo(print());
 

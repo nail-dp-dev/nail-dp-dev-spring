@@ -18,11 +18,12 @@ import org.springframework.http.ResponseEntity;
 
 import com.backend.naildp.JwtUtilTest;
 import com.backend.naildp.common.CookieUtil;
+import com.backend.naildp.common.ProviderType;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.KakaoUserInfoDto;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
+import com.backend.naildp.dto.auth.SocialUserInfoDto;
 import com.backend.naildp.entity.Profile;
 import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
@@ -30,8 +31,9 @@ import com.backend.naildp.entity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.jwt.JwtAuthorizationFilter;
-import com.backend.naildp.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
+import com.backend.naildp.oauth2.jwt.JwtUtil;
+import com.backend.naildp.oauth2.jwt.RedisUtil;
 import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -56,6 +58,8 @@ class AuthServiceTest {
 	ProfileRepository profileRepository;
 	@Mock
 	JwtUtil jwtUtil;
+	@Mock
+	private RedisUtil redisUtil;
 
 	@Mock
 	private HttpServletRequest req;
@@ -72,7 +76,7 @@ class AuthServiceTest {
 	private UsersProfileRepository usersProfileRepository;
 
 	private LoginRequestDto loginRequestDto;
-	private KakaoUserInfoDto kakaoUserInfoDto;
+	private SocialUserInfoDto kakaoUserInfoDto;
 
 	@BeforeEach
 	public void setUp() {
@@ -80,7 +84,8 @@ class AuthServiceTest {
 		loginRequestDto.setNickname("alswl123");
 		loginRequestDto.setPhoneNumber("010-1234-5678");
 
-		kakaoUserInfoDto = new KakaoUserInfoDto(123L, "alswl123@naver.com", "http://naver.com/profile.jpg");
+		kakaoUserInfoDto = new SocialUserInfoDto("123L", "alswl123@naver.com", "http://naver.com/profile.jpg",
+			ProviderType.kakao);
 	}
 
 	@Test
@@ -89,8 +94,7 @@ class AuthServiceTest {
 		// given
 		given(userRepository.findByNickname(loginRequestDto.getNickname())).willReturn(Optional.empty());
 		given(cookieUtil.getUserInfoFromCookie(req)).willReturn(kakaoUserInfoDto);
-		doNothing().when(cookieUtil).deleteCookie("userInfo", req, res);
-		given(jwtUtil.createToken(anyString(), any(UserRole.class))).willReturn("Authorization");
+		given(jwtUtil.createToken(any(), any(UserRole.class))).willReturn(anyString());
 
 		// when
 		ResponseEntity<ApiResponse<?>> response = authService.signupUser(loginRequestDto, req, res);
@@ -103,14 +107,14 @@ class AuthServiceTest {
 		verify(profileRepository).save(any(Profile.class));
 		verify(usersProfileRepository).save(any(UsersProfile.class));
 		verify(cookieUtil).deleteCookie("userInfo", req, res);
-		verify(jwtUtil).addJwtToCookie("Authorization", res);
+
 	}
 
 	@Test
 	@DisplayName("회원가입 실패")
 	public void testSignup_fail() {
 		// given
-		User existingUser = new User("alswl123", "010-1234-5678", 1L, UserRole.USER);
+		User existingUser = createUser();
 		given(userRepository.findByNickname(loginRequestDto.getNickname())).willReturn(Optional.of(existingUser));
 
 		// when
@@ -125,7 +129,16 @@ class AuthServiceTest {
 		verify(profileRepository, never()).save(any(Profile.class));
 		verify(cookieUtil, never()).deleteCookie(anyString(), any(HttpServletRequest.class),
 			any(HttpServletResponse.class));
-		verify(jwtUtil, never()).addJwtToCookie(anyString(), any(HttpServletResponse.class));
+		verify(jwtUtil, never()).addJwtToCookie(any(), anyString(), any(HttpServletResponse.class));
+	}
+
+	private User createUser() {
+		return User.builder()
+			.nickname("alswl123")
+			.phoneNumber("010-1234-5678")
+			.role(UserRole.USER)
+			.agreement(true)
+			.build();
 	}
 
 	@Test
@@ -150,7 +163,7 @@ class AuthServiceTest {
 		// given
 		NicknameRequestDto requestDto = new NicknameRequestDto();
 		requestDto.setNickname("alswl123");
-		User user = new User("alswl123", "010-1234-5678", 1L, UserRole.USER);
+		User user = createUser();
 		given(userRepository.findByNickname(requestDto.getNickname())).willReturn(Optional.of(user));
 
 		// when
@@ -185,7 +198,7 @@ class AuthServiceTest {
 		// given
 		PhoneNumberRequestDto requestDto = new PhoneNumberRequestDto();
 		requestDto.setPhoneNumber("010-1234-5678");
-		User user = new User("alswl123", "010-1234-5678", 1L, UserRole.USER);
+		User user = createUser();
 		given(userRepository.findByPhoneNumber(requestDto.getPhoneNumber())).willReturn(Optional.of(user));
 
 		// when

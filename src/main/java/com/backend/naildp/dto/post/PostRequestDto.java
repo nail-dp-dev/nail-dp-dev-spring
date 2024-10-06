@@ -16,8 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostRequestDto {
 	private String postContent;
-	@NotNull(message = "임시저장 여부를 입력해주세요")
-	private Boolean tempSave;
 	@NotNull(message = "공개범위를 입력해주세요")
 	private Boundary boundary;
 	@NotEmpty(message = "태그를 추가해주세요")

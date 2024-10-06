@@ -17,10 +17,10 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
@@ -114,12 +114,39 @@ class PostLikeServiceTest {
 		assertThat(deletedPostLike).hasSize(0);
 	}
 
+	@DisplayName("게시물 좋아요 조회 테스트")
+	@Test
+	void countPostLike() {
+		//given
+		User normalUser = createTestMember("normalUserEmail", "normalUser", "pn", 4L);
+		User postWriter = createTestMember("postWriterEmail", "postWriter", "pn", 5L);
+		Post post = Post.builder()
+			.user(normalUser)
+			.postContent("content")
+			.tempSave(false)
+			.boundary(Boundary.ALL)
+			.build();
+		em.persist(post);
+
+		for (int i = 0; i < 10; i++) {
+			em.persist(new PostLike(normalUser, post));
+		}
+		em.flush();
+		em.clear();
+
+		//when
+		System.out.println("====================");
+		PostLikeCountResponse response = postLikeService.countPostLike(post.getId(), normalUser.getNickname());
+		System.out.println("====================");
+
+		//then
+		assertThat(response.getLikeCount()).isEqualTo(10);
+	}
+
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
 		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
 		User user = new User(loginRequestDto, UserRole.USER);
-		SocialLogin socialLogin = new SocialLogin(socialId, "kakao", email, user);
 		User savedUser = userRepository.save(user);
-		em.persist(socialLogin);
 		return savedUser;
 	}
 

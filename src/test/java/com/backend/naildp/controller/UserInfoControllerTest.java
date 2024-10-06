@@ -9,13 +9,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,7 +22,7 @@ import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.security.UserDetailsImpl;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.UserInfoService;
 
 @WebMvcTest(UserInfoController.class)
@@ -43,15 +41,11 @@ public class UserInfoControllerTest {
 
 	@BeforeEach
 	public void setup() {
-		MockitoAnnotations.openMocks(this);
+		User user = User.builder().nickname("testUser").phoneNumber("pn").role(UserRole.USER).agreement(true).build();
+		UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
-		user = new User("testUser", "010-1234-5678", 0L, UserRole.USER);
-
-		given(userDetails.getUser()).willReturn(user);
-
-		SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-		securityContext.setAuthentication(new TestingAuthenticationToken(userDetails, null, "ROLE_USER"));
-		SecurityContextHolder.setContext(securityContext);
+		SecurityContextHolder.getContext().setAuthentication(
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
 	}
 
 	@Test
@@ -70,7 +64,7 @@ public class UserInfoControllerTest {
 		given(userInfoService.getUserInfo("testUser")).willReturn(userInfoResponseDto);
 
 		//Then
-		mockMvc.perform(get("/user").with(csrf())
+		mockMvc.perform(get("/api/user").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.nickname").value("testUser"))
@@ -91,7 +85,7 @@ public class UserInfoControllerTest {
 			.when(userInfoService).getUserInfo(anyString());
 
 		// Then
-		mockMvc.perform(get("/user").with(csrf())
+		mockMvc.perform(get("/api/user").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("nickname 으로 회원을 찾을 수 없습니다."))
@@ -106,7 +100,7 @@ public class UserInfoControllerTest {
 			.when(userInfoService).getUserInfo(anyString());
 
 		// Then
-		mockMvc.perform(get("/user").with(csrf())
+		mockMvc.perform(get("/api/user").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("설정된 프로필 썸네일이 없습니다."))

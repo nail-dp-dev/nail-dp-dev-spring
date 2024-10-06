@@ -46,4 +46,11 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 	Slice<PostLike> findPostLikesByIdAndFollowing(@Param("nickname") String nickname, @Param("id") Long cursorId,
 		@Param("following") List<User> following, PageRequest pageRequest);
 
+	@Query("SELECT pl.post FROM PostLike pl WHERE pl.user.nickname = :nickname")
+	List<Post> findPostLikesByUserNickname(@Param("nickname") String nickname);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("delete from PostLike pl where pl.post.id = :postId")
+	void deleteAllByPostId(@Param("postId") Long postId);
+
 }

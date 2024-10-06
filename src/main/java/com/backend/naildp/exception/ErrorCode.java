@@ -15,7 +15,7 @@ public enum ErrorCode {
 	// 400 Bad Request
 	TEMPORARY_SERVER_ERROR(400),
 
-	INPUT_NULL(4000),
+	INVALID_FORM(4000),
 
 	ALREADY_EXIST(4001),
 
@@ -28,8 +28,13 @@ public enum ErrorCode {
 
 	FILES_NOT_REGISTERED(4005),
 
-	USER_MISMATCH(4006);
-	// EXPIRED_JWT("401_1", "JWT 시간이 만료되었습니다."),
+	USER_MISMATCH(4006),
+
+	COMMENT_AUTHORITY(4007),
+
+	INVALID_BOUNDARY(4008),
+
+	EXPIRED_JWT(4009);
 	// AUTHENTICATION_FAILURE_JWT("401_2", "올바른 JWT 정보가 아닙니다.");
 	private final int errorCode;
 

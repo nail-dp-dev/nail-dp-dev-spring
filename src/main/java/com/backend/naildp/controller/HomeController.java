@@ -13,16 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.PostInfoService;
-import com.backend.naildp.service.PostService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping
 @RequiredArgsConstructor
+@RequestMapping("/api/")
 public class HomeController {
 
-	// private final PostService postService;
 	private final PostInfoService postInfoService;
 
 	@GetMapping("/home")

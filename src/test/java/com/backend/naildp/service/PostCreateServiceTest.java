@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +11,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +23,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostRequestDto;
 import com.backend.naildp.dto.post.TagRequestDto;
 import com.backend.naildp.entity.Photo;
@@ -30,6 +32,8 @@ import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PhotoRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.TagPostRepository;
@@ -60,15 +64,21 @@ class PostCreateServiceTest {
 	@Mock
 	PhotoRepository photoRepository;
 
+	@Mock
+	FollowRepository followRepository;
+
 	@InjectMocks
 	PostService postService;
+
+	@Mock
+	private PostDeletionFacade postDeletionFacade;
 
 	@Test
 	@DisplayName("게시물 업로드 테스트")
 	void testUploadPost() {
 		// given
 		String nickname = "testUser";
-		PostRequestDto postRequestDto = new PostRequestDto("postContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("postContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			Collections.emptyList());
 
@@ -77,7 +87,7 @@ class PostCreateServiceTest {
 			new MockMultipartFile("file2", new byte[] {4, 5, 6})
 		);
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		List<FileRequestDto> fileRequestDtos = List.of(
 			new FileRequestDto("file1", 12345L, "fileUrl1"),
@@ -85,7 +95,6 @@ class PostCreateServiceTest {
 		);
 
 		Post post = Post.builder()
-			.photos(List.of())
 			.user(user)
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
@@ -116,6 +125,15 @@ class PostCreateServiceTest {
 		verify(photoRepository, times(2)).save(any(Photo.class));
 	}
 
+	private User createUser(String nickname) {
+		return User.builder()
+			.nickname(nickname)
+			.phoneNumber("010-1234-5678")
+			.agreement(true)
+			.role(UserRole.USER)
+			.build();
+	}
+
 	@Test
 	@DisplayName("게시물 수정 테스트")
 	void testEditPost() {
@@ -128,7 +146,7 @@ class PostCreateServiceTest {
 			new MockMultipartFile("newFile2", new byte[] {4, 5, 6})
 		);
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
 		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
@@ -136,13 +154,11 @@ class PostCreateServiceTest {
 		List<FileRequestDto> fileRequestDtos = List.of(
 			fileRequestDto1, fileRequestDto2);
 
-		PostRequestDto postRequestDto = new PostRequestDto("editContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("editContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			List.of("fileUrl1", "fileUrl2"));
 
 		Post post = Post.builder()
-			.id(postId)
-			.photos(List.of())
 			.user(user)
 			.postContent("content")
 			.boundary(Boundary.FOLLOW)
@@ -152,7 +168,6 @@ class PostCreateServiceTest {
 		Photo photo1 = new Photo(post, fileRequestDto1);
 		Photo photo2 = new Photo(post, fileRequestDto2);
 
-		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 		given(tagRepository.findByName(anyString())).willAnswer(invocation -> {
 			String tagName = invocation.getArgument(0);
@@ -168,7 +183,6 @@ class PostCreateServiceTest {
 		postService.editPost(nickname, postRequestDto, files, postId);
 
 		// then
-		verify(userRepository, times(1)).findByNickname(nickname);
 		verify(postRepository, times(1)).findById(postId);
 		verify(tagPostRepository, times(1)).deleteAllByPostId(postId);
 		verify(tagRepository, times(2)).findByName(anyString());
@@ -192,15 +206,13 @@ class PostCreateServiceTest {
 		// given
 		String nickname = "testUser";
 		Long postId = 10L;
-		PostRequestDto postRequestDto = new PostRequestDto("editContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("editContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			List.of("fileUrl1", "fileUrl2"));
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		Post post = Post.builder()
-			.id(postId)
-			.photos(new ArrayList<>())
 			.user(user)
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
@@ -210,7 +222,6 @@ class PostCreateServiceTest {
 		post.addPhoto(new Photo(post, new FileRequestDto("file1", 12345L, "fileUrl1")));
 		post.addPhoto(new Photo(post, new FileRequestDto("file2", 12345L, "fileUrl2")));
 
-		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
 		// then
@@ -228,23 +239,20 @@ class PostCreateServiceTest {
 		String nickname = "testUser";
 		Long postId = 10L;
 
-		PostRequestDto postRequestDto = new PostRequestDto("postContent", false, Boundary.ALL,
+		PostRequestDto postRequestDto = new PostRequestDto("postContent", Boundary.ALL,
 			List.of(new TagRequestDto("tag1"), new TagRequestDto("tag2")),
 			Collections.emptyList());
 
-		User user = new User(nickname, "010-1234-5678", 0L, UserRole.USER);
+		User user = createUser(nickname);
 
 		FileRequestDto fileRequestDto1 = new FileRequestDto("file1", 12345L, "fileUrl1");
 		FileRequestDto fileRequestDto2 = new FileRequestDto("file2", 12345L, "fileUrl2");
 
 		Post post = Post.builder()
-			.id(postId)
 			.user(user)
-			.photos(new ArrayList<>())
 			.postContent(postRequestDto.getPostContent())
 			.boundary(postRequestDto.getBoundary())
 			.tempSave(false)
-			.tagPosts(new ArrayList<>())
 			.build();
 
 		Photo photo1 = new Photo(post, fileRequestDto1);
@@ -262,7 +270,6 @@ class PostCreateServiceTest {
 		post.addTagPost(tagPost1);
 		post.addTagPost(tagPost2);
 
-		given(userRepository.findByNickname(nickname)).willReturn(Optional.of(user));
 		given(postRepository.findById(postId)).willReturn(Optional.of(post));
 		given(photoRepository.findAllByPostId(postId)).willReturn(List.of(photo1, photo2));
 
@@ -280,5 +287,195 @@ class PostCreateServiceTest {
 		assertTrue(responseDto.getPhotos().stream().anyMatch(file -> file.getFileUrl().equals("fileUrl2")));
 		assertEquals(Boundary.ALL, responseDto.getBoundary());
 		assertFalse(responseDto.getTempSave());
+	}
+
+	@DisplayName("게시물 공개범위 변경 예외 테스트 - 작성자와 요청자가 다를 때")
+	@Test
+	void changeBoundaryExceptionWithOtherUser() {
+		//given
+		String wrongUserNickname = "wrongNickname";
+		User user = User.builder().nickname("nickname").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class,
+			() -> postService.changeBoundary(1L, new PostBoundaryRequest(Boundary.FOLLOW), wrongUserNickname));
+
+		//then
+		assertThat(exception.getMessage()).isEqualTo("게시글 범위 설정은 작성자만 할 수 있습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_MISMATCH);
+	}
+
+	@DisplayName("게시물 공개범위 변경 테스트")
+	@Test
+	void changeBoundary() {
+		//given
+		String userNickname = "nickname";
+		User user = User.builder().nickname(userNickname).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+
+		//when
+		postService.changeBoundary(1L, new PostBoundaryRequest(Boundary.NONE), userNickname);
+
+		//then
+		verify(postRepository).findPostAndUser(1L);
+	}
+
+	@Test
+	@DisplayName("게시물 삭제 성공 테스트")
+	public void deletePostSuccessfully() {
+		User user = User.builder().nickname("user1").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+		given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+		postService.deletePost(1L, "user1");
+
+		then(postDeletionFacade).should().deletePostAndAssociations(1L);
+	}
+
+	@Test
+	@DisplayName("게시물 삭제 실패 테스트 - 작성자가 아닌 경우")
+	public void deletePost_IsNotAuthor() {
+		User user = User.builder().nickname("user1").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+		given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+		assertThatThrownBy(() -> postService.deletePost(1L, "user2"))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("게시글 삭제는 작성자만 할 수 있습니다.");
+
+		then(postDeletionFacade).shouldHaveNoInteractions();
+	}
+
+	@Test
+	@DisplayName("게시물 삭제 실패 테스트 - 게시물 존재하지 않는 경우")
+	public void deletePost_NotFound() {
+		User user = User.builder().nickname("user1").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(user).postContent("content").tempSave(false).boundary(Boundary.ALL).build();
+
+		given(postRepository.findById(1L)).willReturn(Optional.empty());
+
+		assertThatThrownBy(() -> postService.deletePost(1L, "user1"))
+			.isInstanceOf(CustomException.class)
+			.hasMessage("해당 포스트를 찾을 수 없습니다.");
+
+		then(postDeletionFacade).shouldHaveNoInteractions();
+	}
+
+	@Test
+	@DisplayName("게시물 공유 횟수 조회 예외 - 비공개 게시물에 작성자가 아닌 경우")
+	void privatePostSharedCountExceptionWithoutWriter() {
+		//given
+		User user = User.builder().nickname("user").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post privatePost = Post.builder().user(writer).postContent("").tempSave(false).boundary(Boundary.NONE).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(privatePost));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class, () -> postService.countSharing(1L, "user"));
+
+		//then
+		assertThat(exception).hasMessage("비공개 게시물은 작성자만 접근할 수 있습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_BOUNDARY);
+	}
+
+	@Test
+	@DisplayName("게시물 공유 횟수 조회 예외 - 팔로우 공개 게시물에 작성자와 팔로워가 아닌 경우")
+	void followPostSharedCountExceptionWithoutWriterAndFollower() {
+		//given
+		User user = User.builder().nickname("user").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post followPost = Post.builder().user(writer).postContent("").tempSave(false).boundary(Boundary.FOLLOW).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		when(followRepository.existsByFollowerNicknameAndFollowing(eq(user.getNickname()), any(User.class)))
+			.thenReturn(false);
+
+		//when
+		CustomException exception = assertThrows(CustomException.class, () -> postService.countSharing(1L, "user"));
+
+		//then
+		assertThat(exception).hasMessage("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_BOUNDARY);
+	}
+
+	@ParameterizedTest
+	@DisplayName("게시물 공유 횟수 조회 - 팔로워가 조회")
+	@EnumSource(value = Boundary.class, names = {"ALL", "FOLLOW"})
+	void postSharedCountWithFollower(Boundary boundary) {
+		//given
+		User user = User.builder().nickname("user").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post followPost = Post.builder().user(writer).postContent("").tempSave(false).boundary(boundary).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(user.getNickname()), any(User.class)))
+			.thenReturn(true);
+
+		//when
+		postService.countSharing(1L, "user");
+
+		//then
+		assertThat(followPost.getSharing()).isEqualTo(0L);
+	}
+
+	@ParameterizedTest
+	@DisplayName("게시물 공유 횟수 조회 - 작성자가 조회")
+	@EnumSource(value = Boundary.class)
+	void postSharedCountWithWriter(Boundary boundary) {
+		//given
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post followPost = Post.builder().user(writer).postContent("").tempSave(false).boundary(boundary).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(followPost));
+		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), any(User.class)))
+			.thenReturn(true);
+
+		//when
+		postService.countSharing(1L, "writer");
+
+		//then
+		assertThat(followPost.getSharing()).isEqualTo(0L);
+	}
+
+	@Test
+	@DisplayName("임시저장 게시물 공유 예외")
+	void tempSavedPostShareException() {
+		//given
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post tempSavedPost = Post.builder().user(writer).postContent("").tempSave(true).boundary(Boundary.ALL).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(tempSavedPost));
+
+		//when
+		CustomException exception = assertThrows(CustomException.class, () -> postService.sharePost(1L, "user"));
+
+		//then
+		assertThat(exception).hasMessage("임시저장한 게시물은 공유할 수 없습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
+	}
+
+	@ParameterizedTest
+	@DisplayName("게시물 공유 테스트 - 작성자가 공유")
+	@EnumSource(value = Boundary.class)
+	void tempSavedPostShareException(Boundary boundary) {
+		//given
+		User writer = User.builder().nickname("writer").phoneNumber("").agreement(true).role(UserRole.USER).build();
+		Post post = Post.builder().user(writer).postContent("").tempSave(false).boundary(boundary).build();
+
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), any(User.class)))
+			.thenReturn(true);
+
+		//when
+		postService.sharePost(1L, writer.getNickname());
+
+		//then
+		assertThat(post.getSharing()).isEqualTo(1);
 	}
 }
