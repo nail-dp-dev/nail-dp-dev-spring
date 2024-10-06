@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.PostInfoService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,10 +42,10 @@ public class HomeController {
 	}
 
 	@GetMapping("/posts/like")
-	public ResponseEntity<?> likedPost(@AuthenticationPrincipal UserDetails userDetails,
+	public ResponseEntity<?> likedPost(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostLikeId") long postLikeId) {
-		PostSummaryResponse likedPostsResponses = postInfoService.findLikedPost(userDetails.getUsername(), size,
+		PostSummaryResponse likedPostsResponses = postInfoService.findLikedPost(userDetails.getUser().getNickname(), size,
 			postLikeId);
 		return ResponseEntity.ok(ApiResponse.successResponse(likedPostsResponses, "좋아요 체크한 게시물 조회", 2000));
 	}

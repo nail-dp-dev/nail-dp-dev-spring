@@ -80,12 +80,12 @@ public class WebSecurityConfig {
 		return configuration.getAuthenticationManager();
 	}
 
-	@Bean
-	public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-		JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
-		filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
-		return filter;
-	}
+	// @Bean
+	// public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
+	// 	JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
+	// 	filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
+	// 	return filter;
+	// }
 
 	@Bean
 	public JwtAuthorizationFilter jwtAuthorizationFilter() {
@@ -136,6 +136,7 @@ public class WebSecurityConfig {
 			.permitAll()
 			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+			.requestMatchers("/api/admin/login").permitAll()
 			.requestMatchers("/api/home").permitAll()
 			.anyRequest()
 			.authenticated() // 그 외 모든 요청 인증처리

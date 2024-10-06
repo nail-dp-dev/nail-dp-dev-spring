@@ -29,6 +29,10 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private UUID id;
 
+	private String loginId;
+
+	private String password;
+
 	@Column(nullable = false)
 	private String nickname;
 
@@ -74,6 +78,14 @@ public class User extends BaseEntity {
 
 	public void updatePoint(Long point) {
 		this.point = point;
+	}
+
+	public void addAdminLoginId(String loginId) {
+		this.loginId = loginId;
+	}
+
+	public void addAdminPassword(String password) {
+		this.password = password;
 	}
 
 }

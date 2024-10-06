@@ -64,6 +64,9 @@ public class AuthService {
 			.role(UserRole.USER)
 			.build();
 
+		user.addAdminLoginId("실험이요" + loginRequestDto.getNickname());
+		user.addAdminPassword("실험비번" + loginRequestDto.getNickname());
+
 		userRepository.save(user);
 
 		SocialUserInfoDto userInfo = cookieUtil.getUserInfoFromCookie(req);
@@ -91,7 +94,7 @@ public class AuthService {
 		cookieUtil.deleteCookie("userInfo", req, res);
 		log.info("쿠키 지우기");
 
-		String createToken = jwtUtil.createToken(user.getNickname(), user.getRole());
+		String createToken = jwtUtil.createToken(user.getLoginId(), user.getRole());
 		jwtUtil.addJwtToCookie(createToken, "Authorization", res);
 		jwtUtil.addJwtToCookie(jwtUtil.createRefreshToken(), "refreshToken", res);
 		redisUtil.saveRefreshToken(user.getNickname(), jwtUtil.createRefreshToken());

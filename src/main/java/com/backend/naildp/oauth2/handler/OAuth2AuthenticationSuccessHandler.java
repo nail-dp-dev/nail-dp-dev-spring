@@ -40,11 +40,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		UserDetailsImpl userDetails = getOAuth2UserPrincipal(authentication);
 
 		// 유저 정보가 있는 경우(JWT 토큰을 생성하여 쿠키에 추가)
-		String token = jwtUtil.createToken(userDetails.getUser().getNickname(), userDetails.getUser().getRole());
+		String token = jwtUtil.createToken(userDetails.getUser().getLoginId(), userDetails.getUser().getRole());
 		jwtUtil.addJwtToCookie(token, "Authorization", response);
 		jwtUtil.addJwtToCookie(jwtUtil.createRefreshToken(), "refreshToken", response);
 
-		redisUtil.saveRefreshToken(userDetails.getUser().getNickname(), jwtUtil.createRefreshToken());
+		redisUtil.saveRefreshToken(userDetails.getUser().getLoginId(), jwtUtil.createRefreshToken());
 
 		getRedirectStrategy().sendRedirect(request, response, domain);
 	}

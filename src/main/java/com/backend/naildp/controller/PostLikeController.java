@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.PostLikeService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,8 @@ public class PostLikeController {
 
 	@PostMapping("/{postId}/likes")
 	public ResponseEntity<?> likePost(@PathVariable("postId") Long postId,
-		@AuthenticationPrincipal UserDetails userDetails) {
-		Long likePostId = postLikeService.likeByPostId(postId, userDetails.getUsername());
+		@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		Long likePostId = postLikeService.likeByPostId(postId, userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
 	}
 

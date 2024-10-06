@@ -44,7 +44,7 @@ public class UserDetailsImpl implements UserDetails, OAuth2User {
 
 	@Override
 	public String getUsername() {
-		return user.getNickname();
+		return user.getLoginId();
 	}
 
 	//인증객체 생성

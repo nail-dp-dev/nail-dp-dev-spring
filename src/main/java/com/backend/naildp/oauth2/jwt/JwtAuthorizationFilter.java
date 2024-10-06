@@ -77,15 +77,15 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		expiredAccessToken = jwtUtil.substringToken(expiredAccessToken);
 		log.info("Token from request: {}", expiredAccessToken);
 
-		String nickname;
+		String loginId;
 		try {
-			nickname = jwtUtil.getUserInfoFromToken(expiredAccessToken).getSubject();
+			loginId = jwtUtil.getUserInfoFromToken(expiredAccessToken).getSubject();
 		} catch (ExpiredJwtException e) {
-			nickname = e.getClaims().getSubject(); // 만료된 토큰에서도 사용자 정보 추출 가능
+			loginId = e.getClaims().getSubject(); // 만료된 토큰에서도 사용자 정보 추출 가능
 		}
 		log.info("4");
 
-		User findUser = userRepository.findUserByNickname(nickname).orElseThrow(() ->
+		User findUser = userRepository.findByLoginId(loginId).orElseThrow(() ->
 			new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 		log.info("nickname = " + findUser.getNickname());
 
@@ -102,7 +102,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 			}
 		}
 		// Redis 에서 Refresh Token 추출
-		String refreshTokenFromRedis = redisUtil.getRefreshToken(findUser.getNickname());
+		String refreshTokenFromRedis = redisUtil.getRefreshToken(findUser.getLoginId());
 		log.info("refreshTokenFromRedis: {}", refreshTokenFromRedis);
 
 		if (refreshTokenFromRedis == null || !refreshTokenFromRedis.equals(refreshTokenFromCookie)) {
@@ -112,14 +112,14 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
 		// 리프레시 토큰 유효성 검증
 		if (!jwtUtil.validateToken(refreshTokenFromCookie)) {
-			redisUtil.deleteRefreshToken(findUser.getNickname());
+			redisUtil.deleteRefreshToken(findUser.getLoginId());
 			throw new TokenNotValidateException("리프레시 토큰이 만료되었습니다.");
 		}
 		log.info("6 ");
 
 		// 새로운 AccessToken 발급
 		log.info("새로운 Access Token 발급");
-		String newAccessToken = jwtUtil.createToken(findUser.getNickname(), findUser.getRole());
+		String newAccessToken = jwtUtil.createToken(findUser.getLoginId(), findUser.getRole());
 	}
 
 	// 인증 처리
