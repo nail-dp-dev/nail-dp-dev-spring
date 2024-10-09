@@ -34,6 +34,7 @@ public class ChatService {
 
 	@Transactional
 	public UUID createChatRoom(String myNickname, ChatRoomRequestDto chatRoomRequestDto) {
+		// 1:1 채팅일 경우
 		if (chatRoomRequestDto.getNickname().size() == 1) {
 			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
 			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
