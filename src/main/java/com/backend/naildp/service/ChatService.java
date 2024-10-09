@@ -1,6 +1,8 @@
 package com.backend.naildp.service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -32,6 +34,14 @@ public class ChatService {
 
 	@Transactional
 	public UUID createChatRoom(String myNickname, ChatRoomRequestDto chatRoomRequestDto) {
+		if (chatRoomRequestDto.getNickname().size() == 1) {
+			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
+			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
+			if (chatRoom.isPresent()) {
+				return chatRoom.get().getId();
+
+			}
+		}
 		ChatRoom chatRoom = new ChatRoom();
 		chatRoomRepository.save(chatRoom);
 
