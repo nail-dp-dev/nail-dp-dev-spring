@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
-import com.backend.naildp.dto.chat.MessageResponseDto;
+import com.backend.naildp.dto.chat.MessageListResponseDto;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
 import com.backend.naildp.entity.User;
@@ -53,8 +53,17 @@ public class ChatService {
 		return chatMessage.getId();
 	}
 
-	public MessageResponseDto getMessagesByRoomId(UUID chatRoomId) {
-		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId);
-		return MessageResponseDto.of(chatMessageList);
+	public MessageListResponseDto getMessageList(String nickname) {
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		List<ChatRoomUser> chatRoomUser = chatRoomUserRepository.findAllByUser(user);
+		return MessageListResponseDto.of(chatRoomUser);
+
 	}
+
+	// public MessageResponseDto getMessagesByRoomId(UUID chatRoomId) {
+	// 	List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId);
+	// 	return MessageResponseDto.of(chatMessageList);
+	// }
 }
