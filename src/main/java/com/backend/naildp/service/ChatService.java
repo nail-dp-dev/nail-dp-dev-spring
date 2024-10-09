@@ -73,8 +73,8 @@ public class ChatService {
 
 	}
 
-	// public MessageResponseDto getMessagesByRoomId(UUID chatRoomId) {
-	// 	List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId);
-	// 	return MessageResponseDto.of(chatMessageList);
-	// }
+	public MessageResponseDto getMessagesByRoomId(UUID chatRoomId) {
+		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId);
+		return MessageResponseDto.of(chatMessageList);
+	}
 }

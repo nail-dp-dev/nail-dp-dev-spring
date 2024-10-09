@@ -8,6 +8,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,12 +55,13 @@ public class ChatController {
 	@GetMapping("chat/list")
 	public ResponseEntity<ApiResponse<?>> getMessageList(@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		MessageListResponseDto messageListResponseDto = chatService.getMessageList(userDetails.getUser().getNickname());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "채팅방 목록 조회 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(messageListResponseDto, "채팅방 목록 조회 성공", 2000));
 	}
 
-	// @GetMapping("chat/{chatRoomId}")
-	// public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable UUID chatRoomId) {
-	// 	MessageResponseDto messageResponseDto = chatService.getMessagesByRoomId(chatRoomId);
-	// }
+	@GetMapping("chat/{chatRoomId}")
+	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable UUID chatRoomId) {
+		MessageResponseDto messageResponseDto = chatService.getMessagesByRoomId(chatRoomId);
+		return ResponseEntity.ok(ApiResponse.successResponse(messageResponseDto, "특정 메시지 조회 성공", 2000));
+	}
 
 }
