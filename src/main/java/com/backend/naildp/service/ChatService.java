@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -7,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
+import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
 import com.backend.naildp.entity.User;
@@ -49,5 +51,10 @@ public class ChatService {
 		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoomId);
 		chatMessageRepository.save(chatMessage);
 		return chatMessage.getId();
+	}
+
+	public MessageResponseDto getMessagesByRoomId(UUID chatRoomId) {
+		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId);
+		return MessageResponseDto.of(chatMessageList);
 	}
 }

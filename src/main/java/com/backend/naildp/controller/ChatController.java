@@ -29,7 +29,7 @@ public class ChatController {
 	private final ChatService chatService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
 
-	@PostMapping
+	@PostMapping("/chat")
 	public ResponseEntity<ApiResponse<?>> createChatRoom(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@RequestBody ChatRoomRequestDto chatRoomRequestDto) {
 		UUID chatRoomId = chatService.createChatRoom(userDetails.getUser().getNickname(), chatRoomRequestDto);
@@ -48,5 +48,10 @@ public class ChatController {
 			chatRoomId);
 
 	}
+
+	// @GetMapping("chat/{chatRoomId}")
+	// public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable UUID chatRoomId) {
+	// 	MessageResponseDto messageResponseDto = chatService.getMessagesByRoomId(chatRoomId);
+	// }
 
 }
