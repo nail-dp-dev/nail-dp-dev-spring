@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.MessageListResponseDto;
+import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
 import com.backend.naildp.entity.User;

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.MessageListResponseDto;
+import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.ChatService;
