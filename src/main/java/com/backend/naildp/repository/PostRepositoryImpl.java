@@ -80,8 +80,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 				.and(isBeforeCursorPost(cursorPostId))
 			)
 			.orderBy(post.createdDate.desc())
-			.offset(pageable.getOffset())
-			.limit(pageable.getPageSize())
+			.limit(pageable.getPageSize() + 1)
 			.fetch();
 
 		return new SliceImpl<>(newestPosts, pageable, hasNext(newestPosts, pageable.getPageSize()));
