@@ -42,6 +42,8 @@ import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
@@ -407,14 +409,19 @@ public class PostSearchRepositoryTest {
 		PageRequest pageRequest = PageRequest.of(0, pageSize);
 
 		//when
-		Slice<Post> postSlice = findTrendPostSlice(username, cursorPostId, pageRequest);
+		// Slice<Post> postSlice = findTrendPostSliceV2(username, cursorPostId, pageRequest);
+		Slice<Post> postSlice = postRepository.findTrendPostSlice(username, cursorPostId, pageRequest);
 
 		//then
 		assertThat(postSlice).hasSize(pageSize);
 		assertThat(postSlice.hasNext()).isFalse();
 		assertThat(postSlice).extracting(Post::getTempSave).containsOnly(false);
 		assertThat(postSlice.getContent()).isSortedAccordingTo(
-			Comparator.comparingInt((Post post) -> post.getPostLikes().size()).reversed()
+			Comparator.comparingInt((Post post) -> (int)post.getPostLikes()
+					.stream()
+					.filter(postLike1 -> postLike1.getCreatedDate().isBefore(LocalDateTime.now()) &&
+						postLike1.getCreatedDate().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT)))
+					.count()).reversed()
 				.thenComparing(Post::getCreatedDate, Comparator.reverseOrder())
 		);
 	}
@@ -439,18 +446,23 @@ public class PostSearchRepositoryTest {
 		PageRequest pageRequest = PageRequest.of(0, pageSize);
 
 		//when
-		Slice<Post> trendPostSliceWithoutCursor = findTrendPostSlice(username, null, pageRequest);
+		// Slice<Post> trendPostSliceWithoutCursor = findTrendPostSliceV2(username, null, pageRequest);
+		Slice<Post> trendPostSliceWithoutCursor = postRepository.findTrendPostSlice(username, null, pageRequest);
 		Post cursorPost = trendPostSliceWithoutCursor.getContent()
 			.get(trendPostSliceWithoutCursor.getNumberOfElements() - 1);
-		System.out.println("cursor pagination");
-		Slice<Post> trendPostSliceWithCursor = findTrendPostSlice(username, cursorPost.getId(), pageRequest);
+		// Slice<Post> trendPostSliceWithCursor = findTrendPostSliceV2(username, cursorPost.getId(), pageRequest);
+		Slice<Post> trendPostSliceWithCursor = postRepository.findTrendPostSlice(username, cursorPost.getId(), pageRequest);
 
 		//then
 		assertThat(trendPostSliceWithCursor).hasSize(pageSize);
 		assertThat(trendPostSliceWithCursor.hasNext()).isFalse();
 		assertThat(trendPostSliceWithCursor).extracting(Post::getTempSave).containsOnly(false);
 		assertThat(trendPostSliceWithCursor.getContent()).isSortedAccordingTo(
-			Comparator.comparingInt((Post post) -> post.getPostLikes().size()).reversed()
+			Comparator.comparingInt((Post post) -> (int)post.getPostLikes()
+					.stream()
+					.filter(postLike1 -> postLike1.getCreatedDate().isBefore(LocalDateTime.now()) &&
+						postLike1.getCreatedDate().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT)))
+					.count()).reversed()
 				.thenComparing(Post::getCreatedDate, Comparator.reverseOrder())
 		);
 	}
@@ -483,6 +495,30 @@ public class PostSearchRepositoryTest {
 			.fetch();
 
 		List<Post> posts = tuples.stream().map(tuple -> tuple.get(post)).collect(Collectors.toList());
+
+		return new SliceImpl<>(posts, pageRequest, hasNext(posts, pageRequest.getPageSize()));
+	}
+
+	private Slice<Post> findTrendPostSliceV2(String username, Long cursorPostId, PageRequest pageRequest) {
+		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate
+					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
+
+		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
+
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(hasLessLikeThanCursorPost(cursorPostId))
+			)
+			.orderBy(orderSpecifier, post.createdDate.desc())
+			.limit(pageRequest.getPageSize() + 1)
+			.fetch();
 
 		return new SliceImpl<>(posts, pageRequest, hasNext(posts, pageRequest.getPageSize()));
 	}

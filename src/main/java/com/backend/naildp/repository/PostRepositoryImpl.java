@@ -7,6 +7,9 @@ import static com.backend.naildp.entity.QPostLike.*;
 import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -17,12 +20,15 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import io.jsonwebtoken.lang.Strings;
@@ -84,6 +90,31 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.fetch();
 
 		return new SliceImpl<>(newestPosts, pageable, hasNext(newestPosts, pageable.getPageSize()));
+	}
+
+	@Override
+	public Slice<Post> findTrendPostSlice(String username, Long cursorPostId, Pageable pageable) {
+		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate
+					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
+
+		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
+
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(hasLessLikeThanCursorPost(cursorPostId))
+			)
+			.orderBy(orderSpecifier, post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
 	private BooleanExpression isBeforeCursorPost(Long cursorPostId) {
@@ -176,4 +207,35 @@ public class PostRepositoryImpl implements PostSearchRepository {
 				.concat(StringExpressions.lpad(post.id.stringValue(), 8, '0')));
 	}
 
+	private BooleanExpression hasLessLikeThanCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		JPQLQuery<Long> postTodayLikeQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT),
+					LocalDateTime.now()));
+
+		JPQLQuery<Long> cursorPostTodayLikeQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.id.eq(cursorPostId)
+				, postLike.createdDate.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT),
+					LocalDateTime.now()));
+
+		return postTodayLikeQuery.lt(cursorPostTodayLikeQuery)
+			.or(postTodayLikeQuery.eq(cursorPostId).and(isRegisteredBeforeCursorPost(cursorPostId)));
+	}
+
+	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		return post.createdDate.before(
+			JPAExpressions.select(post.createdDate).from(post).where(post.id.eq(cursorPostId)));
+	}
 }

@@ -15,4 +15,6 @@ public interface PostSearchRepository {
 	List<Post> findLikedPosts(String username);
 
 	Slice<Post> findNewestPostSlice(String username, Long cursorPostId, Pageable pageable);
+
+	Slice<Post> findTrendPostSlice(String username, Long cursorPostId, Pageable pageable);
 }
