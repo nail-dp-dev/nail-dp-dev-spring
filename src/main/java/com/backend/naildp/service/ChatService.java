@@ -18,6 +18,7 @@ import com.backend.naildp.entity.User;
 import com.backend.naildp.entity.mongo.ChatMessage;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.ChatRoomMapping;
 import com.backend.naildp.repository.ChatRoomRepository;
 import com.backend.naildp.repository.ChatRoomUserRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -38,7 +39,7 @@ public class ChatService {
 		// 1:1 채팅일 경우
 		if (chatRoomRequestDto.getNickname().size() == 1) {
 			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
-			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
+			Optional<ChatRoom> chatRoom = chatRoomUserRepository.findChatRoomByUsers(userNames, userNames.size());
 			if (chatRoom.isPresent()) {
 				return chatRoom.get().getId();
 
@@ -69,8 +70,8 @@ public class ChatService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		List<ChatRoomUser> chatRoomUser = chatRoomUserRepository.findAllByUser(user);
-		return MessageListResponseDto.of(chatRoomUser);
+		List<ChatRoomMapping> chatRoomList = chatRoomUserRepository.findAllChatRoomByNickname(nickname);
+		return MessageListResponseDto.of(chatRoomList);
 
 	}
 
