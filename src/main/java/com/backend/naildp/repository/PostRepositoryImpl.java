@@ -227,7 +227,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 					LocalDateTime.now()));
 
 		return postTodayLikeQuery.lt(cursorPostTodayLikeQuery)
-			.or(postTodayLikeQuery.eq(cursorPostId).and(isRegisteredBeforeCursorPost(cursorPostId)));
+			.or(postTodayLikeQuery.eq(cursorPostTodayLikeQuery).and(isRegisteredBeforeCursorPost(cursorPostId)));
 	}
 
 	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
