@@ -76,7 +76,8 @@ public class ChatService {
 	}
 
 	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId) {
-		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomIdOrderByCreatedAtDesc(
+			chatRoomId.toString());
 		return MessageSummaryResponse.of(chatMessageList);
 	}
 }
