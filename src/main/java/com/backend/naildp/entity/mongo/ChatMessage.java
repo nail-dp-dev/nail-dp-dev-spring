@@ -46,5 +46,6 @@ public class ChatMessage {
 		this.content = chatMessageDto.getContent();
 		this.sender = chatMessageDto.getSender();
 		this.mention = chatMessageDto.getMention();
+		this.messageType = chatMessageDto.getMessageType();
 	}
 }

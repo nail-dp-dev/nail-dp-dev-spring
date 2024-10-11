@@ -7,5 +7,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.backend.naildp.entity.mongo.ChatMessage;
 
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
-	List<ChatMessage> findAllByChatRoomIdOrderByCreatedAtDesc(String chatRoomId);
+	List<ChatMessage> findAllByChatRoomId(String chatRoomId);
 }

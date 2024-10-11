@@ -41,7 +41,6 @@ public class ChatController {
 	}
 
 	@MessageMapping("chat/{chatRoomId}/message")
-
 	public void sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
 		String chatId = chatService.sendMessage(chatMessageDto, chatRoomId);

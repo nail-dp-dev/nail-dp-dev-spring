@@ -15,5 +15,5 @@ public class ChatMessageDto {
 	private List<String> content;
 	private String sender;
 	private List<String> mention;
-	private String messsageType;
+	private String messageType;
 }
