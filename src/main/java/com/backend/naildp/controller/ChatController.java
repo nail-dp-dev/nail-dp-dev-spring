@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
-import com.backend.naildp.dto.chat.MessageListResponseDto;
-import com.backend.naildp.dto.chat.MessageResponseDto;
+import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.ChatService;
@@ -41,6 +41,7 @@ public class ChatController {
 	}
 
 	@MessageMapping("chat/{chatRoomId}/message")
+
 	public void sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
 		String chatId = chatService.sendMessage(chatMessageDto, chatRoomId);
@@ -54,14 +55,14 @@ public class ChatController {
 	}
 
 	@GetMapping("chat/list")
-	public ResponseEntity<ApiResponse<?>> getMessageList(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		MessageListResponseDto messageListResponseDto = chatService.getMessageList(userDetails.getUser().getNickname());
-		return ResponseEntity.ok(ApiResponse.successResponse(messageListResponseDto, "채팅방 목록 조회 성공", 2000));
+	public ResponseEntity<ApiResponse<?>> getChatList(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		ChatListSummaryResponse response = chatService.getChatList(userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "채팅방 목록 조회 성공", 2000));
 	}
 
 	@GetMapping("chat/{chatRoomId}")
-	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable UUID chatRoomId) {
-		MessageResponseDto messageResponseDto = chatService.getMessagesByRoomId(chatRoomId);
+	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable("chatRoomId") UUID chatRoomId) {
+		MessageSummaryResponse messageResponseDto = chatService.getMessagesByRoomId(chatRoomId);
 		return ResponseEntity.ok(ApiResponse.successResponse(messageResponseDto, "특정 메시지 조회 성공", 2000));
 	}
 

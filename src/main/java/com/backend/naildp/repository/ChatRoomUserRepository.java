@@ -20,7 +20,6 @@ public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long
 	Optional<ChatRoom> findChatRoomByUsers(@Param("userNames") List<String> userNames, @Param("size") int size);
 
 	@Query(
-		"SELECT cu.chatRoom.id as id, cu.name as name FROM ChatRoomUser cu " + "WHERE cu.user.nickname = :nickname "
-			+ "GROUP BY cu.chatRoom ")
+		"SELECT cu.chatRoom.id as id, cu.name as name FROM ChatRoomUser cu " + "WHERE cu.user.nickname = :nickname ")
 	List<ChatRoomMapping> findAllChatRoomByNickname(@Param("nickname") String nickname);
 }

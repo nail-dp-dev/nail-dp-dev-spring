@@ -33,14 +33,16 @@ public class ChatMessage {
 
 	private String sender;
 
-	private UUID chatRoomId;
+	private String profileUrl;
+
+	private String chatRoomId;
 
 	private List<String> mention;
 
 	private String messageType;
 
 	public ChatMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
-		this.chatRoomId = chatRoomId;
+		this.chatRoomId = chatRoomId.toString();
 		this.content = chatMessageDto.getContent();
 		this.sender = chatMessageDto.getSender();
 		this.mention = chatMessageDto.getMention();

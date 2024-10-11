@@ -1,7 +1,6 @@
 package com.backend.naildp.dto.chat;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.backend.naildp.entity.mongo.ChatMessage;
 
@@ -21,16 +20,12 @@ public class MessageResponseDto {
 	private String messageType;
 	// private Long unReadMessageCnt;
 
-	public static MessageResponseDto of(List<ChatMessage> chatMessageList) {
+	public static MessageResponseDto of(ChatMessage chatMessage) {
 		return MessageResponseDto.builder()
-			.content(chatMessageList.stream()
-				.flatMap(chatMessage -> chatMessage.getContent().stream())
-				.collect(Collectors.toList()))
-			.sender(chatMessageList.isEmpty() ? null : chatMessageList.get(0).getSender())
-			.mention(chatMessageList.stream()
-				.flatMap(msg -> msg.getMention().stream())
-				.collect(Collectors.toList()))
-			.messageType(chatMessageList.isEmpty() ? null : chatMessageList.get(0).getMessageType())
+			.content(chatMessage.getContent().stream().toList())
+			.sender(chatMessage.getSender())
+			.mention(chatMessage.getMention().stream().toList())
+			.messageType(chatMessage.getMessageType())
 			.build();
 	}
 }

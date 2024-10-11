@@ -8,10 +8,10 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
-import com.backend.naildp.dto.chat.MessageListResponseDto;
-import com.backend.naildp.dto.chat.MessageResponseDto;
+import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
 import com.backend.naildp.entity.User;
@@ -66,17 +66,17 @@ public class ChatService {
 		return chatMessage.getId();
 	}
 
-	public MessageListResponseDto getMessageList(String nickname) {
+	public ChatListSummaryResponse getChatList(String nickname) {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		List<ChatRoomMapping> chatRoomList = chatRoomUserRepository.findAllChatRoomByNickname(nickname);
-		return MessageListResponseDto.of(chatRoomList);
+		return ChatListSummaryResponse.of(chatRoomList);
 
 	}
 
-	public MessageResponseDto getMessagesByRoomId(UUID chatRoomId) {
-		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId);
-		return MessageResponseDto.of(chatMessageList);
+	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId) {
+		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+		return MessageSummaryResponse.of(chatMessageList);
 	}
 }
