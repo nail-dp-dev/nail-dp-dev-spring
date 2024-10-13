@@ -21,6 +21,7 @@ import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.ChatService;
+import com.backend.naildp.service.KafkaProducerService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatController {
 	private final ChatService chatService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
+	private final KafkaProducerService kafkaProducerService;
 
 	@PostMapping("/chat")
 	public ResponseEntity<ApiResponse<?>> createChatRoom(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -44,12 +46,14 @@ public class ChatController {
 	public void sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
 		String chatId = chatService.sendMessage(chatMessageDto, chatRoomId);
-		simpMessagingTemplate.convertAndSend("/sub/chat/" + chatRoomId, chatMessageDto);
+		// simpMessagingTemplate.convertAndSend("/sub/chat/" + chatRoomId, chatMessageDto);
 
 		log.info("Message [{}] sent by user: {} to chatting room: {}",
 			chatMessageDto.getContent(),
 			chatMessageDto.getSender(),
 			chatRoomId);
+		chatMessageDto.setChatRoomId(chatRoomId.toString());
+		kafkaProducerService.send(chatMessageDto);
 
 	}
 

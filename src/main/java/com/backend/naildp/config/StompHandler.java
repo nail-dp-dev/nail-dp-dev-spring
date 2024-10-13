@@ -2,23 +2,16 @@ package com.backend.naildp.config;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.backend.naildp.entity.User;
-import com.backend.naildp.exception.CustomException;
-import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.service.SessionService;
 
-import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,48 +21,57 @@ import lombok.extern.slf4j.Slf4j;
 public class StompHandler implements ChannelInterceptor {
 	private final JwtUtil jwtUtil;
 	private final UserRepository userRepository;
+	private final SessionService sessionService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
-		if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-			// 헤더에서 Authorization 정보를 가져옴
-			String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
-			log.error("Authorization header is missing or invalid");
-
-			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer")) {
-				String jwtToken = authorizationHeader.substring(7); // "Bearer " 부분 제거
-
-				if (jwtUtil.validateToken(jwtToken)) {
-					Claims claims = jwtUtil.getUserInfoFromToken(jwtToken);
-					String nickname = claims.getSubject();
-
-					User user = userRepository.findByNickname(nickname).orElseThrow(() ->
-						new CustomException("notFound", ErrorCode.NOT_FOUND)
-					);
-
-					// Spring Security 인증 객체 생성
-					UserDetailsImpl userDetails = new UserDetailsImpl(user);
-					UsernamePasswordAuthenticationToken authentication =
-						new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-					// 인증 정보를 SecurityContextHolder에 설정
-					SecurityContextHolder.getContext().setAuthentication(authentication);
-
-					// WebSocket 세션에 사용자 정보를 설정
-					accessor.setUser(authentication);
-				} else {
-					log.error("Invalid JWT Token");
-					throw new AuthenticationCredentialsNotFoundException("JWT token is invalid");
-				}
-			} else {
-				log.error("Authorization header is missing or invalid");
-				throw new AuthenticationCredentialsNotFoundException("Authorization header is missing or invalid");
-			}
-		}
-
+		StompHeaderAccessor headerAccessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+		handleMessage(headerAccessor);
+		log.info("stomp command : {} , destination :  {} , sessionId : {}", headerAccessor.getCommand(),
+			headerAccessor.getDestination(), headerAccessor.getSessionId());
 		return message;
+	}
+
+	private void handleMessage(StompHeaderAccessor headerAccessor) {
+		if (headerAccessor == null || headerAccessor.getCommand() == null) {
+			throw new MessageDeliveryException("chat:  요청이 잘못되었습니다.");
+		}
+		try {
+			switch (headerAccessor.getCommand()) {
+				case CONNECT:
+					String username = (String)headerAccessor.getSessionAttributes().get("username");
+					sessionService.saveSession(headerAccessor.getSessionId(), username);
+					break;
+				case SUBSCRIBE:
+					enterToChatRoom(headerAccessor);
+					break;
+				case UNSUBSCRIBE:
+					exitToChatRoom(headerAccessor);
+					break;
+				case DISCONNECT:
+					sessionService.deleteSession(headerAccessor.getSessionId());
+					break;
+			}
+		} catch (Exception e) {
+			throw new MessageDeliveryException("메세지 요청 오류");
+		}
+	}
+
+	private void enterToChatRoom(StompHeaderAccessor headerAccessor) throws Exception {
+		String memberId = sessionService.getMemberIdBySessionId(headerAccessor.getSessionId());
+		String roomId = extractRoomId(headerAccessor.getDestination());
+	}
+
+	private void exitToChatRoom(StompHeaderAccessor headerAccessor) {
+		String memberId = sessionService.getMemberIdBySessionId(headerAccessor.getSessionId());
+		String roomId = extractRoomId(headerAccessor.getDestination());
+	}
+
+	private String extractRoomId(String destination) {
+		if (destination == null) {
+			throw new MessageDeliveryException("메세지 오류");
+		}
+		return destination.replace("/sub/", "");
 	}
 
 }
