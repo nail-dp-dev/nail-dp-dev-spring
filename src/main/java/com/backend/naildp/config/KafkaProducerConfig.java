@@ -15,6 +15,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
+import com.backend.naildp.dto.chat.ChatUpdateDto;
 
 @EnableKafka
 @Configuration
@@ -41,4 +42,13 @@ public class KafkaProducerConfig {
 		return new KafkaTemplate<>(producerFactory());
 	}
 
+	@Bean
+	public ProducerFactory<String, ChatUpdateDto> chatUpdateProducerFactory() {
+		return new DefaultKafkaProducerFactory<>(producerConfigurations());
+	}
+
+	@Bean
+	public KafkaTemplate<String, ChatUpdateDto> chatUpdateKafkaTemplate() {
+		return new KafkaTemplate<>(chatUpdateProducerFactory());
+	}
 }

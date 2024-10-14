@@ -15,6 +15,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
+import com.backend.naildp.dto.chat.ChatUpdateDto;
 
 @EnableKafka
 @Configuration
@@ -49,4 +50,16 @@ public class KafkaConsumerConfig {
 		return factory;
 	}
 
+	@Bean
+	public ConsumerFactory<String, ChatUpdateDto> chatUpdateConsumerFactory() {
+		return new DefaultKafkaConsumerFactory<>(consumerConfigurations(), new StringDeserializer(),
+			new JsonDeserializer<>(ChatUpdateDto.class));
+	}
+
+	@Bean
+	public ConcurrentKafkaListenerContainerFactory<String, ChatUpdateDto> chatUpdateKafkaListenerContainerFactory() {
+		ConcurrentKafkaListenerContainerFactory<String, ChatUpdateDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
+		factory.setConsumerFactory(chatUpdateConsumerFactory());
+		return factory;
+	}
 }

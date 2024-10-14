@@ -1,5 +1,6 @@
 package com.backend.naildp.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
+import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
@@ -62,12 +64,22 @@ public class ChatController {
 				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, messageId);
 			}
 		});
+
+		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
+		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(
+			chatRoomId.toString(),
+			unreadCount,
+			chatMessageDto.getContent().get(0),
+			LocalDateTime.now()
+		);
+		kafkaProducerService.send(chatMessageDto);
+
+		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
 		log.info("Message [{}] sent by user: {} to chatting room: {}",
 			chatMessageDto.getContent(),
 			chatMessageDto.getSender(),
 			chatRoomId);
-
-		kafkaProducerService.send(chatMessageDto);
 
 	}
 
