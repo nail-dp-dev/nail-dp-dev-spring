@@ -24,10 +24,10 @@ import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
+import com.backend.naildp.service.ChatRoomStatusService;
 import com.backend.naildp.service.ChatService;
 import com.backend.naildp.service.KafkaProducerService;
 import com.backend.naildp.service.MessageStatusService;
-import com.backend.naildp.service.UnreadMessageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class ChatController {
 	private final ChatService chatService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
 	private final KafkaProducerService kafkaProducerService;
-	private final UnreadMessageService unreadMessageService;
+	private final ChatRoomStatusService chatRoomStatusService;
 	private final MessageStatusService messageStatusService;
 
 	@PostMapping("/chat")
@@ -58,8 +58,8 @@ public class ChatController {
 		List<String> nicknames = chatService.getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
-				unreadMessageService.incrementUnreadCount(chatRoomId.toString(), nickname);
-				unreadMessageService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, messageId);
+				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, messageId);
 			}
 		});
 		log.info("Message [{}] sent by user: {} to chatting room: {}",

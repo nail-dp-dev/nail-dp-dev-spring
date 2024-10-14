@@ -38,7 +38,7 @@ public class ChatService {
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatRoomUserRepository chatRoomUserRepository;
 	private final ChatMessageRepository chatMessageRepository;
-	private final UnreadMessageService unreadMessageService;
+	private final ChatRoomStatusService chatRoomStatusService;
 	private final MessageStatusService messageStatusService;
 	private final S3Service s3Service;
 	private final SessionService sessionService;
@@ -100,7 +100,7 @@ public class ChatService {
 
 		List<ChatListResponse> chatRoomDto = chatRoomList.stream()
 			.map(chatRoom -> {
-				int unreadCount = unreadMessageService.getUnreadCount(chatRoom.getId().toString(),
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(),
 					user.getNickname());
 				List<String> profileUrls = chatRoomRepository.findOtherUsersThumbnailUrls(chatRoom.getId(), nickname);
 
@@ -114,7 +114,7 @@ public class ChatService {
 
 	@Transactional(readOnly = true)
 	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId, String nickname) {
-		String firstUnreadMessageId = unreadMessageService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
+		String firstUnreadMessageId = messageStatusService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
 
 		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(
 			chatRoomId.toString());
@@ -130,7 +130,7 @@ public class ChatService {
 			.map(user -> {
 				boolean isActive = sessionService.isSessionExist(user.getNickname());
 				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
-					isActive);
+					isActive, false);
 			})
 			.toList();
 

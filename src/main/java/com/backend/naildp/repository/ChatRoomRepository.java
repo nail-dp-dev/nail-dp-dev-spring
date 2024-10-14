@@ -19,7 +19,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 	@Query(
 		"SELECT cu.chatRoom.id AS id, cu.name AS name, cu.chatRoom.lastMessage AS lastMessage, cu.chatRoom.participantCnt as participantCnt, cu.chatRoom.modifiedAt AS modifiedAt"
 			+ " FROM ChatRoomUser cu "
-			+ "WHERE cu.user.nickname = :nickname ")
+			+ "WHERE cu.user.nickname = :nickname "
+			+ "ORDER BY cu.chatRoom.modifiedAt desc")
 	List<ChatRoomMapping> findAllChatRoomByNickname(@Param("nickname") String nickname);
 
 	@Query("SELECT u.thumbnailUrl FROM ChatRoomUser cu JOIN cu.user u WHERE cu.chatRoom.id = :chatRoomId AND u.nickname != :nickname")

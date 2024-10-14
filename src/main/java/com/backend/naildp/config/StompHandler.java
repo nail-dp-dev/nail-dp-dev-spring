@@ -10,8 +10,9 @@ import org.springframework.stereotype.Component;
 
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.service.ChatRoomStatusService;
+import com.backend.naildp.service.MessageStatusService;
 import com.backend.naildp.service.SessionService;
-import com.backend.naildp.service.UnreadMessageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,8 @@ public class StompHandler implements ChannelInterceptor {
 	private final JwtUtil jwtUtil;
 	private final UserRepository userRepository;
 	private final SessionService sessionService;
-	private final UnreadMessageService unreadMessageService;
+	private final ChatRoomStatusService chatRoomStatusService;
+	private final MessageStatusService messageStatusService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -65,8 +67,8 @@ public class StompHandler implements ChannelInterceptor {
 
 		log.info("사용자 {} 가 채팅방 {} 에 입장함", userId, roomId);
 
-		unreadMessageService.resetUnreadCount(roomId, userId);
-		unreadMessageService.resetFirstUnreadMessageId(roomId, userId);
+		chatRoomStatusService.resetUnreadCount(roomId, userId);
+		messageStatusService.resetFirstUnreadMessageId(roomId, userId);
 
 	}
 

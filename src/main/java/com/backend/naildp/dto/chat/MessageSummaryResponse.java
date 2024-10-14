@@ -14,16 +14,6 @@ public class MessageSummaryResponse {
 	private String firstUnreadMessageId;
 	private List<ChatUserInfoResponse> chatUserInfo;
 
-	// public static MessageSummaryResponse of(List<MessageResponseDto> messageDto, String firstUnreadMessageId,
-	// 	List<User> user) {
-	//
-	// 	return builder()
-	// 		.contents(messageDto)
-	// 		.firstUnreadMessageId(firstUnreadMessageId)
-	// 		.chatUserInfo(chatUserInfoResponses)
-	// 		.build();
-	// }
-
 	@Getter
 	@AllArgsConstructor
 	@NoArgsConstructor
@@ -31,12 +21,7 @@ public class MessageSummaryResponse {
 		private String participant;
 		private String profileUrl;
 		private Boolean isActive;
+		private Boolean isBusiness;
 
-		// public ChatUserInfoResponse(String nickname, String thumbnail, Boolean isActive) {
-		// 	this.participant = nickname;
-		// 	this.profileUrl = thumbnail;
-		// 	this.isActive = isActive;
-		//
-		// }
 	}
 }
