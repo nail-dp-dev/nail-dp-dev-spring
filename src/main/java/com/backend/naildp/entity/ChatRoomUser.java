@@ -40,4 +40,8 @@ public class ChatRoomUser {
 		this.chatRoom = chatRoom;
 	}
 
+	public void updateRoomName(String roomName) {
+		this.name = roomName;
+	}
+
 }

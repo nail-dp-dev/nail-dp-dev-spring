@@ -4,14 +4,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.naildp.dto.chat.ChatListResponse;
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
+import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
+import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
 import com.backend.naildp.entity.User;
@@ -33,51 +38,155 @@ public class ChatService {
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatRoomUserRepository chatRoomUserRepository;
 	private final ChatMessageRepository chatMessageRepository;
+	private final UnreadMessageService unreadMessageService;
+	private final MessageStatusService messageStatusService;
+	private final S3Service s3Service;
+	private final SessionService sessionService;
 
 	@Transactional
 	public UUID createChatRoom(String myNickname, ChatRoomRequestDto chatRoomRequestDto) {
 		// 1:1 채팅일 경우
-		if (chatRoomRequestDto.getNickname().size() == 1) {
+		chatRoomRequestDto.getNickname().add(myNickname);
+		int participantCnt = chatRoomRequestDto.getNickname().size();
+
+		if (participantCnt == 1) {
 			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
-			Optional<ChatRoom> chatRoom = chatRoomUserRepository.findChatRoomByUsers(userNames, userNames.size());
+			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
 			if (chatRoom.isPresent()) {
 				return chatRoom.get().getId();
-
 			}
 		}
 		ChatRoom chatRoom = new ChatRoom();
 		chatRoomRepository.save(chatRoom);
+		chatRoom.updateParticipantCnt(participantCnt);
 
-		chatRoomRequestDto.getNickname().add(myNickname);
-
-		chatRoomRequestDto.getNickname().forEach(nickname -> {
-			User user = userRepository.findByNickname(nickname)
+		chatRoomRequestDto.getNickname().forEach(participant -> {
+			User user = userRepository.findByNickname(participant)
 				.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+			String roomName = chatRoomRequestDto.getNickname().stream()
+				.filter(nickname -> !nickname.equals(participant))
+				.collect(Collectors.joining(", "));
 
 			ChatRoomUser chatRoomUser = new ChatRoomUser(user, chatRoom);
 			chatRoomUserRepository.save(chatRoomUser);
+			chatRoomUser.updateRoomName(roomName);
 		});
 		return chatRoom.getId();
 	}
 
+	@Transactional
 	public String sendMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
-		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoomId);
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
+		User user = userRepository.findByNickname(chatMessageDto.getSender())
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoomId, user);
 		chatMessageRepository.save(chatMessage);
+		chatRoom.updateLastMessage(chatMessageDto.getContent(), chatMessage.getCreatedAt());
+
+		chatMessageDto.setChatRoomId(chatRoomId.toString());
+
 		return chatMessage.getId();
 	}
 
+	@Transactional(readOnly = true)
 	public ChatListSummaryResponse getChatList(String nickname) {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		List<ChatRoomMapping> chatRoomList = chatRoomUserRepository.findAllChatRoomByNickname(nickname);
-		return ChatListSummaryResponse.of(chatRoomList);
+		List<ChatRoomMapping> chatRoomList = chatRoomRepository.findAllChatRoomByNickname(nickname);
+
+		List<ChatListResponse> chatRoomDto = chatRoomList.stream()
+			.map(chatRoom -> {
+				int unreadCount = unreadMessageService.getUnreadCount(chatRoom.getId().toString(),
+					user.getNickname());
+				List<String> profileUrls = chatRoomRepository.findOtherUsersThumbnailUrls(chatRoom.getId(), nickname);
+
+				return ChatListResponse.of(chatRoom, unreadCount, profileUrls);
+			})
+			.collect(Collectors.toList());
+
+		return ChatListSummaryResponse.of(chatRoomDto);
 
 	}
 
-	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId) {
-		List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatRoomId(
+	@Transactional(readOnly = true)
+	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId, String nickname) {
+		String firstUnreadMessageId = unreadMessageService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
+
+		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(
 			chatRoomId.toString());
-		return MessageSummaryResponse.of(chatMessageList);
+		List<MessageResponseDto> messageDto = messages.stream()
+			.map(message -> {
+				Long unreadUserCount = messageStatusService.getUnreadUserCount(chatRoomId.toString(), message.getId());
+				return MessageResponseDto.of(message, unreadUserCount);
+			})
+			.collect(Collectors.toList());
+
+		List<User> roomUsers = userRepository.findAllByChatRoomIdNotInMyNickname(chatRoomId, nickname);
+		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo = roomUsers.stream()
+			.map(user -> {
+				boolean isActive = sessionService.isSessionExist(user.getNickname());
+				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
+					isActive);
+			})
+			.toList();
+
+		return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
+	}
+
+	@Transactional(readOnly = true)
+	public List<String> getChatRoomNickname(UUID chatRoomId) {
+		List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
+
+		return chatRoomUsers.stream()
+			.map(chatRoomUser -> chatRoomUser.getUser().getNickname())
+			.collect(Collectors.toList());
+	}
+
+	@Transactional
+	public ChatMessageDto sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
+		User user = userRepository.findByNickname(sender)
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(imageFiles);
+		List<String> imageUrls = fileRequestDtos.stream()
+			.map(FileRequestDto::getFileUrl)
+			.collect(Collectors.toList());
+
+		ChatMessage chatMessage = ChatMessage.builder()
+			.chatRoomId(chatRoomId.toString())
+			.sender(sender)
+			.profileUrl(user.getThumbnailUrl())
+			.messageType("IMAGE")
+			.content(imageUrls)
+			.build();
+
+		chatMessageRepository.save(chatMessage);
+		return ChatMessageDto.of(chatMessage);
+	}
+
+	@Transactional
+	public void leaveChatRoom(UUID chatRoomId, String nickname) {
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
+		chatRoomUserRepository.delete(chatRoomUser);
+
+		// 방 이름 업데이트
+		List<ChatRoomUser> remainingUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
+		for (ChatRoomUser remainingUser : remainingUsers) {
+			String updatedRoomName = remainingUsers.stream()
+				.filter(user -> !user.getUser().getNickname().equals(remainingUser.getUser().getNickname()))
+				.map(user -> user.getUser().getNickname())
+				.collect(Collectors.joining(", "));
+
+			remainingUser.updateRoomName(updatedRoomName); // 방 이름 업데이트
+		}
+
+		if (remainingUsers.isEmpty()) {
+			chatRoomRepository.deleteById(chatRoomId);
+		}
 	}
 }

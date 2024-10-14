@@ -2,8 +2,6 @@ package com.backend.naildp.dto.chat;
 
 import java.util.List;
 
-import com.backend.naildp.repository.ChatRoomMapping;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,10 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatListSummaryResponse {
-	List<?> contents;
+	List<ChatListResponse> contents;
 
-	public static ChatListSummaryResponse of(List<ChatRoomMapping> contents) {
-		return new ChatListSummaryResponse(contents.stream().map(ChatListResponse::of).toList());
+	public static ChatListSummaryResponse of(List<ChatListResponse> contents) {
+		return new ChatListSummaryResponse(contents);
 
 	}
 }

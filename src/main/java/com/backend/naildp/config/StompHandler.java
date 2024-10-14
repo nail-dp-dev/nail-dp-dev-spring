@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.service.SessionService;
+import com.backend.naildp.service.UnreadMessageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class StompHandler implements ChannelInterceptor {
 	private final JwtUtil jwtUtil;
 	private final UserRepository userRepository;
 	private final SessionService sessionService;
+	private final UnreadMessageService unreadMessageService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -43,10 +45,10 @@ public class StompHandler implements ChannelInterceptor {
 					sessionService.saveSession(headerAccessor.getSessionId(), username);
 					break;
 				case SUBSCRIBE:
-					enterToChatRoom(headerAccessor);
+					handleEnter(headerAccessor);
 					break;
 				case UNSUBSCRIBE:
-					exitToChatRoom(headerAccessor);
+					handleExit(headerAccessor);
 					break;
 				case DISCONNECT:
 					sessionService.deleteSession(headerAccessor.getSessionId());
@@ -57,21 +59,29 @@ public class StompHandler implements ChannelInterceptor {
 		}
 	}
 
-	private void enterToChatRoom(StompHeaderAccessor headerAccessor) throws Exception {
-		String memberId = sessionService.getMemberIdBySessionId(headerAccessor.getSessionId());
+	private void handleEnter(StompHeaderAccessor headerAccessor) throws Exception {
 		String roomId = extractRoomId(headerAccessor.getDestination());
+		String userId = sessionService.getUserIdBySessionId(headerAccessor.getSessionId());
+
+		log.info("사용자 {} 가 채팅방 {} 에 입장함", userId, roomId);
+
+		unreadMessageService.resetUnreadCount(roomId, userId);
+		unreadMessageService.resetFirstUnreadMessageId(roomId, userId);
+
 	}
 
-	private void exitToChatRoom(StompHeaderAccessor headerAccessor) {
-		String memberId = sessionService.getMemberIdBySessionId(headerAccessor.getSessionId());
+	private void handleExit(StompHeaderAccessor headerAccessor) {
 		String roomId = extractRoomId(headerAccessor.getDestination());
+		String userId = sessionService.getUserIdBySessionId(headerAccessor.getSessionId());
+
+		log.info("사용자 {} 가 채팅방 {} 에서 퇴장함", userId, roomId);
 	}
 
 	private String extractRoomId(String destination) {
 		if (destination == null) {
-			throw new MessageDeliveryException("메세지 오류");
+			throw new MessageDeliveryException("not found destination");
 		}
-		return destination.replace("/sub/", "");
+		return destination.replace("/sub/chat/", "");
 	}
 
 }

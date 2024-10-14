@@ -18,14 +18,15 @@ public class MessageResponseDto {
 	private String sender;
 	private List<String> mention;
 	private String messageType;
-	// private Long unReadMessageCnt;
+	private Long unreadUserCount;
 
-	public static MessageResponseDto of(ChatMessage chatMessage) {
+	public static MessageResponseDto of(ChatMessage chatMessage, Long unreadUserCount) {
 		return MessageResponseDto.builder()
 			.content(chatMessage.getContent().stream().toList())
 			.sender(chatMessage.getSender())
 			.mention(chatMessage.getMention().stream().toList())
 			.messageType(chatMessage.getMessageType())
+			.unreadUserCount(unreadUserCount)
 			.build();
 	}
 }

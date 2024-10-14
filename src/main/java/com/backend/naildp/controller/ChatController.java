@@ -1,5 +1,6 @@
 package com.backend.naildp.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
@@ -7,12 +8,15 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
@@ -22,6 +26,8 @@ import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.ChatService;
 import com.backend.naildp.service.KafkaProducerService;
+import com.backend.naildp.service.MessageStatusService;
+import com.backend.naildp.service.UnreadMessageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +40,8 @@ public class ChatController {
 	private final ChatService chatService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
 	private final KafkaProducerService kafkaProducerService;
+	private final UnreadMessageService unreadMessageService;
+	private final MessageStatusService messageStatusService;
 
 	@PostMapping("/chat")
 	public ResponseEntity<ApiResponse<?>> createChatRoom(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -45,14 +53,20 @@ public class ChatController {
 	@MessageMapping("chat/{chatRoomId}/message")
 	public void sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
-		String chatId = chatService.sendMessage(chatMessageDto, chatRoomId);
-		// simpMessagingTemplate.convertAndSend("/sub/chat/" + chatRoomId, chatMessageDto);
+		String messageId = chatService.sendMessage(chatMessageDto, chatRoomId);
 
+		List<String> nicknames = chatService.getChatRoomNickname(chatRoomId); // 방 참여자 목록
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
+				unreadMessageService.incrementUnreadCount(chatRoomId.toString(), nickname);
+				unreadMessageService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, messageId);
+			}
+		});
 		log.info("Message [{}] sent by user: {} to chatting room: {}",
 			chatMessageDto.getContent(),
 			chatMessageDto.getSender(),
 			chatRoomId);
-		chatMessageDto.setChatRoomId(chatRoomId.toString());
+
 		kafkaProducerService.send(chatMessageDto);
 
 	}
@@ -64,9 +78,33 @@ public class ChatController {
 	}
 
 	@GetMapping("chat/{chatRoomId}")
-	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable("chatRoomId") UUID chatRoomId) {
-		MessageSummaryResponse messageResponseDto = chatService.getMessagesByRoomId(chatRoomId);
+	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		MessageSummaryResponse messageResponseDto = chatService.getMessagesByRoomId(chatRoomId,
+			userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(messageResponseDto, "특정 메시지 조회 성공", 2000));
+	}
+
+	@PostMapping("chat/{chatRoomId}/images")
+	public ResponseEntity<ApiResponse<?>> sendImageMessages(
+		@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestParam("images") List<MultipartFile> imageFiles) {
+
+		ChatMessageDto chatMessageDto = chatService.sendImageMessages(chatRoomId, userDetails.getUser().getNickname(),
+			imageFiles);
+		kafkaProducerService.send(chatMessageDto);
+		return ResponseEntity.ok(ApiResponse.successResponse(chatMessageDto, "이미지 메시지 전송 성공", 2001));
+
+	}
+
+	@DeleteMapping("chat/{chatRoomId}/leave")
+	public ResponseEntity<ApiResponse<?>> leaveChatRoom(
+		@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+		chatService.leaveChatRoom(chatRoomId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "채팅방에서 나갔습니다.", 2001));
 	}
 
 }

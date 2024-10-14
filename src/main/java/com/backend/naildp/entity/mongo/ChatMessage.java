@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
+import com.backend.naildp.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,11 +42,12 @@ public class ChatMessage {
 
 	private String messageType;
 
-	public ChatMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
+	public ChatMessage(ChatMessageDto chatMessageDto, UUID chatRoomId, User user) {
 		this.chatRoomId = chatRoomId.toString();
 		this.content = chatMessageDto.getContent();
 		this.sender = chatMessageDto.getSender();
 		this.mention = chatMessageDto.getMention();
 		this.messageType = chatMessageDto.getMessageType();
+		this.profileUrl = user.getThumbnailUrl();
 	}
 }
