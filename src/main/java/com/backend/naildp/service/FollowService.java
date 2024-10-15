@@ -1,7 +1,5 @@
 package com.backend.naildp.service;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +19,7 @@ public class FollowService {
 
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public Long followUser(String followTargetNickname, String username) {
@@ -37,6 +36,8 @@ public class FollowService {
 					.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 				return followRepository.saveAndFlush(new Follow(user, followTargetUser));
 			});
+
+		notificationService.generateFollowNotification(follow.getFollower().getId(), follow.getFollowing().getId());
 
 		return follow.getId();
 	}
