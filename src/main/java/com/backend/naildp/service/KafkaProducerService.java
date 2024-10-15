@@ -19,10 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 public class KafkaProducerService {
 
 	private static final String TOPIC_NAME = "chatting";
-	private static final String CHAT_UPDATE_TOPIC = "chatUpdates"; // 새로운 토픽 추가
+	private static final String CHAT_UPDATE_TOPIC = "chatUpdates";
 
 	private final KafkaTemplate<String, ChatMessageDto> kafkaTemplate;
-	private final KafkaTemplate<String, ChatUpdateDto> updateKafkaTemplate; // ChatUpdateDto용 KafkaTemplate 추가
+	private final KafkaTemplate<String, ChatUpdateDto> updateKafkaTemplate;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 

@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -162,6 +163,7 @@ public class ChatService {
 			.profileUrl(user.getThumbnailUrl())
 			.messageType("IMAGE")
 			.content(imageUrls)
+			.mention(new ArrayList<>())
 			.build();
 
 		chatMessageRepository.save(chatMessage);

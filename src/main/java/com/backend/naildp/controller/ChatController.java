@@ -67,10 +67,11 @@ public class ChatController {
 
 		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
 		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(
-			chatRoomId.toString(),
+			chatRoomId,
 			unreadCount,
 			chatMessageDto.getContent().get(0),
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			chatMessageDto.getSender()
 		);
 		kafkaProducerService.send(chatMessageDto);
 

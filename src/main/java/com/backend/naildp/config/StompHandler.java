@@ -47,7 +47,12 @@ public class StompHandler implements ChannelInterceptor {
 					sessionService.saveSession(headerAccessor.getSessionId(), username);
 					break;
 				case SUBSCRIBE:
-					handleEnter(headerAccessor);
+					String destination = headerAccessor.getDestination();
+					if (destination.startsWith("/sub/chat/list")) {
+						handleChatListSubscription(headerAccessor);
+					} else if (destination.startsWith("/sub/chat/")) {
+						handleChatRoomSubscription(headerAccessor);
+					}
 					break;
 				case UNSUBSCRIBE:
 					handleExit(headerAccessor);
@@ -61,7 +66,15 @@ public class StompHandler implements ChannelInterceptor {
 		}
 	}
 
-	private void handleEnter(StompHeaderAccessor headerAccessor) throws Exception {
+	private void handleChatListSubscription(StompHeaderAccessor headerAccessor) throws Exception {
+		String roomId = extractRoomId(headerAccessor.getDestination());
+		String userId = sessionService.getUserIdBySessionId(headerAccessor.getSessionId());
+
+		log.info("사용자 {} 가 채팅목록 {} 에 입장함", userId, roomId);
+
+	}
+
+	private void handleChatRoomSubscription(StompHeaderAccessor headerAccessor) throws Exception {
 		String roomId = extractRoomId(headerAccessor.getDestination());
 		String userId = sessionService.getUserIdBySessionId(headerAccessor.getSessionId());
 
