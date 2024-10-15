@@ -1,6 +1,7 @@
 package com.backend.naildp.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -36,7 +37,7 @@ public interface ArchivePostRepository extends JpaRepository<ArchivePost, Long> 
 	@Query("delete from ArchivePost ap where ap.post.id = :postId")
 	void deleteAllByPostId(@Param("postId") Long postId);
 
-	@Modifying(flushAutomatically = true, clearAutomatically = true)
-	@Query("delete from ArchivePost ap where ap.post.id = :postId and ap.archive.id in :archiveList")
-	void deleteAllByPostIdAndArchiveId(@Param("postId") Long postId, @Param("archiveList") List<Long> archiveList);
+	void deleteByPostIdAndArchiveId(@Param("postId") Long postId, @Param("archiveId") Long archiveId);
+
+	Optional<ArchivePost> findFirstByArchiveIdOrderByLastModifiedDateDesc(Long archiveId);
 }
