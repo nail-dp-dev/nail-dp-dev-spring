@@ -1,4 +1,4 @@
-package com.backend.naildp.config;
+package com.backend.naildp.config.chat;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.repository.UserRepository;
-import com.backend.naildp.service.ChatRoomStatusService;
-import com.backend.naildp.service.MessageStatusService;
-import com.backend.naildp.service.SessionService;
+import com.backend.naildp.service.chat.ChatRoomStatusService;
+import com.backend.naildp.service.chat.MessageStatusService;
+import com.backend.naildp.service.chat.SessionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

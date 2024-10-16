@@ -26,10 +26,10 @@ import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
-import com.backend.naildp.service.ChatRoomStatusService;
-import com.backend.naildp.service.ChatService;
-import com.backend.naildp.service.KafkaProducerService;
-import com.backend.naildp.service.MessageStatusService;
+import com.backend.naildp.service.chat.ChatRoomStatusService;
+import com.backend.naildp.service.chat.ChatService;
+import com.backend.naildp.service.chat.KafkaProducerService;
+import com.backend.naildp.service.chat.MessageStatusService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +69,7 @@ public class ChatController {
 		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(
 			chatRoomId,
 			unreadCount,
-			chatMessageDto.getContent().get(0),
+			chatMessageDto.getContent(),
 			LocalDateTime.now(),
 			chatMessageDto.getSender()
 		);

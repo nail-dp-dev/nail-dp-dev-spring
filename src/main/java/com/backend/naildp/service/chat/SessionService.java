@@ -1,4 +1,4 @@
-package com.backend.naildp.service;
+package com.backend.naildp.service.chat;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

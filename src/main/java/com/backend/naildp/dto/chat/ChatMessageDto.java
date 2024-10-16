@@ -16,11 +16,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @Setter
 public class ChatMessageDto {
-	private List<String> content;
+	private String content;
 	private String sender;
 	private List<String> mention;
 	private String messageType;
 	private String chatRoomId;
+	private List<String> media;
 
 	public static ChatMessageDto of(ChatMessage chatMessage) {
 		return ChatMessageDto.builder()

@@ -1,7 +1,6 @@
 package com.backend.naildp.entity;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -29,8 +28,8 @@ public class ChatRoom extends BaseEntity {
 	@Column
 	private LocalDateTime modifiedAt;
 
-	public void updateLastMessage(List<String> content, LocalDateTime modifiedAt) {
-		this.lastMessage = content.get(0);
+	public void updateLastMessage(String content, LocalDateTime modifiedAt) {
+		this.lastMessage = content;
 		this.modifiedAt = modifiedAt;
 	}
 

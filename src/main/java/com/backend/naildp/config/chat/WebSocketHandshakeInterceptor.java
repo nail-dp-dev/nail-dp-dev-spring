@@ -1,4 +1,4 @@
-package com.backend.naildp.config;
+package com.backend.naildp.config.chat;
 
 import java.util.Map;
 

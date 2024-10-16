@@ -1,4 +1,4 @@
-package com.backend.naildp.config;
+package com.backend.naildp.config.chat;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;

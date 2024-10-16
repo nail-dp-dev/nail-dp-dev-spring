@@ -14,19 +14,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageResponseDto {
-	private List<String> content;
+	private String content;
 	private String sender;
 	private List<String> mention;
 	private String messageType;
 	private Long unreadUserCount;
+	private List<String> media;
 
 	public static MessageResponseDto of(ChatMessage chatMessage, Long unreadUserCount) {
 		return MessageResponseDto.builder()
-			.content(chatMessage.getContent().stream().toList())
+			.content(chatMessage.getContent())
 			.sender(chatMessage.getSender())
 			.mention(chatMessage.getMention().stream().toList())
 			.messageType(chatMessage.getMessageType())
 			.unreadUserCount(unreadUserCount)
+			.media(chatMessage.getMedia())
 			.build();
 	}
 }

@@ -1,4 +1,4 @@
-package com.backend.naildp.service;
+package com.backend.naildp.service.chat;
 
 import java.util.List;
 

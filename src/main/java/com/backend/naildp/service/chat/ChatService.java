@@ -1,4 +1,4 @@
-package com.backend.naildp.service;
+package com.backend.naildp.service.chat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +29,7 @@ import com.backend.naildp.repository.ChatRoomRepository;
 import com.backend.naildp.repository.ChatRoomUserRepository;
 import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.repository.mongo.ChatMessageRepository;
+import com.backend.naildp.service.S3Service;
 
 import lombok.RequiredArgsConstructor;
 
@@ -149,6 +150,8 @@ public class ChatService {
 
 	@Transactional
 	public ChatMessageDto sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
+		String imageMessage = "사진을 보냈습니다";
+
 		User user = userRepository.findByNickname(sender)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
@@ -162,7 +165,8 @@ public class ChatService {
 			.sender(sender)
 			.profileUrl(user.getThumbnailUrl())
 			.messageType("IMAGE")
-			.content(imageUrls)
+			.content(imageMessage)
+			.media(imageUrls)
 			.mention(new ArrayList<>())
 			.build();
 

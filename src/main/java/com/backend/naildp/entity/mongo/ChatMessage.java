@@ -25,9 +25,7 @@ public class ChatMessage {
 	@Id
 	private String id;
 
-	private List<String> content;
-
-	private Boolean status = false;
+	private String content;
 
 	@CreatedDate
 	private LocalDateTime createdAt;
@@ -39,6 +37,7 @@ public class ChatMessage {
 	private String chatRoomId;
 
 	private List<String> mention;
+	private List<String> media;
 
 	private String messageType;
 
