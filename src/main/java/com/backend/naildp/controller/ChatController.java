@@ -165,4 +165,11 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 고정 해제했습니다", 2001));
 
 	}
+
+	// @PatchMapping("/{chatRoomId}")
+	// public ResponseEntity<ApiResponse<?>> renameChatRoom(@PathVariable("chatRoomId") UUID chatRoomId,
+	// 	@AuthenticationPrincipal UserDetailsImpl userDetails, @ResponseBody
+	// RenameChatRoomRequestDto req) {
+	//
+	// }
 }
