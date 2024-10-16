@@ -112,6 +112,33 @@ public class ChatController {
 
 	}
 
+	@PostMapping("/{chatRoomId}/video")
+	public ResponseEntity<ApiResponse<?>> sendVideoMessage(
+		@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestParam("video") MultipartFile video) {
+
+		ChatMessageDto chatMessageDto = chatService.sendVideoMessage(chatRoomId, userDetails.getUser().getNickname(),
+			video);
+		kafkaProducerService.send(chatMessageDto);
+
+		return ResponseEntity.ok(ApiResponse.successResponse(chatMessageDto, "동영상 메시지 전송 성공", 2001));
+
+	}
+
+	@PostMapping("/{chatRoomId}/file")
+	public ResponseEntity<ApiResponse<?>> sendFileMessages(
+		@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestParam("file") MultipartFile video) {
+
+		ChatMessageDto chatMessageDto = chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
+			video);
+		kafkaProducerService.send(chatMessageDto);
+		return ResponseEntity.ok(ApiResponse.successResponse(chatMessageDto, "파일 메시지 전송 성공", 2001));
+
+	}
+
 	@DeleteMapping("/{chatRoomId}/leave")
 	public ResponseEntity<ApiResponse<?>> leaveChatRoom(
 		@PathVariable("chatRoomId") UUID chatRoomId,

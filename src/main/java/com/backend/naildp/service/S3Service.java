@@ -45,7 +45,7 @@ public class S3Service {
 				throw new CustomException("isDuplicate error", ErrorCode.FILE_EXCEPTION);
 			}
 
-			FileRequestDto uploadedUrl = saveFile(multipartFile);
+			FileRequestDto uploadedUrl = saveFile(multipartFile, false);
 			uploadedUrls.add(uploadedUrl);
 		}
 
@@ -86,11 +86,11 @@ public class S3Service {
 	}
 
 	// 단일 파일 저장
-	public FileRequestDto saveFile(MultipartFile file) {
+	public FileRequestDto saveFile(MultipartFile file, boolean skipExtensionCheck) {
 		if (file == null || file.isEmpty()) { //.isEmpty()도 되는지 확인해보기
 			throw new CustomException("Not Input files", ErrorCode.FILE_EXCEPTION);
 		}
-		String randomFilename = generateRandomFilename(file);
+		String randomFilename = generateRandomFilename(file, skipExtensionCheck);
 
 		log.info("File upload started: " + randomFilename);
 
@@ -142,9 +142,10 @@ public class S3Service {
 	}
 
 	// 랜덤파일명 생성 (파일명 중복 방지)
-	private String generateRandomFilename(MultipartFile multipartFile) {
+	private String generateRandomFilename(MultipartFile multipartFile, boolean skipExtensionCheck) {
 		String originalFilename = multipartFile.getOriginalFilename();
-		String fileExtension = validateFileExtension(originalFilename);
+		String fileExtension =
+			skipExtensionCheck ? getFileExtension(originalFilename) : validateFileExtension(originalFilename);
 		String randomFilename = UUID.randomUUID() + "." + fileExtension;
 		return randomFilename;
 	}
@@ -159,5 +160,9 @@ public class S3Service {
 			throw new CustomException("Invalid File Extension", ErrorCode.INVALID_FILE_EXTENSION);
 		}
 		return fileExtension;
+	}
+
+	private String getFileExtension(String originalFilename) {
+		return originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
 	}
 }

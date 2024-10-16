@@ -160,18 +160,30 @@ public class ChatService {
 			.map(FileRequestDto::getFileUrl)
 			.collect(Collectors.toList());
 
-		ChatMessage chatMessage = ChatMessage.builder()
-			.chatRoomId(chatRoomId.toString())
-			.sender(sender)
-			.profileUrl(user.getThumbnailUrl())
-			.messageType("IMAGE")
-			.content(imageMessage)
-			.media(imageUrls)
-			.mention(new ArrayList<>())
-			.build();
+		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(),
+			"IMAGE", "사진을 보냈습니다", imageUrls);
+	}
 
-		chatMessageRepository.save(chatMessage);
-		return ChatMessageDto.of(chatMessage);
+	public ChatMessageDto sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
+
+		String videoMessage = "동영상을 보냈습니다";
+		User user = userRepository.findByNickname(sender)
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		FileRequestDto fileRequestDto = s3Service.saveFile(video, false);
+
+		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(),
+			"VIDEO", "동영상을 보냈습니다", List.of(fileRequestDto.getFileUrl()));
+	}
+
+	public ChatMessageDto sendFileMessage(UUID chatRoomId, String sender, MultipartFile file) {
+
+		User user = userRepository.findByNickname(sender)
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		FileRequestDto fileRequestDto = s3Service.saveFile(file, true);
+		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(),
+			"FILE", "파일을 보냈습니다", List.of(fileRequestDto.getFileUrl()));
 	}
 
 	@Transactional
@@ -208,4 +220,21 @@ public class ChatService {
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
 		chatRoomUser.updatePinning(false);
 	}
+
+	private ChatMessageDto createAndSaveMessage(UUID chatRoomId, String sender, String profileUrl,
+		String messageType, String content, List<String> mediaUrls) {
+		ChatMessage chatMessage = ChatMessage.builder()
+			.chatRoomId(chatRoomId.toString())
+			.sender(sender)
+			.profileUrl(profileUrl)
+			.messageType(messageType)
+			.content(content)
+			.media(mediaUrls)
+			.mention(new ArrayList<>())
+			.build();
+
+		chatMessageRepository.save(chatMessage);
+		return ChatMessageDto.of(chatMessage);
+	}
+
 }

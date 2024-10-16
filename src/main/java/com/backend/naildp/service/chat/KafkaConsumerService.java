@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.repository.ChatRoomUserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +23,6 @@ public class KafkaConsumerService {
 
 	private final SimpMessageSendingOperations template;
 	private final ChatRoomUserRepository chatRoomUserRepository;
-
-	ObjectMapper objectMapper = new ObjectMapper();
 
 	@KafkaListener(topics = TOPIC_NAME)
 	public void listenMessage(ChatMessageDto chatMessageDto) {

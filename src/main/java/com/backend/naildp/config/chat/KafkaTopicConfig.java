@@ -26,4 +26,9 @@ public class KafkaTopicConfig {
 	public NewTopic topic() {
 		return new NewTopic("chatting", 1, (short)1);
 	}
+
+	@Bean
+	public NewTopic chatUpdateTopic() {
+		return new NewTopic("chatUpdates", 1, (short)1);
+	}
 }
