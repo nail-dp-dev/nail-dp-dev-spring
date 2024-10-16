@@ -114,8 +114,7 @@ public class S3Service {
 		log.info("File upload completed: " + randomFilename);
 
 		FileRequestDto fileRequestDto = new FileRequestDto();
-		String fileUrl = amazonS3.getUrl(bucket, randomFilename).toString();
-		fileRequestDto.setFileUrl(fileUrl);
+		fileRequestDto.setFileUrl(randomFilename);
 		fileRequestDto.setFileName(file.getOriginalFilename());
 		fileRequestDto.setFileSize(file.getSize());
 		return fileRequestDto;
