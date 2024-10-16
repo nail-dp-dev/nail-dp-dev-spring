@@ -1,5 +1,5 @@
 package com.backend.naildp.common;
 
 public enum NotificationType {
-	FOLLOW;
+	FOLLOW, POST_LIKE;
 }

@@ -65,6 +65,13 @@ public class SseService {
 		log.info("팔로우 알림 전송 성공 : {}" , senderName);
 	}
 
+	public void sendPushNotification(String senderName, Notification notification) {
+		log.info("{} 알림 전송 : {}" , notification.getNotificationType().toString(), senderName);
+		this.eventRedisOperations.convertAndSend(getChannelName(notification.getReceiver().getNickname()),
+			PushNotificationResponseDto.from(senderName, notification));
+		log.info("{} 알림 전송 성공 : {}", notification.getNotificationType().toString(), senderName);
+	}
+
 	private void sendPush(SseEmitter emitter, String emitterKey, Object data) {
 		try {
 			emitter.send(SseEmitter.event()

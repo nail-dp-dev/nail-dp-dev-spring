@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.NotificationType;
 import com.backend.naildp.entity.Notification;
+import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -41,6 +42,22 @@ public class NotificationService {
 
 		//팔로우 푸시 알림 전송
 		sseService.sendFollowPush(followerUser.getNickname(), savedNotification);
+
+		return savedNotification.getId();
+	}
+
+	@Transactional
+	public long generatePostLikeNotification(User sender, Post likedPost) {
+		Notification postLikeNotification = Notification.builder()
+			.receiver(likedPost.getUser())
+			.content(sender.getNickname() + "가 회원님의 게시물을 좋아합니다.")
+			.notificationType(NotificationType.POST_LIKE)
+			.isRead(false)
+			.build();
+
+		Notification savedNotification = notificationRepository.save(postLikeNotification);
+
+		sseService.sendPushNotification(sender.getNickname(), savedNotification);
 
 		return savedNotification.getId();
 	}

@@ -27,6 +27,7 @@ public class PostLikeService {
 	private final PostRepository postRepository;
 	private final PostLikeRepository postLikeRepository;
 	private final FollowRepository followRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
@@ -39,6 +40,8 @@ public class PostLikeService {
 		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(username, postId)
 			.orElseGet(() -> postLikeRepository.save(new PostLike(user, post)));
 		post.addPostLike(postLike);
+
+		notificationService.generatePostLikeNotification(user, post);
 
 		return postLike.getId();
 	}
