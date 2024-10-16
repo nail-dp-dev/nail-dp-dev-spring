@@ -164,5 +164,6 @@ public class S3Service {
 
 	private String getFileExtension(String originalFilename) {
 		return originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+		// 용량 제한 필요
 	}
 }
