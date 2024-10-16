@@ -108,7 +108,7 @@ public class ChatController {
 		ChatMessageDto chatMessageDto = chatService.sendImageMessages(chatRoomId, userDetails.getUser().getNickname(),
 			imageFiles);
 		kafkaProducerService.send(chatMessageDto);
-		return ResponseEntity.ok(ApiResponse.successResponse(chatMessageDto, "이미지 메시지 전송 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "이미지 메시지 전송 성공", 2001));
 
 	}
 
@@ -122,7 +122,7 @@ public class ChatController {
 			video);
 		kafkaProducerService.send(chatMessageDto);
 
-		return ResponseEntity.ok(ApiResponse.successResponse(chatMessageDto, "동영상 메시지 전송 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "동영상 메시지 전송 성공", 2001));
 
 	}
 
@@ -135,7 +135,7 @@ public class ChatController {
 		ChatMessageDto chatMessageDto = chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
 		kafkaProducerService.send(chatMessageDto);
-		return ResponseEntity.ok(ApiResponse.successResponse(chatMessageDto, "파일 메시지 전송 성공", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "파일 메시지 전송 성공", 2001));
 
 	}
 
