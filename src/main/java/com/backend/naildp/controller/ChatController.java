@@ -11,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "Chat")
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/chat")
 @RestController
 public class ChatController {
 	private final ChatService chatService;
@@ -45,14 +46,14 @@ public class ChatController {
 	private final ChatRoomStatusService chatRoomStatusService;
 	private final MessageStatusService messageStatusService;
 
-	@PostMapping("/chat")
+	@PostMapping
 	public ResponseEntity<ApiResponse<?>> createChatRoom(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@RequestBody ChatRoomRequestDto chatRoomRequestDto) {
 		UUID chatRoomId = chatService.createChatRoom(userDetails.getUser().getNickname(), chatRoomRequestDto);
 		return ResponseEntity.ok(ApiResponse.successResponse(chatRoomId, "채팅방 생성 성공", 2001));
 	}
 
-	@MessageMapping("chat/{chatRoomId}/message")
+	@MessageMapping("/{chatRoomId}/message")
 	public void sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
 		String messageId = chatService.sendMessage(chatMessageDto, chatRoomId);
@@ -84,13 +85,13 @@ public class ChatController {
 
 	}
 
-	@GetMapping("chat/list")
+	@GetMapping("/list")
 	public ResponseEntity<ApiResponse<?>> getChatList(@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		ChatListSummaryResponse response = chatService.getChatList(userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "채팅방 목록 조회 성공", 2000));
 	}
 
-	@GetMapping("chat/{chatRoomId}")
+	@GetMapping("/{chatRoomId}")
 	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		MessageSummaryResponse messageResponseDto = chatService.getMessagesByRoomId(chatRoomId,
@@ -98,7 +99,7 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.successResponse(messageResponseDto, "특정 메시지 조회 성공", 2000));
 	}
 
-	@PostMapping("chat/{chatRoomId}/images")
+	@PostMapping("/{chatRoomId}/images")
 	public ResponseEntity<ApiResponse<?>> sendImageMessages(
 		@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -111,13 +112,30 @@ public class ChatController {
 
 	}
 
-	@DeleteMapping("chat/{chatRoomId}/leave")
+	@DeleteMapping("/{chatRoomId}/leave")
 	public ResponseEntity<ApiResponse<?>> leaveChatRoom(
 		@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-		chatService.leaveChatRoom(chatRoomId, userDetails.getUsername());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "채팅방에서 나갔습니다.", 2001));
+		chatService.leaveChatRoom(chatRoomId, userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "채팅방에서 나갔습니다", 2001));
 	}
 
+	@PatchMapping("/{chatRoomId}/pinning")
+	public ResponseEntity<ApiResponse<?>> pinByChatRoomUser(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+		chatService.pinByChatRoomUser(chatRoomId, userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 고정했습니다", 2001));
+
+	}
+
+	@PatchMapping("/{chatRoomId}/unpinning")
+	public ResponseEntity<ApiResponse<?>> unpinByChatRoomUser(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+		chatService.unpinByChatRoomUser(chatRoomId, userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 고정 해제했습니다", 2001));
+
+	}
 }

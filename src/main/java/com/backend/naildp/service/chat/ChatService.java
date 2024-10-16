@@ -195,4 +195,17 @@ public class ChatService {
 			chatRoomRepository.deleteById(chatRoomId);
 		}
 	}
+
+	@Transactional
+	public void pinByChatRoomUser(UUID chatRoomId, String nickname) {
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
+		chatRoomUser.updatePinning(true);
+	}
+
+	public void unpinByChatRoomUser(UUID chatRoomId, String nickname) {
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
+		chatRoomUser.updatePinning(false);
+	}
 }

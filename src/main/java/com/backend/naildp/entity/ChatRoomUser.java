@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatRoomUser {
+public class ChatRoomUser extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +35,8 @@ public class ChatRoomUser {
 	@Column
 	private int unReadMessage = 0;
 
+	private Boolean isPinning = false;
+
 	public ChatRoomUser(User user, ChatRoom chatRoom) {
 		this.user = user;
 		this.chatRoom = chatRoom;
@@ -44,4 +46,7 @@ public class ChatRoomUser {
 		this.name = roomName;
 	}
 
+	public void updatePinning(boolean isPinning) {
+		this.isPinning = isPinning;
+	}
 }
