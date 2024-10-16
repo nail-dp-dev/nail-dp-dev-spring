@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +20,7 @@ public class FollowService {
 
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
-	private final NotificationService notificationService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long followUser(String followTargetNickname, String username) {
@@ -37,7 +38,7 @@ public class FollowService {
 				return followRepository.saveAndFlush(new Follow(user, followTargetUser));
 			});
 
-		notificationService.generateFollowNotification(follow.getFollower().getId(), follow.getFollowing().getId());
+		applicationEventPublisher.publishEvent(follow);
 
 		return follow.getId();
 	}
