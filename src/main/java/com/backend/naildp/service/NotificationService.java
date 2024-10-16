@@ -33,14 +33,14 @@ public class NotificationService {
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 		Notification followNotification = Notification.builder()
 			.receiver(receiver)
-			.content(followerUser.getNickname() + "가 팔로우했습니다.")
+			.content(followerUser.getNickname() + "가 회원님을 팔로우했습니다.")
 			.notificationType(NotificationType.FOLLOW)
 			.isRead(false)
 			.build();
 		Notification savedNotification = notificationRepository.save(followNotification);
 
 		//팔로우 푸시 알림 전송
-		sseService.sendFollowPush(receiver.getNickname(), savedNotification);
+		sseService.sendFollowPush(followerUser.getNickname(), savedNotification);
 
 		return savedNotification.getId();
 	}

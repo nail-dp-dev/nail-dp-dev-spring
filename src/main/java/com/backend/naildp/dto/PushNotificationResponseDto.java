@@ -4,11 +4,6 @@ import java.time.LocalDateTime;
 
 import com.backend.naildp.common.NotificationType;
 import com.backend.naildp.entity.Notification;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,14 +16,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PushNotificationResponseDto {
 
-	private String subscriberNickname;
+	private String senderNickname;
+	private String receiverNickname;
 	private String content;
 	private NotificationType notificationType;
 	private LocalDateTime createdAt;
 
-	public static PushNotificationResponseDto from(Notification notification) {
+	public static PushNotificationResponseDto from(String senderName, Notification notification) {
 		return PushNotificationResponseDto.builder()
-			.subscriberNickname(notification.getReceiver().getNickname())
+			.senderNickname(senderName)
+			.receiverNickname(notification.getReceiver().getNickname())
 			.content(notification.getContent())
 			.notificationType(notification.getNotificationType())
 			.createdAt(notification.getCreatedDate())

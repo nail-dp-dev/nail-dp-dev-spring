@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SseService {
 
-	private static final long DEFAULT_TIMEOUT = 10 * 60 * 1000L; // 2분
+	private static final long DEFAULT_TIMEOUT = 30 * 60 * 1000L; // 30분
 
 	private final RedisMessageListenerContainer redisMessageListenerContainer;
 	private final RedisOperations<String, PushNotificationResponseDto> eventRedisOperations;
@@ -35,22 +35,6 @@ public class SseService {
 		String emitterKey = username;
 		SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
 		emitterRepository.save(emitterKey, emitter);
-
-		emitter.onTimeout(() -> {
-			log.info("sse timeout : id={}", username);
-			emitterRepository.deleteById(emitterKey);
-		});
-
-		emitter.onCompletion(() -> {
-			log.info("sse complete : id={}", username);
-			emitter.complete();
-			emitterRepository.deleteById(emitterKey);
-		});
-
-		emitter.onError(e -> {
-			log.info("sse error occurred : id={}, message={}", username, e.getMessage());
-			emitterRepository.deleteById(emitterKey);
-		});
 
 		String dummyData = "EventStream Created. [username=" + username + "]";
 		sendPush(emitter, emitterKey, dummyData);
@@ -71,11 +55,14 @@ public class SseService {
 		return emitter;
 	}
 
-	public void sendFollowPush(String username, Notification notification) {
-		log.info("팔로우 알림 전송 : {}" , username);
-		this.eventRedisOperations.convertAndSend(getChannelName(username),
-			PushNotificationResponseDto.from(notification));
-		log.info("팔로우 알림 전송 성공 : {}" , username);
+	/**
+	 * 팔로우 알림 전송 : convertAndSend() 로 해당 채널에 데이터를 전송한다.
+	 */
+	public void sendFollowPush(String senderName, Notification notification) {
+		log.info("팔로우 알림 전송 : {}" , senderName);
+		this.eventRedisOperations.convertAndSend(getChannelName(notification.getReceiver().getNickname()),
+			PushNotificationResponseDto.from(senderName, notification));
+		log.info("팔로우 알림 전송 성공 : {}" , senderName);
 	}
 
 	private void sendPush(SseEmitter emitter, String emitterKey, Object data) {
@@ -92,11 +79,8 @@ public class SseService {
 
 	private PushNotificationResponseDto serialize(final Message message) {
 		try {
-			// final Notification notification = this.objectMapper.readValue(message.getBody(), Notification.class);
-			// return PushNotificationResponseDto.from(notification);
 			return this.objectMapper.readValue(message.getBody(), PushNotificationResponseDto.class);
 		} catch (IOException e) {
-			// throw new InvalidRedisMessageException(message);
 			throw new IllegalArgumentException("알림 serialize 실패");
 		}
 	}
