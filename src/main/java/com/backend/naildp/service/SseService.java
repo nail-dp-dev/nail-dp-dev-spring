@@ -61,15 +61,20 @@ public class SseService {
 	public void sendFollowPush(String senderName, Notification notification) {
 		log.info("팔로우 알림 전송 : {}" , senderName);
 		this.eventRedisOperations.convertAndSend(getChannelName(notification.getReceiver().getNickname()),
-			PushNotificationResponseDto.from(senderName, notification));
+			// PushNotificationResponseDto.from(senderName, notification)
+			PushNotificationResponseDto.fromV2(notification)
+		);
 		log.info("팔로우 알림 전송 성공 : {}" , senderName);
 	}
 
-	public void sendPushNotification(String senderName, Notification notification) {
-		log.info("{} 알림 전송 : {}" , notification.getNotificationType().toString(), senderName);
+	/**
+	 * 팔로우 알림 전송 : convertAndSend() 로 해당 채널에 데이터를 전송한다.
+	 */
+	public void sendPushNotification(Notification notification) {
+		log.info("{} 알림 전송 : {}" , notification.getNotificationType().toString(), notification.getSender().getNickname());
 		this.eventRedisOperations.convertAndSend(getChannelName(notification.getReceiver().getNickname()),
-			PushNotificationResponseDto.from(senderName, notification));
-		log.info("{} 알림 전송 성공 : {}", notification.getNotificationType().toString(), senderName);
+			PushNotificationResponseDto.fromV2(notification));
+		log.info("{} 알림 전송 성공 : {}", notification.getNotificationType().toString(), notification.getSender().getNickname());
 	}
 
 	private void sendPush(SseEmitter emitter, String emitterKey, Object data) {

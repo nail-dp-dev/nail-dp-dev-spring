@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,6 +8,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.backend.naildp.common.NotificationType;
+import com.backend.naildp.dto.notification.NotificationResponseDto;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Notification;
@@ -40,6 +42,7 @@ public class NotificationService {
 
 		Notification followNotification = Notification.builder()
 			.receiver(followingUser)
+			.sender(followerUser)
 			.content(followerUser.getNickname() + "님이 회원님을 팔로우했습니다.")
 			.notificationType(NotificationType.FOLLOW)
 			.isRead(false)
@@ -48,7 +51,8 @@ public class NotificationService {
 		Notification savedNotification = notificationRepository.save(followNotification);
 
 		//팔로우 푸시 알림 전송
-		sseService.sendFollowPush(followerUser.getNickname(), savedNotification);
+		// sseService.sendFollowPush(followerUser.getNickname(), savedNotification);
+		sseService.sendPushNotification(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -60,6 +64,7 @@ public class NotificationService {
 	public long generatePostLikeNotification(User sender, Post likedPost) {
 		Notification postLikeNotification = Notification.builder()
 			.receiver(likedPost.getUser())
+			.sender(sender)
 			.content(sender.getNickname() + "가 회원님의 게시물을 좋아합니다.")
 			.notificationType(NotificationType.POST_LIKE)
 			.isRead(false)
@@ -67,7 +72,7 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(postLikeNotification);
 
-		sseService.sendPushNotification(sender.getNickname(), savedNotification);
+		sseService.sendPushNotification(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -79,6 +84,7 @@ public class NotificationService {
 	public long generateCommentLikeNotification(User sender, Comment comment) {
 		Notification commentLikeNotification = Notification.builder()
 			.receiver(comment.getUser())
+			.sender(sender)
 			.content(sender.getNickname() + "님이 회원님의 댓글을 좋아합니다.")
 			.notificationType(NotificationType.COMMENT_LIKE)
 			.isRead(false)
@@ -86,7 +92,7 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(commentLikeNotification);
 
-		sseService.sendPushNotification(sender.getNickname(), savedNotification);
+		sseService.sendPushNotification(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -98,6 +104,7 @@ public class NotificationService {
 	public long generateCommentNotification(User sender, Comment comment) {
 		Notification commentNotification = Notification.builder()
 			.receiver(comment.getUser())
+			.sender(sender)
 			.content(sender.getNickname() + "님이 회원님의 게시물에 댓글을 등록했습니다. " + comment.getCommentContent())
 			.notificationType(NotificationType.COMMENT)
 			.isRead(false)
@@ -105,8 +112,12 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(commentNotification);
 
-		sseService.sendPushNotification(sender.getNickname(), savedNotification);
+		sseService.sendPushNotification(savedNotification);
 
 		return savedNotification.getId();
+	}
+
+	public Slice<NotificationResponseDto> allNotifications(String username) {
+		return notificationRepository.findNotificationSliceByUsername(username);
 	}
 }
