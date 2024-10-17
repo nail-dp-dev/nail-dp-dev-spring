@@ -2,6 +2,7 @@ package com.backend.naildp.service;
 
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ public class PostLikeService {
 	private final PostRepository postRepository;
 	private final PostLikeRepository postLikeRepository;
 	private final FollowRepository followRepository;
-	private final NotificationService notificationService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
@@ -41,7 +42,7 @@ public class PostLikeService {
 			.orElseGet(() -> postLikeRepository.save(new PostLike(user, post)));
 		post.addPostLike(postLike);
 
-		notificationService.generatePostLikeNotification(user, post);
+		applicationEventPublisher.publishEvent(postLike);
 
 		return postLike.getId();
 	}
