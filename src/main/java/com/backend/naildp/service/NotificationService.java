@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -117,7 +118,7 @@ public class NotificationService {
 		return savedNotification.getId();
 	}
 
-	public Slice<NotificationResponseDto> allNotifications(String username) {
-		return notificationRepository.findNotificationSliceByUsername(username);
+	public Slice<NotificationResponseDto> allNotifications(Pageable pageable, String username, Long cursorNotificationId) {
+		return notificationRepository.findNotificationSliceByUsername(pageable, username, cursorNotificationId);
 	}
 }
