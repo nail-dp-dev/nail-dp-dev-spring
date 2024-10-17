@@ -29,6 +29,7 @@ public class ChatMessageDto {
 			.sender(chatMessage.getSender())
 			.messageType(chatMessage.getMessageType())
 			.content(chatMessage.getContent())
+			.media(chatMessage.getMedia())
 			.build();
 	}
 }

@@ -17,6 +17,7 @@ import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
+import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
@@ -164,6 +165,7 @@ public class ChatService {
 			"IMAGE", "사진을 보냈습니다", imageUrls);
 	}
 
+	@Transactional
 	public ChatMessageDto sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
 
 		String videoMessage = "동영상을 보냈습니다";
@@ -176,6 +178,7 @@ public class ChatService {
 			"VIDEO", "동영상을 보냈습니다", List.of(fileRequestDto.getFileUrl()));
 	}
 
+	@Transactional
 	public ChatMessageDto sendFileMessage(UUID chatRoomId, String sender, MultipartFile file) {
 
 		User user = userRepository.findByNickname(sender)
@@ -221,7 +224,8 @@ public class ChatService {
 		chatRoomUser.updatePinning(false);
 	}
 
-	private ChatMessageDto createAndSaveMessage(UUID chatRoomId, String sender, String profileUrl,
+	@Transactional
+	public ChatMessageDto createAndSaveMessage(UUID chatRoomId, String sender, String profileUrl,
 		String messageType, String content, List<String> mediaUrls) {
 		ChatMessage chatMessage = ChatMessage.builder()
 			.chatRoomId(chatRoomId.toString())
@@ -237,4 +241,11 @@ public class ChatService {
 		return ChatMessageDto.of(chatMessage);
 	}
 
+	@Transactional
+	public void renameChatRoom(UUID chatRoomId, String nickname, RenameChatRoomRequestDto request) {
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
+
+		chatRoomUser.updateRoomName(request.getChatRoomName());
+	}
 }

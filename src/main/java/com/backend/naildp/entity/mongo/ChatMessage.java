@@ -1,6 +1,7 @@
 package com.backend.naildp.entity.mongo;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,5 +49,6 @@ public class ChatMessage {
 		this.mention = chatMessageDto.getMention();
 		this.messageType = chatMessageDto.getMessageType();
 		this.profileUrl = user.getThumbnailUrl();
+		this.media = new ArrayList<>();
 	}
 }

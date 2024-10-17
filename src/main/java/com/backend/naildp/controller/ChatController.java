@@ -25,6 +25,7 @@ import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
+import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.chat.ChatRoomStatusService;
@@ -166,10 +167,10 @@ public class ChatController {
 
 	}
 
-	// @PatchMapping("/{chatRoomId}")
-	// public ResponseEntity<ApiResponse<?>> renameChatRoom(@PathVariable("chatRoomId") UUID chatRoomId,
-	// 	@AuthenticationPrincipal UserDetailsImpl userDetails, @ResponseBody
-	// RenameChatRoomRequestDto req) {
-	//
-	// }
+	@PatchMapping("/{chatRoomId}")
+	public ResponseEntity<ApiResponse<?>> renameChatRoom(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody RenameChatRoomRequestDto request) {
+		chatService.renameChatRoom(chatRoomId, userDetails.getUser().getNickname(), request);
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 이름을 변경했습니다", 2001));
+	}
 }
