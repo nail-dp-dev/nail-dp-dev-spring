@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "Chat")
 @RequiredArgsConstructor
-@RequestMapping("/api/chat")
+@RequestMapping("/api")
 @RestController
 public class ChatController {
 	private final ChatService chatService;
@@ -47,14 +47,14 @@ public class ChatController {
 	private final ChatRoomStatusService chatRoomStatusService;
 	private final MessageStatusService messageStatusService;
 
-	@PostMapping
+	@PostMapping("/chat")
 	public ResponseEntity<ApiResponse<?>> createChatRoom(@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@RequestBody ChatRoomRequestDto chatRoomRequestDto) {
 		UUID chatRoomId = chatService.createChatRoom(userDetails.getUser().getNickname(), chatRoomRequestDto);
 		return ResponseEntity.ok(ApiResponse.successResponse(chatRoomId, "채팅방 생성 성공", 2001));
 	}
 
-	@MessageMapping("/{chatRoomId}/message")
+	@MessageMapping("/chat/{chatRoomId}/message")
 	public void sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
 		String messageId = chatService.sendMessage(chatMessageDto, chatRoomId);
@@ -86,13 +86,13 @@ public class ChatController {
 
 	}
 
-	@GetMapping("/list")
+	@GetMapping("/chat/list")
 	public ResponseEntity<ApiResponse<?>> getChatList(@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		ChatListSummaryResponse response = chatService.getChatList(userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "채팅방 목록 조회 성공", 2000));
 	}
 
-	@GetMapping("/{chatRoomId}")
+	@GetMapping("/chat/{chatRoomId}")
 	public ResponseEntity<ApiResponse<?>> getMessagesByRoomId(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		MessageSummaryResponse messageResponseDto = chatService.getMessagesByRoomId(chatRoomId,
@@ -100,11 +100,11 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.successResponse(messageResponseDto, "특정 메시지 조회 성공", 2000));
 	}
 
-	@PostMapping("/{chatRoomId}/images")
+	@PostMapping("/chat/{chatRoomId}/images")
 	public ResponseEntity<ApiResponse<?>> sendImageMessages(
 		@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestParam("images") List<MultipartFile> imageFiles) {
+		@RequestPart("images") List<MultipartFile> imageFiles) {
 
 		ChatMessageDto chatMessageDto = chatService.sendImageMessages(chatRoomId, userDetails.getUser().getNickname(),
 			imageFiles);
@@ -113,11 +113,11 @@ public class ChatController {
 
 	}
 
-	@PostMapping("/{chatRoomId}/video")
+	@PostMapping("/chat/{chatRoomId}/video")
 	public ResponseEntity<ApiResponse<?>> sendVideoMessage(
 		@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestParam("video") MultipartFile video) {
+		@RequestPart("video") MultipartFile video) {
 
 		ChatMessageDto chatMessageDto = chatService.sendVideoMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
@@ -127,11 +127,11 @@ public class ChatController {
 
 	}
 
-	@PostMapping("/{chatRoomId}/file")
+	@PostMapping("/chat/{chatRoomId}/file")
 	public ResponseEntity<ApiResponse<?>> sendFileMessages(
 		@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestParam("file") MultipartFile video) {
+		@RequestPart("file") MultipartFile video) {
 
 		ChatMessageDto chatMessageDto = chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
@@ -140,7 +140,7 @@ public class ChatController {
 
 	}
 
-	@DeleteMapping("/{chatRoomId}/leave")
+	@DeleteMapping("/chat/{chatRoomId}/leave")
 	public ResponseEntity<ApiResponse<?>> leaveChatRoom(
 		@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -149,7 +149,7 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "채팅방에서 나갔습니다", 2001));
 	}
 
-	@PatchMapping("/{chatRoomId}/pinning")
+	@PatchMapping("/chat/{chatRoomId}/pinning")
 	public ResponseEntity<ApiResponse<?>> pinByChatRoomUser(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 
@@ -158,7 +158,7 @@ public class ChatController {
 
 	}
 
-	@PatchMapping("/{chatRoomId}/unpinning")
+	@PatchMapping("/chat/{chatRoomId}/unpinning")
 	public ResponseEntity<ApiResponse<?>> unpinByChatRoomUser(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 
@@ -167,7 +167,7 @@ public class ChatController {
 
 	}
 
-	@PatchMapping("/{chatRoomId}")
+	@PatchMapping("/chat/{chatRoomId}")
 	public ResponseEntity<ApiResponse<?>> renameChatRoom(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody RenameChatRoomRequestDto request) {
 		chatService.renameChatRoom(chatRoomId, userDetails.getUser().getNickname(), request);
