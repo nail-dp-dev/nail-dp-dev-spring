@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,7 +70,8 @@ public class ChatService {
 			User user = userRepository.findByNickname(participant)
 				.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-			String roomName = chatRoomRequestDto.getNickname().stream()
+			String roomName = chatRoomRequestDto.getNickname()
+				.stream()
 				.filter(nickname -> !nickname.equals(participant))
 				.collect(Collectors.joining(", "));
 
@@ -87,7 +91,7 @@ public class ChatService {
 
 		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoomId, user);
 		chatMessageRepository.save(chatMessage);
-		chatRoom.updateLastMessage(chatMessageDto.getContent(), chatMessage.getCreatedAt());
+		chatRoom.updateLastMessage(chatMessageDto.getContent());
 
 		chatMessageDto.setChatRoomId(chatRoomId.toString());
 
@@ -95,23 +99,32 @@ public class ChatService {
 	}
 
 	@Transactional(readOnly = true)
-	public ChatListSummaryResponse getChatList(String nickname) {
+	public ChatListSummaryResponse getChatList(String nickname, String category, int size, UUID cursorId) {
+		PageRequest pageRequest = PageRequest.of(0, size);
+		Slice<ChatRoomMapping> chatRoomList;
+
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		if (cursorId == null) {
+			chatRoomList = chatRoomRepository.findAllChatRoomByNicknameAndCategory(nickname, category, pageRequest);
+		} else {
+			chatRoomList = chatRoomRepository.findAllChatRoomByNicknameAndCategoryAndId(nickname, category, cursorId,
+				pageRequest);
 
-		List<ChatRoomMapping> chatRoomList = chatRoomRepository.findAllChatRoomByNickname(nickname);
+		}
+		if (chatRoomList.isEmpty()) {
+			return ChatListSummaryResponse.createEmptyResponse();
+		}
 
 		List<ChatListResponse> chatRoomDto = chatRoomList.stream()
 			.map(chatRoom -> {
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(),
-					user.getNickname());
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(), user.getNickname());
 				List<String> profileUrls = chatRoomRepository.findOtherUsersThumbnailUrls(chatRoom.getId(), nickname);
-
 				return ChatListResponse.of(chatRoom, unreadCount, profileUrls);
 			})
 			.collect(Collectors.toList());
 
-		return ChatListSummaryResponse.of(chatRoomDto);
+		return ChatListSummaryResponse.of(new SliceImpl<>(chatRoomDto, pageRequest, chatRoomList.hasNext()));
 
 	}
 
@@ -119,23 +132,18 @@ public class ChatService {
 	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId, String nickname) {
 		String firstUnreadMessageId = messageStatusService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
 
-		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(
-			chatRoomId.toString());
-		List<MessageResponseDto> messageDto = messages.stream()
-			.map(message -> {
-				Long unreadUserCount = messageStatusService.getUnreadUserCount(chatRoomId.toString(), message.getId());
-				return MessageResponseDto.of(message, unreadUserCount);
-			})
-			.collect(Collectors.toList());
+		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+		List<MessageResponseDto> messageDto = messages.stream().map(message -> {
+			Long unreadUserCount = messageStatusService.getUnreadUserCount(chatRoomId.toString(), message.getId());
+			return MessageResponseDto.of(message, unreadUserCount);
+		}).collect(Collectors.toList());
 
 		List<User> roomUsers = userRepository.findAllByChatRoomIdNotInMyNickname(chatRoomId, nickname);
-		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo = roomUsers.stream()
-			.map(user -> {
-				boolean isActive = sessionService.isSessionExist(user.getNickname());
-				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
-					isActive, false);
-			})
-			.toList();
+		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo = roomUsers.stream().map(user -> {
+			boolean isActive = sessionService.isSessionExist(user.getNickname());
+			return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(), isActive,
+				false);
+		}).toList();
 
 		return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
 	}
@@ -157,12 +165,9 @@ public class ChatService {
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(imageFiles);
-		List<String> imageUrls = fileRequestDtos.stream()
-			.map(FileRequestDto::getFileUrl)
-			.collect(Collectors.toList());
+		List<String> imageUrls = fileRequestDtos.stream().map(FileRequestDto::getFileUrl).collect(Collectors.toList());
 
-		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(),
-			"IMAGE", "사진을 보냈습니다", imageUrls);
+		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(), "IMAGE", "사진을 보냈습니다", imageUrls);
 	}
 
 	@Transactional
@@ -174,8 +179,8 @@ public class ChatService {
 
 		FileRequestDto fileRequestDto = s3Service.saveFile(video, false);
 
-		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(),
-			"VIDEO", "동영상을 보냈습니다", List.of(fileRequestDto.getFileUrl()));
+		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(), "VIDEO", "동영상을 보냈습니다",
+			List.of(fileRequestDto.getFileUrl()));
 	}
 
 	@Transactional
@@ -185,8 +190,8 @@ public class ChatService {
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		FileRequestDto fileRequestDto = s3Service.saveFile(file, true);
-		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(),
-			"FILE", "파일을 보냈습니다", List.of(fileRequestDto.getFileUrl()));
+		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(), "FILE", "파일을 보냈습니다",
+			List.of(fileRequestDto.getFileUrl()));
 	}
 
 	@Transactional
@@ -225,8 +230,8 @@ public class ChatService {
 	}
 
 	@Transactional
-	public ChatMessageDto createAndSaveMessage(UUID chatRoomId, String sender, String profileUrl,
-		String messageType, String content, List<String> mediaUrls) {
+	public ChatMessageDto createAndSaveMessage(UUID chatRoomId, String sender, String profileUrl, String messageType,
+		String content, List<String> mediaUrls) {
 		ChatMessage chatMessage = ChatMessage.builder()
 			.chatRoomId(chatRoomId.toString())
 			.sender(sender)

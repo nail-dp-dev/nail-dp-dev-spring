@@ -13,4 +13,6 @@ public interface ChatRoomMapping {
 	Integer getParticipantCnt();
 
 	LocalDateTime getModifiedAt();
+
+	Boolean getIsPinning();
 }

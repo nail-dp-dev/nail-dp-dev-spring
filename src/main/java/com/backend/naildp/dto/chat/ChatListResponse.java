@@ -25,6 +25,7 @@ public class ChatListResponse {
 	private int participantCnt;
 	private LocalDateTime modifiedAt;
 	private Boolean isBusiness;
+	private Boolean isPinning;
 
 	public static ChatListResponse of(ChatRoomMapping chatRoomInfo, int unreadCount, List<String> profileUrls) {
 		return ChatListResponse.builder()
@@ -36,6 +37,7 @@ public class ChatListResponse {
 			.participantCnt(Optional.ofNullable(chatRoomInfo.getParticipantCnt()).orElse(0))
 			.modifiedAt(chatRoomInfo.getModifiedAt())
 			.isBusiness(false)
+			.isPinning(chatRoomInfo.getIsPinning())
 			.build();
 	}
 }

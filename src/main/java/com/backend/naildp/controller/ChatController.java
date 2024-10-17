@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,8 +56,7 @@ public class ChatController {
 	}
 
 	@MessageMapping("/chat/{chatRoomId}/message")
-	public void sendMessage(ChatMessageDto chatMessageDto,
-		@DestinationVariable("chatRoomId") UUID chatRoomId) {
+	public void sendMessage(ChatMessageDto chatMessageDto, @DestinationVariable("chatRoomId") UUID chatRoomId) {
 		String messageId = chatService.sendMessage(chatMessageDto, chatRoomId);
 
 		List<String> nicknames = chatService.getChatRoomNickname(chatRoomId); // 방 참여자 목록
@@ -68,27 +68,24 @@ public class ChatController {
 		});
 
 		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
-		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(
-			chatRoomId,
-			unreadCount,
-			chatMessageDto.getContent(),
-			LocalDateTime.now(),
-			chatMessageDto.getSender()
-		);
+		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+			LocalDateTime.now(), chatMessageDto.getSender());
 		kafkaProducerService.send(chatMessageDto);
 
 		kafkaProducerService.sendChatUpdate(chatUpdateDto);
 
-		log.info("Message [{}] sent by user: {} to chatting room: {}",
-			chatMessageDto.getContent(),
-			chatMessageDto.getSender(),
-			chatRoomId);
+		log.info("Message [{}] sent by user: {} to chatting room: {}", chatMessageDto.getContent(),
+			chatMessageDto.getSender(), chatRoomId);
 
 	}
 
 	@GetMapping("/chat/list")
-	public ResponseEntity<ApiResponse<?>> getChatList(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		ChatListSummaryResponse response = chatService.getChatList(userDetails.getUser().getNickname());
+	public ResponseEntity<ApiResponse<?>> getChatList(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestParam(required = false, defaultValue = "all", value = "category") String category,
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, value = "cursorId") UUID cursorId) {
+		ChatListSummaryResponse response = chatService.getChatList(userDetails.getUser().getNickname(), category, size,
+			cursorId);
 		return ResponseEntity.ok(ApiResponse.successResponse(response, "채팅방 목록 조회 성공", 2000));
 	}
 
@@ -101,10 +98,8 @@ public class ChatController {
 	}
 
 	@PostMapping("/chat/{chatRoomId}/images")
-	public ResponseEntity<ApiResponse<?>> sendImageMessages(
-		@PathVariable("chatRoomId") UUID chatRoomId,
-		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestPart("images") List<MultipartFile> imageFiles) {
+	public ResponseEntity<ApiResponse<?>> sendImageMessages(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("images") List<MultipartFile> imageFiles) {
 
 		ChatMessageDto chatMessageDto = chatService.sendImageMessages(chatRoomId, userDetails.getUser().getNickname(),
 			imageFiles);
@@ -114,10 +109,8 @@ public class ChatController {
 	}
 
 	@PostMapping("/chat/{chatRoomId}/video")
-	public ResponseEntity<ApiResponse<?>> sendVideoMessage(
-		@PathVariable("chatRoomId") UUID chatRoomId,
-		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestPart("video") MultipartFile video) {
+	public ResponseEntity<ApiResponse<?>> sendVideoMessage(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("video") MultipartFile video) {
 
 		ChatMessageDto chatMessageDto = chatService.sendVideoMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
@@ -128,10 +121,8 @@ public class ChatController {
 	}
 
 	@PostMapping("/chat/{chatRoomId}/file")
-	public ResponseEntity<ApiResponse<?>> sendFileMessages(
-		@PathVariable("chatRoomId") UUID chatRoomId,
-		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestPart("file") MultipartFile video) {
+	public ResponseEntity<ApiResponse<?>> sendFileMessages(@PathVariable("chatRoomId") UUID chatRoomId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("file") MultipartFile video) {
 
 		ChatMessageDto chatMessageDto = chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
@@ -141,8 +132,7 @@ public class ChatController {
 	}
 
 	@DeleteMapping("/chat/{chatRoomId}/leave")
-	public ResponseEntity<ApiResponse<?>> leaveChatRoom(
-		@PathVariable("chatRoomId") UUID chatRoomId,
+	public ResponseEntity<ApiResponse<?>> leaveChatRoom(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 
 		chatService.leaveChatRoom(chatRoomId, userDetails.getUser().getNickname());
