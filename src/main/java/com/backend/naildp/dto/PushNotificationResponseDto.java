@@ -31,6 +31,16 @@ public class PushNotificationResponseDto {
 			.createdAt(notification.getCreatedDate())
 			.build();
 	}
+
+	public static PushNotificationResponseDto fromV2(Notification notification) {
+		return PushNotificationResponseDto.builder()
+			.senderNickname(notification.getSender().getNickname())
+			.receiverNickname(notification.getReceiver().getNickname())
+			.content(notification.getContent())
+			.notificationType(notification.getNotificationType())
+			.createdAt(notification.getCreatedDate())
+			.build();
+	}
 }
 
 

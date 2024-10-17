@@ -35,14 +35,19 @@ public class Notification extends BaseEntity {
 	private boolean isRead;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
+	@JoinColumn(name = "receiver_id")
 	private User receiver;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "sender_id")
+	private User sender;
+
 	@Builder
-	public Notification(String content, NotificationType notificationType, boolean isRead, User receiver) {
+	public Notification(String content, NotificationType notificationType, boolean isRead, User receiver, User sender) {
 		this.content = content;
 		this.notificationType = notificationType;
 		this.isRead = isRead;
 		this.receiver = receiver;
+		this.sender = sender;
 	}
 }
