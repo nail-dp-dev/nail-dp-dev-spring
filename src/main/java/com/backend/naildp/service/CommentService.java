@@ -30,6 +30,7 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
@@ -58,6 +59,8 @@ public class CommentService {
 			.orElseThrow(() -> new CustomException("다시 시도해주세요.", ErrorCode.NOT_FOUND));
 		Comment comment = new Comment(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
+
+		notificationService.generateCommentNotification(user, comment);
 
 		return commentRepository.save(comment).getId();
 	}

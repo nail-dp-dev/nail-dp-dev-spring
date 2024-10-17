@@ -1,7 +1,5 @@
 package com.backend.naildp.service;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -32,6 +30,7 @@ public class CommentLikeService {
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
 	private final CommentLikeRepository commentLikeRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public Long likeComment(Long postId, Long commentId, String username) {
@@ -64,6 +63,8 @@ public class CommentLikeService {
 
 		User user = userRepository.findByNickname(username)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		notificationService.generateCommentLikeNotification(user, findComment);
 
 		return commentLikeRepository.saveAndFlush(new CommentLike(user, findComment)).getId();
 	}
