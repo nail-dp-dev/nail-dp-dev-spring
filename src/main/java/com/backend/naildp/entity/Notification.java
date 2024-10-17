@@ -34,6 +34,8 @@ public class Notification extends BaseEntity {
 
 	private boolean isRead;
 
+	private String link;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "receiver_id")
 	private User receiver;
@@ -43,11 +45,26 @@ public class Notification extends BaseEntity {
 	private User sender;
 
 	@Builder
-	public Notification(String content, NotificationType notificationType, boolean isRead, User receiver, User sender) {
+	public Notification(String content, NotificationType notificationType, boolean isRead, String link, User receiver, User sender) {
 		this.content = content;
 		this.notificationType = notificationType;
 		this.isRead = isRead;
+		this.link = link;
 		this.receiver = receiver;
 		this.sender = sender;
+	}
+
+	public static Notification followOf(Follow follow) {
+		User followerUser = follow.getFollower();
+		User followingUser = follow.getFollowing();
+
+		return Notification.builder()
+			.receiver(followingUser)
+			.sender(followerUser)
+			.content(followerUser.getNickname() + "님이 회원님을 팔로우했습니다.")
+			.notificationType(NotificationType.FOLLOW)
+			.isRead(false)
+			.link("/api/user/" + followerUser.getNickname())
+			.build();
 	}
 }

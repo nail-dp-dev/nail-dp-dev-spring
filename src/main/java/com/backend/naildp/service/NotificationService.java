@@ -38,21 +38,11 @@ public class NotificationService {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public long generateFollowNotification(Follow follow) {
 		log.info("follow transactionalEventListener -> 새로운 transaction 시작");
-		User followerUser = follow.getFollower();
-		User followingUser = follow.getFollowing();
-
-		Notification followNotification = Notification.builder()
-			.receiver(followingUser)
-			.sender(followerUser)
-			.content(followerUser.getNickname() + "님이 회원님을 팔로우했습니다.")
-			.notificationType(NotificationType.FOLLOW)
-			.isRead(false)
-			.build();
+		Notification followNotification = Notification.followOf(follow);
 
 		Notification savedNotification = notificationRepository.save(followNotification);
 
 		//팔로우 푸시 알림 전송
-		// sseService.sendFollowPush(followerUser.getNickname(), savedNotification);
 		sseService.sendPushNotification(savedNotification);
 
 		return savedNotification.getId();
@@ -69,6 +59,7 @@ public class NotificationService {
 			.content(sender.getNickname() + "가 회원님의 게시물을 좋아합니다.")
 			.notificationType(NotificationType.POST_LIKE)
 			.isRead(false)
+			.link("/api/posts/" + likedPost.getId().toString())
 			.build();
 
 		Notification savedNotification = notificationRepository.save(postLikeNotification);
@@ -89,6 +80,7 @@ public class NotificationService {
 			.content(sender.getNickname() + "님이 회원님의 댓글을 좋아합니다.")
 			.notificationType(NotificationType.COMMENT_LIKE)
 			.isRead(false)
+			.link("/api/posts/" + comment.getPost().getId().toString())
 			.build();
 
 		Notification savedNotification = notificationRepository.save(commentLikeNotification);
@@ -109,6 +101,7 @@ public class NotificationService {
 			.content(sender.getNickname() + "님이 회원님의 게시물에 댓글을 등록했습니다. " + comment.getCommentContent())
 			.notificationType(NotificationType.COMMENT)
 			.isRead(false)
+			.link("/api/posts/" + comment.getPost().getId().toString())
 			.build();
 
 		Notification savedNotification = notificationRepository.save(commentNotification);
@@ -118,7 +111,7 @@ public class NotificationService {
 		return savedNotification.getId();
 	}
 
-	public Slice<NotificationResponseDto> allNotifications(Pageable pageable, String username, Long cursorNotificationId) {
-		return notificationRepository.findNotificationSliceByUsername(pageable, username, cursorNotificationId);
+	public Slice<NotificationResponseDto> allNotifications(Pageable pageable, String username) {
+		return notificationRepository.findNotificationSliceByUsername(pageable, username);
 	}
 }

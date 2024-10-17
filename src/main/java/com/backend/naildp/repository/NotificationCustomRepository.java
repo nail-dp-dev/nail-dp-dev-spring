@@ -7,5 +7,5 @@ import com.backend.naildp.dto.notification.NotificationResponseDto;
 
 public interface NotificationCustomRepository {
 
-	Slice<NotificationResponseDto> findNotificationSliceByUsername(Pageable pageable, String username, Long cursorNotificationId);
+	Slice<NotificationResponseDto> findNotificationSliceByUsername(Pageable pageable, String username);
 }

@@ -23,12 +23,11 @@ public class NotificationController {
 	private final NotificationService notificationService;
 
 	@GetMapping
-	ResponseEntity<?> notifications(@PageableDefault(size = 25) Pageable pageable,
-		@RequestParam("cursorId") Long cursorId,
+	ResponseEntity<?> notifications(@PageableDefault(size = 50) Pageable pageable,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		return ResponseEntity.ok(
 			ApiResponse.successResponse(
-				notificationService.allNotifications(pageable, userDetails.getUser().getNickname(), cursorId),
+				notificationService.allNotifications(pageable, userDetails.getUser().getNickname()),
 				"전체 알림 조회", 2000));
 	}
 }
