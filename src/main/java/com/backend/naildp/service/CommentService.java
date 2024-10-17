@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -30,7 +31,7 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
-	private final NotificationService notificationService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
@@ -60,7 +61,7 @@ public class CommentService {
 		Comment comment = new Comment(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
 
-		notificationService.generateCommentNotification(user, comment);
+		applicationEventPublisher.publishEvent(comment);
 
 		return commentRepository.save(comment).getId();
 	}

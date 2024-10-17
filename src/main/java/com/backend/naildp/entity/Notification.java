@@ -67,4 +67,48 @@ public class Notification extends BaseEntity {
 			.link("/api/user/" + followerUser.getNickname())
 			.build();
 	}
+
+	public static Notification fromPostLike(PostLike postLike) {
+		Post likedPost = postLike.getPost();
+		User receiver = likedPost.getUser();
+		User sender = postLike.getUser();
+
+		return Notification.builder()
+			.receiver(receiver)
+			.sender(sender)
+			.content(sender.getNickname() + "가 회원님의 게시물을 좋아합니다.")
+			.notificationType(NotificationType.POST_LIKE)
+			.isRead(false)
+			.link("/api/posts/" + likedPost.getId().toString())
+			.build();
+	}
+
+	public static Notification fromCommentLike(CommentLike commentLike) {
+		Comment comment = commentLike.getComment();
+		User commentOwner = comment.getUser();
+		User sender = commentLike.getUser();
+
+		return Notification.builder()
+			.receiver(commentOwner)
+			.sender(sender)
+			.content(sender.getNickname() + "님이 회원님의 댓글을 좋아합니다.")
+			.notificationType(NotificationType.COMMENT_LIKE)
+			.isRead(false)
+			.link("/api/posts/" + comment.getPost().getId().toString())
+			.build();
+	}
+
+	public static Notification fromComment(Comment comment) {
+		User postOwner = comment.getPost().getUser();
+		User sender = comment.getUser();
+
+		return Notification.builder()
+			.receiver(postOwner)
+			.sender(sender)
+			.content(sender.getNickname() + "님이 회원님의 게시물에 댓글을 등록했습니다. " + comment.getCommentContent())
+			.notificationType(NotificationType.COMMENT)
+			.isRead(false)
+			.link("/api/posts/" + comment.getPost().getId().toString())
+			.build();
+	}
 }

@@ -11,9 +11,11 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.backend.naildp.common.NotificationType;
 import com.backend.naildp.dto.notification.NotificationResponseDto;
 import com.backend.naildp.entity.Comment;
+import com.backend.naildp.entity.CommentLike;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.repository.NotificationRepository;
 import com.backend.naildp.repository.UserRepository;
@@ -51,16 +53,11 @@ public class NotificationService {
 	/**
 	 * 게시물 좋아요 알림 생성 및 푸시알림 전송
 	 */
-	@Transactional
-	public long generatePostLikeNotification(User sender, Post likedPost) {
-		Notification postLikeNotification = Notification.builder()
-			.receiver(likedPost.getUser())
-			.sender(sender)
-			.content(sender.getNickname() + "가 회원님의 게시물을 좋아합니다.")
-			.notificationType(NotificationType.POST_LIKE)
-			.isRead(false)
-			.link("/api/posts/" + likedPost.getId().toString())
-			.build();
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public long generatePostLikeNotification(PostLike postLike) {
+		log.info("postLike transactionalEventListener -> 새로운 transaction 시작");
+		Notification postLikeNotification = Notification.fromPostLike(postLike);
 
 		Notification savedNotification = notificationRepository.save(postLikeNotification);
 
@@ -72,16 +69,12 @@ public class NotificationService {
 	/**
 	 * 댓글 좋아요 알림 생성 및 푸시알림 전송
 	 */
-	@Transactional
-	public long generateCommentLikeNotification(User sender, Comment comment) {
-		Notification commentLikeNotification = Notification.builder()
-			.receiver(comment.getUser())
-			.sender(sender)
-			.content(sender.getNickname() + "님이 회원님의 댓글을 좋아합니다.")
-			.notificationType(NotificationType.COMMENT_LIKE)
-			.isRead(false)
-			.link("/api/posts/" + comment.getPost().getId().toString())
-			.build();
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public long generateCommentLikeNotification(CommentLike commentLike) {
+		log.info("commentLike transactionalEventListener -> 새로운 transaction 시작");
+
+		Notification commentLikeNotification = Notification.fromCommentLike(commentLike);
 
 		Notification savedNotification = notificationRepository.save(commentLikeNotification);
 
@@ -93,16 +86,12 @@ public class NotificationService {
 	/**
 	 * 게시물에 댓글 등록 알림 생성 및 푸시알림 전송
 	 */
-	@Transactional
-	public long generateCommentNotification(User sender, Comment comment) {
-		Notification commentNotification = Notification.builder()
-			.receiver(comment.getUser())
-			.sender(sender)
-			.content(sender.getNickname() + "님이 회원님의 게시물에 댓글을 등록했습니다. " + comment.getCommentContent())
-			.notificationType(NotificationType.COMMENT)
-			.isRead(false)
-			.link("/api/posts/" + comment.getPost().getId().toString())
-			.build();
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public long generateCommentNotification(Comment comment) {
+		log.info("comment transactionalEventListener -> 새로운 transaction 시작");
+
+		Notification commentNotification = Notification.fromComment(comment);
 
 		Notification savedNotification = notificationRepository.save(commentNotification);
 
