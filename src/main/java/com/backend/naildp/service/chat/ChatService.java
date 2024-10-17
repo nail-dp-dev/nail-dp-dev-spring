@@ -1,5 +1,6 @@
 package com.backend.naildp.service.chat;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.backend.naildp.dto.chat.ChatListResponse;
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
+import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
@@ -48,6 +50,7 @@ public class ChatService {
 	private final MessageStatusService messageStatusService;
 	private final S3Service s3Service;
 	private final SessionService sessionService;
+	private final KafkaProducerService kafkaProducerService;
 
 	@Transactional
 	public UUID createChatRoom(String myNickname, ChatRoomRequestDto chatRoomRequestDto) {
@@ -83,7 +86,7 @@ public class ChatService {
 	}
 
 	@Transactional
-	public String sendMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
+	public void sendMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
 		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
 			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		User user = userRepository.findByNickname(chatMessageDto.getSender())
@@ -95,7 +98,20 @@ public class ChatService {
 
 		chatMessageDto.setChatRoomId(chatRoomId.toString());
 
-		return chatMessage.getId();
+		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
+				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+			}
+		});
+
+		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
+		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+			LocalDateTime.now(), chatMessageDto.getSender());
+		kafkaProducerService.send(chatMessageDto);
+
+		kafkaProducerService.sendChatUpdate(chatUpdateDto);
 	}
 
 	@Transactional(readOnly = true)
@@ -158,7 +174,7 @@ public class ChatService {
 	}
 
 	@Transactional
-	public ChatMessageDto sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
+	public void sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
 		String imageMessage = "사진을 보냈습니다";
 
 		User user = userRepository.findByNickname(sender)
@@ -167,11 +183,38 @@ public class ChatService {
 		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(imageFiles);
 		List<String> imageUrls = fileRequestDtos.stream().map(FileRequestDto::getFileUrl).collect(Collectors.toList());
 
-		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(), "IMAGE", "사진을 보냈습니다", imageUrls);
+		ChatMessage chatMessage = ChatMessage.builder()
+			.chatRoomId(chatRoomId.toString())
+			.sender(sender)
+			.profileUrl(user.getThumbnailUrl())
+			.messageType("IMAGE")
+			.content(imageMessage)
+			.media(imageUrls)
+			.mention(new ArrayList<>())
+			.build();
+
+		chatMessageRepository.save(chatMessage);
+		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+
+		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
+				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+			}
+		});
+
+		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
+		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+			LocalDateTime.now(), chatMessageDto.getSender());
+
+		kafkaProducerService.send(chatMessageDto);
+		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
 	}
 
 	@Transactional
-	public ChatMessageDto sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
+	public void sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
 
 		String videoMessage = "동영상을 보냈습니다";
 		User user = userRepository.findByNickname(sender)
@@ -179,19 +222,70 @@ public class ChatService {
 
 		FileRequestDto fileRequestDto = s3Service.saveFile(video, false);
 
-		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(), "VIDEO", "동영상을 보냈습니다",
-			List.of(fileRequestDto.getFileUrl()));
+		ChatMessage chatMessage = ChatMessage.builder()
+			.chatRoomId(chatRoomId.toString())
+			.sender(sender)
+			.profileUrl(user.getThumbnailUrl())
+			.messageType("VIDEO")
+			.content(videoMessage)
+			.media(List.of(fileRequestDto.getFileUrl()))
+			.mention(new ArrayList<>())
+			.build();
+
+		chatMessageRepository.save(chatMessage);
+		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+
+		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
+				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+			}
+		});
+
+		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
+		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+			LocalDateTime.now(), chatMessageDto.getSender());
+
+		kafkaProducerService.send(chatMessageDto);
+		kafkaProducerService.sendChatUpdate(chatUpdateDto);
 	}
 
 	@Transactional
-	public ChatMessageDto sendFileMessage(UUID chatRoomId, String sender, MultipartFile file) {
+	public void sendFileMessage(UUID chatRoomId, String sender, MultipartFile file) {
+		String fileMessage = "파일을 보냈습니다";
 
 		User user = userRepository.findByNickname(sender)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		FileRequestDto fileRequestDto = s3Service.saveFile(file, true);
-		return createAndSaveMessage(chatRoomId, sender, user.getThumbnailUrl(), "FILE", "파일을 보냈습니다",
-			List.of(fileRequestDto.getFileUrl()));
+		ChatMessage chatMessage = ChatMessage.builder()
+			.chatRoomId(chatRoomId.toString())
+			.sender(sender)
+			.profileUrl(user.getThumbnailUrl())
+			.messageType("VIDEO")
+			.content(fileMessage)
+			.media(List.of(fileRequestDto.getFileUrl()))
+			.mention(new ArrayList<>())
+			.build();
+
+		chatMessageRepository.save(chatMessage);
+		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+
+		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
+				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+			}
+		});
+
+		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
+		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+			LocalDateTime.now(), chatMessageDto.getSender());
+
+		kafkaProducerService.send(chatMessageDto);
+		kafkaProducerService.sendChatUpdate(chatUpdateDto);
 	}
 
 	@Transactional

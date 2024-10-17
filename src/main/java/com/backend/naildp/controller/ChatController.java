@@ -1,6 +1,5 @@
 package com.backend.naildp.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
-import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
 import com.backend.naildp.exception.ApiResponse;
@@ -56,26 +54,13 @@ public class ChatController {
 	}
 
 	@MessageMapping("/chat/{chatRoomId}/message")
-	public void sendMessage(ChatMessageDto chatMessageDto, @DestinationVariable("chatRoomId") UUID chatRoomId) {
-		String messageId = chatService.sendMessage(chatMessageDto, chatRoomId);
-
-		List<String> nicknames = chatService.getChatRoomNickname(chatRoomId); // 방 참여자 목록
-		nicknames.forEach(nickname -> {
-			if (!nickname.equals(chatMessageDto.getSender())) {
-				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, messageId);
-			}
-		});
-
-		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
-		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
-			LocalDateTime.now(), chatMessageDto.getSender());
-		kafkaProducerService.send(chatMessageDto);
-
-		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+	public ResponseEntity<ApiResponse<?>> sendMessage(ChatMessageDto chatMessageDto,
+		@DestinationVariable("chatRoomId") UUID chatRoomId) {
+		chatService.sendMessage(chatMessageDto, chatRoomId);
 
 		log.info("Message [{}] sent by user: {} to chatting room: {}", chatMessageDto.getContent(),
 			chatMessageDto.getSender(), chatRoomId);
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "메시지 전송 성공", 2000));
 
 	}
 
@@ -101,9 +86,8 @@ public class ChatController {
 	public ResponseEntity<ApiResponse<?>> sendImageMessages(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("images") List<MultipartFile> imageFiles) {
 
-		ChatMessageDto chatMessageDto = chatService.sendImageMessages(chatRoomId, userDetails.getUser().getNickname(),
+		chatService.sendImageMessages(chatRoomId, userDetails.getUser().getNickname(),
 			imageFiles);
-		kafkaProducerService.send(chatMessageDto);
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "이미지 메시지 전송 성공", 2001));
 
 	}
@@ -112,9 +96,8 @@ public class ChatController {
 	public ResponseEntity<ApiResponse<?>> sendVideoMessage(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("video") MultipartFile video) {
 
-		ChatMessageDto chatMessageDto = chatService.sendVideoMessage(chatRoomId, userDetails.getUser().getNickname(),
+		chatService.sendVideoMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
-		kafkaProducerService.send(chatMessageDto);
 
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "동영상 메시지 전송 성공", 2001));
 
@@ -124,9 +107,8 @@ public class ChatController {
 	public ResponseEntity<ApiResponse<?>> sendFileMessages(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("file") MultipartFile video) {
 
-		ChatMessageDto chatMessageDto = chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
+		chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
 			video);
-		kafkaProducerService.send(chatMessageDto);
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "파일 메시지 전송 성공", 2001));
 
 	}

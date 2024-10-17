@@ -41,7 +41,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 
 	@Query(
 		"SELECT cu.chatRoom.id AS id, cu.name AS name, cu.chatRoom.lastMessage AS lastMessage, cu.chatRoom.participantCnt AS participantCnt, cu.chatRoom.lastModifiedDate AS modifiedAt, cu.isPinning AS isPinning "
-			+ "FROM ChatRoomUse리r cu "
+			+ "FROM ChatRoomUser cu "
 			+ "WHERE cu.user.nickname = :nickname "
 			+ "AND cu.isPinning = false "
 			+ "AND cu.chatRoom.lastModifiedDate < (SELECT c.lastModifiedDate FROM ChatRoom c WHERE c.id = :cursorId) "
