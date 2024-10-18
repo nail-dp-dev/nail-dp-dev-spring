@@ -1,5 +1,7 @@
 package com.backend.naildp.service;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,16 +30,17 @@ public class PostLikeService {
 
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
+
 		User user = userRepository.findUserByNickname(username)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
 		Post post = postRepository.findById(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
-		post.addPostLike(savedPostLike);
+		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(username, postId)
+			.orElseGet(() -> postLikeRepository.save(new PostLike(user, post)));
+		post.addPostLike(postLike);
 
-		return savedPostLike.getId();
+		return postLike.getId();
 	}
 
 	@Transactional
