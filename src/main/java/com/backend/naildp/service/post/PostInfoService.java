@@ -1,4 +1,4 @@
-package com.backend.naildp.service;
+package com.backend.naildp.service.post;
 
 import java.util.List;
 import java.util.stream.Collectors;

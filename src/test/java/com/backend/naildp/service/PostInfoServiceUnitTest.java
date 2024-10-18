@@ -33,6 +33,7 @@ import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.service.post.PostInfoService;
 
 @ExtendWith(MockitoExtension.class)
 @Import(JpaAuditingConfiguration.class)
