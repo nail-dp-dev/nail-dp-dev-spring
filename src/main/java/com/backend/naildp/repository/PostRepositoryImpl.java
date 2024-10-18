@@ -83,7 +83,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.selectFrom(post)
 			.where(post.tempSave.isFalse()
 				.and(isAllowedToViewPosts(username))
-				.and(isBeforeCursorPost(cursorPostId))
+				.and(isRegisteredBeforeCursorPost(cursorPostId))
 			)
 			.orderBy(post.createdDate.desc())
 			.limit(pageable.getPageSize() + 1)
@@ -117,7 +117,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
-	private BooleanExpression isBeforeCursorPost(Long cursorPostId) {
+	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
 		if (cursorPostId == null) {
 			return null;
 		}
@@ -230,12 +230,4 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.or(postTodayLikeQuery.eq(cursorPostTodayLikeQuery).and(isRegisteredBeforeCursorPost(cursorPostId)));
 	}
 
-	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
-		if (cursorPostId == null) {
-			return null;
-		}
-
-		return post.createdDate.before(
-			JPAExpressions.select(post.createdDate).from(post).where(post.id.eq(cursorPostId)));
-	}
 }
