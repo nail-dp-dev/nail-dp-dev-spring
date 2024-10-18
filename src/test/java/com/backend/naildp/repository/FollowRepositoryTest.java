@@ -39,10 +39,10 @@ public class FollowRepositoryTest {
 
 	@BeforeEach
 	void setup() {
-		user1 = createTestMember("mj@naver.com", "mj", "0101111", 1L);
-		user2 = createTestMember("jw@naver.com", "jw", "0102222", 2L);
+		user1 = createMember("mj");
+		user2 = createMember("jw");
 
-		createTestFollow(user1, user2);
+		createFollow(user1, user2);
 		em.clear();
 	}
 
@@ -71,16 +71,16 @@ public class FollowRepositoryTest {
 	@Test
 	void followerList() {
 		//given
-		User user = createTestMember("user@", "user", "010", cnt);
-		User follower1 = createTestMember("follower1@", "follower1", "010", cnt);
-		User follower2 = createTestMember("follower2@", "follower2", "010", cnt);
-		User follower3 = createTestMember("follower3@", "follower3", "010", cnt);
-		User follower4 = createTestMember("follower4@", "follower4", "010", cnt);
+		User user = createMember("user");
+		User follower1 = createMember("follower1");
+		User follower2 = createMember("follower2");
+		User follower3 = createMember("follower3");
+		User follower4 = createMember("follower4");
 
-		createTestFollow(follower1, user);
-		createTestFollow(follower2, user);
-		createTestFollow(follower3, user);
-		createTestFollow(follower4, user);
+		createFollow(follower1, user);
+		createFollow(follower2, user);
+		createFollow(follower3, user);
+		createFollow(follower4, user);
 
 		//when
 		List<User> followerUsers = em.createQuery(
@@ -97,16 +97,16 @@ public class FollowRepositoryTest {
 	@Test
 	void followingList() {
 		//given
-		User user = createTestMember("user@", "user", "010", cnt);
-		User following1 = createTestMember("following1@", "following1", "010", cnt);
-		User following2 = createTestMember("following2@", "following2", "010", cnt);
-		User following3 = createTestMember("following3@", "following3", "010", cnt);
-		User following4 = createTestMember("following4@", "following4", "010", cnt);
+		User user = createMember("user");
+		User following1 = createMember("following1");
+		User following2 = createMember("following2");
+		User following3 = createMember("following3");
+		User following4 = createMember("following4");
 
-		createTestFollow(user, following1);
-		createTestFollow(user, following2);
-		createTestFollow(user, following3);
-		createTestFollow(user, following4);
+		createFollow(user, following1);
+		createFollow(user, following2);
+		createFollow(user, following3);
+		createFollow(user, following4);
 
 		//when
 		List<User> followingUsersByFollowerNickname = followRepository.findFollowingUserByFollowerNickname(
@@ -120,11 +120,11 @@ public class FollowRepositoryTest {
 	@Test
 	void countFollowingList() {
 		//given
-		User user = createTestMember("user@", "user", "010", cnt);
+		User user = createMember("user");
 		int followingCnt = 10;
 		for (int i = 0; i < followingCnt; i++) {
-			User followingUser = createTestMember("following@", "following" + i, "010", cnt);
-			createTestFollow(user, followingUser);
+			User followingUser = createMember("following" + i);
+			createFollow(user, followingUser);
 		}
 
 		//when
@@ -138,11 +138,11 @@ public class FollowRepositoryTest {
 	@Test
 	void countFollowerList() {
 		//given
-		User user = createTestMember("user@", "user", "010", cnt);
+		User user = createMember("user");
 		int followerCnt = 10;
 		for (int i = 0; i < followerCnt; i++) {
-			User followerUser = createTestMember("follower@", "follower" + i, "010", cnt);
-			createTestFollow(followerUser, user);
+			User followerUser = createMember("follower" + i);
+			createFollow(followerUser, user);
 		}
 
 		//when
@@ -156,10 +156,10 @@ public class FollowRepositoryTest {
 	@Test
 	void checkFollowingStatusByNickname() {
 		//given
-		User user = createTestMember("user@", "user", "010", cnt);
-		User notFollowingUser = createTestMember("notFollowingUser@", "notFollowingUser", "010", cnt);
-		User followingUser = createTestMember("following@", "following", "010", cnt);
-		createTestFollow(user, followingUser);
+		User user = createMember("user");
+		User notFollowingUser = createMember("notFollowingUser");
+		User followingUser = createMember("following");
+		createFollow(user, followingUser);
 
 		//when
 		boolean followingStatusWithFollowingUser = followRepository.existsByFollowerNicknameAndFollowing(
@@ -176,10 +176,10 @@ public class FollowRepositoryTest {
 	@Test
 	void findFollowByNicknames() {
 		//given
-		User followerUser = createTestMember("follower@", "follower", "010", cnt);
-		User notFollowingUser = createTestMember("notFollowingUser@", "notFollowingUser", "010", cnt);
-		User followingUser = createTestMember("following@", "following", "010", cnt);
-		createTestFollow(followerUser, followingUser);
+		User followerUser = createMember("follower");
+		User notFollowingUser = createMember("notFollowingUser");
+		User followingUser = createMember("following");
+		createFollow(followerUser, followingUser);
 
 		//when
 		Optional<Follow> followedOptional = followRepository.findFollowByFollowerNicknameAndFollowingNickname(
@@ -193,39 +193,37 @@ public class FollowRepositoryTest {
 		assertThat(unfollowedOptional.isPresent()).isFalse();
 	}
 
+	@DisplayName("팔로워 취소 테스트")
 	@Test
 	void deleteFollowByNicknames() {
 		//given
-		User followerUser = createTestMember("follower@", "follower", "010", cnt);
-		User followingUser = createTestMember("following@", "following", "010", cnt);
-		createTestFollow(followerUser, followingUser);
-
-		em.flush();
-		em.clear();
+		User follower = createMember("follower");
+		User followee = createMember("following");
+		createFollow(follower, followee);
 
 		//when
-		followRepository.deleteByFollowerNicknameAndFollowingNickname(followerUser.getNickname(),
-			followingUser.getNickname());
+		followRepository.deleteByFollowerNicknameAndFollowingNickname(follower.getNickname(),
+			followee.getNickname());
 
 		//then
 		Optional<Follow> followOptional = followRepository.findFollowByFollowerNicknameAndFollowingNickname(
-			followerUser.getNickname(),
-			followingUser.getNickname());
+			follower.getNickname(),
+			followee.getNickname());
 		assertThat(followOptional.isPresent()).isFalse();
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
+	private User createMember(String nickname) {
 		User user = User.builder()
 			.nickname(nickname)
 			.role(UserRole.USER)
-			.phoneNumber(phoneNumber)
+			.phoneNumber("")
 			.agreement(true)
 			.build();
 		em.persist(user);
 		return user;
 	}
 
-	private void createTestFollow(User follower, User following) {
+	private void createFollow(User follower, User following) {
 		Follow follow = new Follow(follower, following);
 		em.persist(follow);
 	}

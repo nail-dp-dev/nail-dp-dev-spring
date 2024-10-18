@@ -29,6 +29,5 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
 	Optional<Follow> findFollowByFollowerNicknameAndFollowingNickname(String followerNickname, String followingNickname);
 
-	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	void deleteByFollowerNicknameAndFollowingNickname(String followerNickname, String followingNickname);
 }

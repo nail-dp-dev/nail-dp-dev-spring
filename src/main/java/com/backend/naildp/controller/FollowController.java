@@ -23,16 +23,16 @@ public class FollowController {
 	private final FollowService followService;
 
 	@PostMapping("/{nickname}/follow")
-	ResponseEntity<?> follow(@PathVariable("nickname") String followingNickname,
+	ResponseEntity<?> follow(@PathVariable("nickname") String followTargetNickname,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		followService.followUser(followingNickname, userDetails.getUsername());
+		followService.followUser(followTargetNickname, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 성공", 2001));
 	}
 
 	@DeleteMapping("/{nickname}/follow")
-	ResponseEntity<?> unfollow(@PathVariable("nickname") String nickname,
+	ResponseEntity<?> unfollow(@PathVariable("nickname") String followTargetNickname,
 		@AuthenticationPrincipal UserDetails userDetails) {
-		followService.unfollowUser(nickname, userDetails.getUsername());
+		followService.unfollowUser(followTargetNickname, userDetails.getUsername());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "팔로우 취소 성공", 2001));
 	}
 
