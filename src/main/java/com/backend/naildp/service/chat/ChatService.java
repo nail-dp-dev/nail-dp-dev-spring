@@ -347,4 +347,9 @@ public class ChatService {
 
 		chatRoomUser.updateRoomName(request.getChatRoomName());
 	}
+
+	public S3Service.S3DownloadResult downloadFile(String fileName) {
+
+		S3Service.S3DownloadResult result = s3Service.downloadFile(fileName);
+	}
 }

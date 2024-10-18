@@ -9,17 +9,23 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -165,4 +171,29 @@ public class S3Service {
 		return originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
 		// 용량 제한 필요
 	}
+
+	public S3DownloadResult downloadFile(String fileName) {
+		// S3 객체 가져오기
+		S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, fileName));
+
+		// 파일의 InputStream 가져오기
+		InputStreamResource resource = new InputStreamResource(s3Object.getObjectContent());
+
+		// 헤더 설정
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+
+		// S3DownloadResult 객체로 파일과 헤더 반환
+		return new S3DownloadResult(resource, headers, s3Object.getObjectMetadata().getContentLength());
+
+	}
+
+	@Getter
+	@AllArgsConstructor
+	public static class S3DownloadResult {
+		private InputStreamResource resource;
+		private HttpHeaders headers;
+		private long contentLength;
+	}
+
 }

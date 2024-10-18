@@ -3,6 +3,7 @@ package com.backend.naildp.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -144,5 +145,10 @@ public class ChatController {
 		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody RenameChatRoomRequestDto request) {
 		chatService.renameChatRoom(chatRoomId, userDetails.getUser().getNickname(), request);
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 이름을 변경했습니다", 2001));
+	}
+
+	@GetMapping("/chat/{fileName}")
+	public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("fileName") String fileName) {
+		chatService.downloadFile(fileName);
 	}
 }
