@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +21,19 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
+import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.PostInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,8 +47,21 @@ class HomeControllerUnitTest {
 	@MockBean
 	PostInfoService postInfoService;
 
+	@MockBean
+	private UserDetailsImpl userDetails;
+
 	@Autowired
 	ObjectMapper objectMapper;
+
+	@BeforeEach
+	public void setUp() {
+
+		User user = User.builder().nickname("testUser").phoneNumber("pn").role(UserRole.USER).agreement(true).build();
+		UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+		SecurityContextHolder.getContext().setAuthentication(
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+	}
 
 	@DisplayName("최신 게시물 조회 API 테스트 - 첫 호출")
 	@Test
@@ -182,7 +201,7 @@ class HomeControllerUnitTest {
 
 	@DisplayName("좋아요한 게시물 조회 API 예외 - 조회할 좋아요한 게시물이 없을 때")
 	@Test
-	@WithMockUser(username = "testUser", roles = {"USER"})
+	// @WithMockUser(username = "testUser", roles = {"USER"})
 	void zeroLikedPostApiTest() throws Exception {
 		//given
 		PostSummaryResponse emptyResponse = PostSummaryResponse.createEmptyResponse();
@@ -190,7 +209,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(emptyResponse);
+		// when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(emptyResponse);
 
 		//when & then
 		mvc.perform(get("/api/posts/like"))

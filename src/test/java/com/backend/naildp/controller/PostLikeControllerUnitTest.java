@@ -7,18 +7,27 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
+import com.backend.naildp.common.UserRole;
+import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.PostLikeService;
 
 @WebMvcTest(PostLikeController.class)
@@ -29,6 +38,16 @@ class PostLikeControllerUnitTest {
 
 	@MockBean
 	PostLikeService postLikeService;
+
+	@BeforeEach
+	public void setUp() {
+
+		User user = User.builder().nickname("testUser").phoneNumber("pn").role(UserRole.USER).agreement(true).build();
+		UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+		SecurityContextHolder.getContext().setAuthentication(
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+	}
 
 	@DisplayName("게시물 좋아요 API 테스트")
 	@Test
@@ -85,7 +104,7 @@ class PostLikeControllerUnitTest {
 
 	@DisplayName("게시물 좋아요 취소 API 예외 테스트")
 	@Test
-	@WithMockUser(username = "testUser", roles = {"USER"})
+	// @WithMockUser(username = "testUser", roles = {"USER"})
 	void cancelPostLikeApiException() throws Exception {
 		Long resultId = 10L;
 		String errorMessage = "해당 게시물은 존재하지 않습니다.";
@@ -99,7 +118,8 @@ class PostLikeControllerUnitTest {
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-			.andExpect(jsonPath("$.code").value(apiResponse.getCode()));
+			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+			.andDo(print());
 	}
 
 }

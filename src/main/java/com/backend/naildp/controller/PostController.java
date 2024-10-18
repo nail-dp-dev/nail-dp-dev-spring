@@ -87,8 +87,8 @@ public class PostController {
 
 	@GetMapping("/{postId}")
 	ResponseEntity<ApiResponse<?>> postDetails(@PathVariable("postId") Long postId,
-		@AuthenticationPrincipal UserDetails userDetails) {
-		PostInfoResponse postInfoResponse = postService.postInfo(userDetails.getUsername(), postId);
+		@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		PostInfoResponse postInfoResponse = postService.postInfo(userDetails.getUser().getNickname(), postId);
 		return ResponseEntity.ok(ApiResponse.successResponse(postInfoResponse, "특정 게시물 상세정보 조회", 2000));
 	}
 
@@ -108,8 +108,8 @@ public class PostController {
 
 	@PatchMapping("/{postId}/closer")
 	ResponseEntity<?> changePostBoundary(@PathVariable("postId") Long postId,
-		@RequestBody PostBoundaryRequest postBoundaryRequest, @AuthenticationPrincipal UserDetails userDetails) {
-		postService.changeBoundary(postId, postBoundaryRequest, userDetails.getUsername());
+		@RequestBody PostBoundaryRequest postBoundaryRequest, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+		postService.changeBoundary(postId, postBoundaryRequest, userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "게시글 공개범위 설정 완료", 2001));
 	}
 
