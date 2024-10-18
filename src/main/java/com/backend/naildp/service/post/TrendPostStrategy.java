@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Post;
@@ -13,7 +14,7 @@ import com.backend.naildp.repository.PostRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Component("trend-post")
+@Component("trending")
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class TrendPostStrategy implements PostStrategy {
@@ -27,6 +28,10 @@ public class TrendPostStrategy implements PostStrategy {
 
 		if (trendPostSlice.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		if (!StringUtils.hasText(username)) {
+			return new PostSummaryResponse(trendPostSlice);
 		}
 
 		List<Post> likedPosts = postRepository.findLikedPosts(username);

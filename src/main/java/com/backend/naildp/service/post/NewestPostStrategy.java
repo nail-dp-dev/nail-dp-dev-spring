@@ -7,6 +7,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Post;
@@ -14,7 +15,7 @@ import com.backend.naildp.repository.PostRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Component("newpost")
+@Component("new")
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class NewestPostStrategy implements PostStrategy {
@@ -28,6 +29,10 @@ public class NewestPostStrategy implements PostStrategy {
 
 		if (newestPostSlice.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
+		}
+
+		if (!StringUtils.hasText(username)) {
+			return new PostSummaryResponse(newestPostSlice);
 		}
 
 		List<Post> likedPosts = postRepository.findLikedPosts(username);

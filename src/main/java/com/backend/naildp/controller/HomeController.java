@@ -27,24 +27,7 @@ public class HomeController {
 
 	@GetMapping("/home")
 	public ResponseEntity<?> homePosts(
-		@RequestParam(name = "choice") String choice,
-		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
-		@RequestParam(required = false, defaultValue = "-1", value = "oldestPostId") long cursorPostId) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-		if (authentication == null) {
-			PostSummaryResponse postSummaryResponse = postInfoService.homePosts(choice, size, cursorPostId, "");
-			return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
-		}
-
-		PostSummaryResponse postSummaryResponse = postInfoService.homePosts(choice, size, cursorPostId,
-			authentication.getName());
-		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
-	}
-
-	@GetMapping("/v2/home")
-	public ResponseEntity<?> homePostsV2(
-		@RequestParam(name = "choice") String choice,
+		@RequestParam(name = "choice", defaultValue = "new") String choice,
 		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
 		@RequestParam(required = false, value = "oldestPostId") Long cursorPostId) {
 		PostSummaryResponse postSummaryResponse = postInfoContext.posts(choice, size, cursorPostId);
