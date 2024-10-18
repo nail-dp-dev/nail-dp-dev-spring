@@ -33,6 +33,8 @@ public class User extends BaseEntity {
 
 	private String password;
 
+	private String contactEmail;
+
 	@Column(nullable = false)
 	private String nickname;
 
@@ -80,12 +82,20 @@ public class User extends BaseEntity {
 		this.point = point;
 	}
 
-	public void addAdminLoginId(String loginId) {
+	public void setLoginId(String loginId) {
 		this.loginId = loginId;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	public void addAdminPassword(String password) {
 		this.password = password;
+	}
+
+	public void updateContactEmail(String email) {
+		this.contactEmail = email;
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.backend.naildp.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -64,8 +65,8 @@ public class AuthService {
 			.role(UserRole.USER)
 			.build();
 
-		user.addAdminLoginId("실험이요" + loginRequestDto.getNickname());
-		user.addAdminPassword("실험비번" + loginRequestDto.getNickname());
+		user.setLoginId(UUID.randomUUID().toString());
+		user.setPassword(UUID.randomUUID().toString());
 
 		userRepository.save(user);
 
@@ -73,6 +74,8 @@ public class AuthService {
 		SocialLogin socialLogin = new SocialLogin(userInfo.getId(), userInfo.getPlatform(), userInfo.getEmail(),
 			user);
 		socialLoginRepository.save(socialLogin);
+
+		user.updateContactEmail(userInfo.getEmail());
 
 		if (userInfo.getProfileUrl() != null) {
 			Profile profile = Profile.builder()
