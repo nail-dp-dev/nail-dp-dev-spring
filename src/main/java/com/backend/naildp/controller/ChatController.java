@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -147,8 +149,12 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 이름을 변경했습니다", 2001));
 	}
 
-	@GetMapping("/chat/{fileName}")
+	@GetMapping("chat/file/{fileName}")
 	public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("fileName") String fileName) {
-		chatService.downloadFile(fileName);
+		InputStreamResource resource = chatService.downloadFile(fileName);
+		return ResponseEntity.ok()
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+			.contentType(MediaType.APPLICATION_OCTET_STREAM)
+			.body(resource);
 	}
 }
