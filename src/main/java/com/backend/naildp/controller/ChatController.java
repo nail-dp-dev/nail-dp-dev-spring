@@ -143,8 +143,8 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "해당 채팅방을 이름을 변경했습니다", 2001));
 	}
 
-	@GetMapping("chat/file/{fileName}")
-	public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("fileName") String fileName) {
+	@GetMapping("chat/file")
+	public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("fileName") String fileName) {
 		InputStreamResource resource = s3Service.downloadFile(fileName);
 		String originalFileName = s3Service.extractOriginalFileName(fileName);
 		String encodedFileName = s3Service.encodeFileName(originalFileName);
