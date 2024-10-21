@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -349,8 +348,4 @@ public class ChatService {
 		chatRoomUser.updateRoomName(request.getChatRoomName());
 	}
 
-	public InputStreamResource downloadFile(String fileName) {
-
-		return s3Service.downloadFile(fileName);
-	}
 }

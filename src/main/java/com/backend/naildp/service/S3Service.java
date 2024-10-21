@@ -1,6 +1,8 @@
 package com.backend.naildp.service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -146,9 +148,10 @@ public class S3Service {
 	// 랜덤파일명 생성 (파일명 중복 방지)
 	private String generateRandomFilename(MultipartFile multipartFile, boolean skipExtensionCheck) {
 		String originalFilename = multipartFile.getOriginalFilename();
+		String fileNameWithoutExtension = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
 		String fileExtension =
 			skipExtensionCheck ? getFileExtension(originalFilename) : validateFileExtension(originalFilename);
-		String randomFilename = UUID.randomUUID() + "." + fileExtension;
+		String randomFilename = fileNameWithoutExtension + "/" + UUID.randomUUID() + "." + fileExtension;
 		return randomFilename;
 	}
 
@@ -176,6 +179,29 @@ public class S3Service {
 		} catch (AmazonS3Exception e) {
 			throw new CustomException("파일 다운로드 실패", ErrorCode.FILE_EXCEPTION);
 		}
+	}
+
+	// 파일명 인코딩
+	public String encodeFileName(String fileName) {
+		try {
+			return URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("파일명 인코딩 실패", e);
+		}
+	}
+
+	// 원본 파일명 추출 메서드
+	public String extractOriginalFileName(String fileName) {
+		int firstSlashIndex = fileName.indexOf('/');
+		int extensionIndex = fileName.lastIndexOf('.');
+		if (firstSlashIndex == -1 || extensionIndex == -1) {
+			throw new IllegalArgumentException("잘못된 파일 형식입니다.");
+		}
+
+		String fileNameWithoutExtension = fileName.substring(0, firstSlashIndex);
+		String fileExtension = fileName.substring(extensionIndex);
+
+		return fileNameWithoutExtension + fileExtension;
 	}
 
 }

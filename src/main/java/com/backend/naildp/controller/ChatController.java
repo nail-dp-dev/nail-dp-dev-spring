@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +29,8 @@ import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
-import com.backend.naildp.service.chat.ChatRoomStatusService;
+import com.backend.naildp.service.S3Service;
 import com.backend.naildp.service.chat.ChatService;
-import com.backend.naildp.service.chat.KafkaProducerService;
-import com.backend.naildp.service.chat.MessageStatusService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 public class ChatController {
 	private final ChatService chatService;
-	private final SimpMessagingTemplate simpMessagingTemplate;
-	private final KafkaProducerService kafkaProducerService;
-	private final ChatRoomStatusService chatRoomStatusService;
-	private final MessageStatusService messageStatusService;
+	private final S3Service s3Service;
 
 	@PostMapping("/chat")
 	public ResponseEntity<ApiResponse<?>> createChatRoom(@AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -151,10 +145,14 @@ public class ChatController {
 
 	@GetMapping("chat/file/{fileName}")
 	public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("fileName") String fileName) {
-		InputStreamResource resource = chatService.downloadFile(fileName);
+		InputStreamResource resource = s3Service.downloadFile(fileName);
+		String originalFileName = s3Service.extractOriginalFileName(fileName);
+		String encodedFileName = s3Service.encodeFileName(originalFileName);
+
 		return ResponseEntity.ok()
-			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
 			.contentType(MediaType.APPLICATION_OCTET_STREAM)
 			.body(resource);
 	}
+
 }
