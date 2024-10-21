@@ -7,6 +7,9 @@ import static com.backend.naildp.entity.QPostLike.*;
 import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -17,14 +20,18 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import io.jsonwebtoken.lang.Strings;
 import jakarta.persistence.EntityManager;
 
 public class PostRepositoryImpl implements PostSearchRepository {
@@ -41,9 +48,9 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.select(post)
 			.from(post)
 			.where(
-				usernamePermitted(username)
+				isAllowedToViewPosts(username)
 					.and(containsInPost(keywords))
-					.and(lessThanCursor(cursorId))
+					.and(lessThanCustomCursor(cursorId))
 			)
 			.orderBy(post.postLikes.size().desc(), post.createdDate.desc())
 			.limit(pageable.getPageSize() + 1)
@@ -70,6 +77,55 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.fetch();
 	}
 
+	@Override
+	public Slice<Post> findNewestPostSlice(String username, Long cursorPostId, Pageable pageable) {
+		List<Post> newestPosts = queryFactory
+			.selectFrom(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(isRegisteredBeforeCursorPost(cursorPostId))
+			)
+			.orderBy(post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(newestPosts, pageable, hasNext(newestPosts, pageable.getPageSize()));
+	}
+
+	@Override
+	public Slice<Post> findTrendPostSlice(String username, Long cursorPostId, Pageable pageable) {
+		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate
+					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
+
+		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
+
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(hasLessLikeThanCursorPost(cursorPostId))
+			)
+			.orderBy(orderSpecifier, post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
+	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		return post.createdDate.before(
+			JPAExpressions.select(post.createdDate).from(post).where(post.id.eq(cursorPostId)));
+	}
+
 	private boolean hasNext(List<Post> posts, int size) {
 		if (posts.size() > size) {
 			posts.remove(size);
@@ -78,7 +134,10 @@ public class PostRepositoryImpl implements PostSearchRepository {
 		return false;
 	}
 
-	private BooleanExpression usernamePermitted(String usernameCond) {
+	private BooleanExpression isAllowedToViewPosts(String usernameCond) {
+		if (!Strings.hasText(usernameCond)) {
+			return post.boundary.eq(Boundary.ALL);
+		}
 
 		return post.boundary.eq(Boundary.ALL)
 			.or(post.boundary.eq(Boundary.FOLLOW).and(
@@ -121,7 +180,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.contains(keyword);
 	}
 
-	private BooleanExpression lessThanCursor(Long cursorId) {
+	private BooleanExpression lessThanCustomCursor(Long cursorId) {
 		if (cursorId == null) {
 			return null;
 		}
@@ -129,24 +188,46 @@ public class PostRepositoryImpl implements PostSearchRepository {
 		DateTimeTemplate<String> stringDateTimeTemplate = Expressions.dateTimeTemplate(String.class,
 			"DATE_FORMAT({0}, '%y%m%d%H%i%s')", post.createdDate);
 
-		String cursor = generateCursor(cursorId, stringDateTimeTemplate);
+		String cursor = generateCustomCursor(cursorId, stringDateTimeTemplate);
 
-		return generateDateTimeFormat(stringDateTimeTemplate)
-			.lt(cursor);
+		return generateCustomExpression(stringDateTimeTemplate).lt(cursor);
 	}
 
-	private String generateCursor(Long cursorId, DateTimeTemplate<String> stringDateTimeTemplate) {
+	private String generateCustomCursor(Long cursorId, DateTimeTemplate<String> stringDateTimeTemplate) {
 		return queryFactory
-			.select(generateDateTimeFormat(stringDateTimeTemplate))
+			.select(generateCustomExpression(stringDateTimeTemplate))
 			.from(post)
 			.where(post.id.eq(cursorId))
 			.fetchOne();
 	}
 
-	private StringExpression generateDateTimeFormat(DateTimeTemplate<String> stringDateTimeTemplate) {
+	private StringExpression generateCustomExpression(DateTimeTemplate<String> stringDateTimeTemplate) {
 		return StringExpressions.lpad(post.postLikes.size().stringValue(), 6, '0')
 			.concat(StringExpressions.lpad(stringDateTimeTemplate.stringValue(), 12, '0')
 				.concat(StringExpressions.lpad(post.id.stringValue(), 8, '0')));
+	}
+
+	private BooleanExpression hasLessLikeThanCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		JPQLQuery<Long> postTodayLikeQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT),
+					LocalDateTime.now()));
+
+		JPQLQuery<Long> cursorPostTodayLikeQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.id.eq(cursorPostId)
+				, postLike.createdDate.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT),
+					LocalDateTime.now()));
+
+		return postTodayLikeQuery.lt(cursorPostTodayLikeQuery)
+			.or(postTodayLikeQuery.eq(cursorPostTodayLikeQuery).and(isRegisteredBeforeCursorPost(cursorPostId)));
 	}
 
 }
