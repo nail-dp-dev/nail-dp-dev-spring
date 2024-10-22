@@ -27,6 +27,7 @@ import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
+import com.backend.naildp.dto.search.SearchUserResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.S3Service;
@@ -153,6 +154,13 @@ public class ChatController {
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
 			.contentType(MediaType.APPLICATION_OCTET_STREAM)
 			.body(resource);
+	}
+
+	@GetMapping("chat/recommend")
+	public ResponseEntity<ApiResponse<?>> getRecommendUsers(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		List<SearchUserResponse> response = chatService.getRecommendUsers(userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "추천 사용자 조회 성공", 2000));
+
 	}
 
 }

@@ -62,9 +62,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     //Querydsl 추가
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -80,6 +81,19 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// QueryDSL 설정 추가
+sourceSets {
+    main {
+        java {
+            srcDirs += 'src/main/generated'
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file("src/main/generated")
 }
 
 clean {

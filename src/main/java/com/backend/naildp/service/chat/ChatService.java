@@ -24,6 +24,7 @@ import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
 import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
+import com.backend.naildp.dto.search.SearchUserResponse;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
 import com.backend.naildp.entity.User;
@@ -38,7 +39,9 @@ import com.backend.naildp.repository.mongo.ChatMessageRepository;
 import com.backend.naildp.service.S3Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ChatService {
@@ -58,7 +61,7 @@ public class ChatService {
 		chatRoomRequestDto.getNickname().add(myNickname);
 		int participantCnt = chatRoomRequestDto.getNickname().size();
 
-		if (participantCnt == 1) {
+		if (participantCnt == 2) {
 			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
 			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
 			if (chatRoom.isPresent()) {
@@ -109,9 +112,13 @@ public class ChatService {
 		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
 		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
 			LocalDateTime.now(), chatMessageDto.getSender());
+
+		log.info("Message [{}] sent by user: {} to chatting room: {}", chatUpdateDto.getUnreadMessageCount(),
+			chatUpdateDto.getSender(), chatRoomId);
 		kafkaProducerService.send(chatMessageDto);
 
 		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
 	}
 
 	@Transactional(readOnly = true)
@@ -348,4 +355,10 @@ public class ChatService {
 		chatRoomUser.updateRoomName(request.getChatRoomName());
 	}
 
+	public List<SearchUserResponse> getRecommendUsers(String nickname) {
+		User user = userRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		return userRepository.findRecommendedUser(user);
+	}
 }
