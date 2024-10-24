@@ -64,7 +64,7 @@ public class Notification extends BaseEntity {
 			.content(followerUser.getNickname() + "님이 회원님을 팔로우했습니다.")
 			.notificationType(NotificationType.FOLLOW)
 			.isRead(false)
-			.link("/api/user/" + followerUser.getNickname())
+			.link("/user/" + followerUser.getNickname())
 			.build();
 	}
 
@@ -79,7 +79,7 @@ public class Notification extends BaseEntity {
 			.content(sender.getNickname() + "가 회원님의 게시물을 좋아합니다.")
 			.notificationType(NotificationType.POST_LIKE)
 			.isRead(false)
-			.link("/api/posts/" + likedPost.getId().toString())
+			.link("/posts/" + likedPost.getId().toString())
 			.build();
 	}
 
@@ -94,7 +94,7 @@ public class Notification extends BaseEntity {
 			.content(sender.getNickname() + "님이 회원님의 댓글을 좋아합니다.")
 			.notificationType(NotificationType.COMMENT_LIKE)
 			.isRead(false)
-			.link("/api/posts/" + comment.getPost().getId().toString())
+			.link("/posts/" + comment.getPost().getId().toString())
 			.build();
 	}
 
@@ -108,7 +108,7 @@ public class Notification extends BaseEntity {
 			.content(sender.getNickname() + "님이 회원님의 게시물에 댓글을 등록했습니다. " + comment.getCommentContent())
 			.notificationType(NotificationType.COMMENT)
 			.isRead(false)
-			.link("/api/posts/" + comment.getPost().getId().toString())
+			.link("/posts/" + comment.getPost().getId().toString())
 			.build();
 	}
 }
