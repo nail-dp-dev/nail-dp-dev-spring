@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.naildp.common.RoomType;
 import com.backend.naildp.dto.chat.ChatListResponse;
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatMessageDto;
@@ -64,6 +65,7 @@ public class ChatService {
 		if (participantCnt == 2) {
 			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
 			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
+			// 이미 존재한다면
 			if (chatRoom.isPresent()) {
 				ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoom.get()
 						.getId(), myNickname)
@@ -74,6 +76,13 @@ public class ChatService {
 		}
 		ChatRoom chatRoom = new ChatRoom();
 		chatRoomRepository.save(chatRoom);
+
+		if (participantCnt == 2) {
+			chatRoom.updateRoomType(RoomType.PERSONAL);
+		} else {
+			chatRoom.updateRoomType(RoomType.GROUP);
+		}
+
 		chatRoom.updateParticipantCnt(participantCnt);
 
 		chatRoomRequestDto.getNickname().forEach(participant -> {
@@ -183,15 +192,6 @@ public class ChatService {
 		}).toList();
 
 		return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
-	}
-
-	@Transactional(readOnly = true)
-	public List<String> getChatRoomNickname(UUID chatRoomId) {
-		List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
-
-		return chatRoomUsers.stream()
-			.map(chatRoomUser -> chatRoomUser.getUser().getNickname())
-			.collect(Collectors.toList());
 	}
 
 	@Transactional
@@ -361,20 +361,34 @@ public class ChatService {
 	public void leaveChatRoom(UUID chatRoomId, String nickname) {
 		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
+
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		chatRoomUser.setIsExited(true);
-		// 방 이름 업데이트
-		List<ChatRoomUser> remainingUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
-		for (ChatRoomUser remainingUser : remainingUsers) {
-			String updatedRoomName = remainingUsers.stream()
-				.filter(user -> !user.getUser().getNickname().equals(remainingUser.getUser().getNickname()))
-				.map(user -> user.getUser().getNickname())
-				.collect(Collectors.joining(", "));
+		// 단체 채팅방만
+		if (!chatRoom.isPersonal()) {
+			// 방 이름 업데이트
+			List<ChatRoomUser> remainingUsers = chatRoomUserRepository.findAllByChatRoomIdAndIsExitedFalse(chatRoomId);
 
-			remainingUser.updateRoomName(updatedRoomName); // 방 이름 업데이트
-		}
+			chatRoom.updateParticipantCnt(remainingUsers.size());
 
-		if (remainingUsers.isEmpty()) {
-			chatRoomRepository.deleteById(chatRoomId);
+			if (remainingUsers.size() == 1) {
+				remainingUsers.get(0).updateRoomName("대화 상대 없음");
+			} else {
+
+				for (ChatRoomUser remainingUser : remainingUsers) {
+					String updatedRoomName = remainingUsers.stream()
+						.filter(user -> !user.getUser().getNickname().equals(remainingUser.getUser().getNickname()))
+						.map(user -> user.getUser().getNickname())
+						.collect(Collectors.joining(", "));
+
+					remainingUser.updateRoomName(updatedRoomName);
+				}
+			}
+
+			if (remainingUsers.isEmpty()) {
+				chatRoomRepository.deleteById(chatRoomId);
+			}
 		}
 	}
 
@@ -406,5 +420,13 @@ public class ChatService {
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		return userRepository.findRecommendedUser(user);
+	}
+
+	public List<String> getChatRoomNickname(UUID chatRoomId) {
+		List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findAllByChatRoomIdAndIsExitedFalse(chatRoomId);
+
+		return chatRoomUsers.stream()
+			.map(chatRoomUser -> chatRoomUser.getUser().getNickname())
+			.collect(Collectors.toList());
 	}
 }

@@ -14,7 +14,7 @@ import com.backend.naildp.entity.User;
 public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long> {
 	List<ChatRoomUser> findAllByUser(User user);
 
-	List<ChatRoomUser> findAllByChatRoomId(UUID chatRoomId);
+	List<ChatRoomUser> findAllByChatRoomIdAndIsExitedFalse(UUID chatRoomId);
 
 	Optional<ChatRoomUser> findByChatRoomIdAndUserNickname(UUID chatRoomId, String nickname);
 

@@ -29,9 +29,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 		"SELECT cu.chatRoom.id AS id, cu.name AS name, cu.chatRoom.lastMessage AS lastMessage, cu.chatRoom.participantCnt AS participantCnt, cu.chatRoom.lastModifiedDate AS modifiedAt, cu.isPinning AS isPinning "
 			+ "FROM ChatRoomUser cu "
 			+ "WHERE cu.user.nickname = :nickname "
-			+ "AND (cu.isPinning = true "
-			+ "OR (:category = 'all' OR (:category = 'personal' AND cu.chatRoom.participantCnt = 2) "
-			+ "OR (:category = 'group' AND cu.chatRoom.participantCnt > 2))) "
+			+ "AND cu.isExited = false "
+			+ "AND cu.isPinning = true "
+			+ "OR (:category = 'all' OR (:category = 'personal' AND cu.chatRoom.roomType = 'PERSONAL') "
+			+ "OR (:category = 'group' AND cu.chatRoom.roomType = 'GROUP')) "
 			+ "ORDER BY cu.isPinning DESC, cu.chatRoom.lastModifiedDate DESC"
 	)
 	Slice<ChatRoomMapping> findAllChatRoomByNicknameAndCategory(
@@ -43,10 +44,11 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 		"SELECT cu.chatRoom.id AS id, cu.name AS name, cu.chatRoom.lastMessage AS lastMessage, cu.chatRoom.participantCnt AS participantCnt, cu.chatRoom.lastModifiedDate AS modifiedAt, cu.isPinning AS isPinning "
 			+ "FROM ChatRoomUser cu "
 			+ "WHERE cu.user.nickname = :nickname "
+			+ "AND cu.isExited = false "
 			+ "AND cu.isPinning = false "
 			+ "AND cu.chatRoom.lastModifiedDate < (SELECT c.lastModifiedDate FROM ChatRoom c WHERE c.id = :cursorId) "
-			+ "AND (:category = 'all' OR (:category = 'personal' AND cu.chatRoom.participantCnt = 2) "
-			+ "OR (:category = 'group' AND cu.chatRoom.participantCnt > 2)) "
+			+ "AND (:category = 'all' OR (:category = 'personal' AND cu.chatRoom.roomType = 'PERSONAL') "
+			+ "OR (:category = 'group' AND cu.chatRoom.roomType = 'GROUP')) "
 			+ "ORDER BY cu.isPinning DESC, cu.chatRoom.lastModifiedDate DESC"
 	)
 	Slice<ChatRoomMapping> findAllChatRoomByNicknameAndCategoryAndId(
