@@ -15,7 +15,7 @@ import com.backend.naildp.service.SseService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/notification")
+@RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 public class SseController {
 
