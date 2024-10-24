@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -111,7 +110,7 @@ public class ChatController {
 
 	}
 
-	@DeleteMapping("/chat/{chatRoomId}/leave")
+	@PatchMapping("/chat/{chatRoomId}/leave")
 	public ResponseEntity<ApiResponse<?>> leaveChatRoom(@PathVariable("chatRoomId") UUID chatRoomId,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 

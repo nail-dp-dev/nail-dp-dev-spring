@@ -299,8 +299,7 @@ public class ChatService {
 	public void leaveChatRoom(UUID chatRoomId, String nickname) {
 		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
-		chatRoomUserRepository.delete(chatRoomUser);
-
+		chatRoomUser.setIsExited(true);
 		// 방 이름 업데이트
 		List<ChatRoomUser> remainingUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
 		for (ChatRoomUser remainingUser : remainingUsers) {
@@ -324,27 +323,11 @@ public class ChatService {
 		chatRoomUser.updatePinning(true);
 	}
 
+	@Transactional
 	public void unpinByChatRoomUser(UUID chatRoomId, String nickname) {
 		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
 		chatRoomUser.updatePinning(false);
-	}
-
-	@Transactional
-	public ChatMessageDto createAndSaveMessage(UUID chatRoomId, String sender, String profileUrl, String messageType,
-		String content, List<String> mediaUrls) {
-		ChatMessage chatMessage = ChatMessage.builder()
-			.chatRoomId(chatRoomId.toString())
-			.sender(sender)
-			.profileUrl(profileUrl)
-			.messageType(messageType)
-			.content(content)
-			.media(mediaUrls)
-			.mention(new ArrayList<>())
-			.build();
-
-		chatMessageRepository.save(chatMessage);
-		return ChatMessageDto.of(chatMessage);
 	}
 
 	@Transactional
@@ -355,6 +338,7 @@ public class ChatService {
 		chatRoomUser.updateRoomName(request.getChatRoomName());
 	}
 
+	@Transactional(readOnly = true)
 	public List<SearchUserResponse> getRecommendUsers(String nickname) {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));

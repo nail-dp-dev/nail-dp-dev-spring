@@ -35,6 +35,8 @@ public class ChatRoomUser extends BaseEntity {
 	@Column
 	private int unReadMessage = 0;
 
+	private Boolean isExited = false;
+
 	private Boolean isPinning = false;
 
 	public ChatRoomUser(User user, ChatRoom chatRoom) {
@@ -48,5 +50,9 @@ public class ChatRoomUser extends BaseEntity {
 
 	public void updatePinning(boolean isPinning) {
 		this.isPinning = isPinning;
+	}
+
+	public void setIsExited(boolean isExited) {
+		this.isExited = isExited;
 	}
 }
