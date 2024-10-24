@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.post.PostInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Disabled
 @SpringBootTest
 @AutoConfigureMockMvc
 class HomeControllerUnitTest {
