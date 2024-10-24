@@ -65,6 +65,10 @@ public class ChatService {
 			List<String> userNames = Arrays.asList(myNickname, chatRoomRequestDto.getNickname().get(0));
 			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
 			if (chatRoom.isPresent()) {
+				ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoom.get()
+						.getId(), myNickname)
+					.orElseThrow(() -> new CustomException("채팅방 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+				chatRoomUser.setIsExited(false);
 				return chatRoom.get().getId();
 			}
 		}
@@ -106,8 +110,12 @@ public class ChatService {
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
-				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				boolean isActive = sessionService.isSessionExist(nickname);
+				log.info(String.valueOf(isActive));
+				if (!isActive) {
+					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				}
 
 			}
 		});
@@ -218,8 +226,12 @@ public class ChatService {
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
-				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				boolean isActive = sessionService.isSessionExist(nickname);
+				log.info(String.valueOf(isActive));
+				if (!isActive) {
+					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				}
 			}
 		});
 
@@ -242,7 +254,7 @@ public class ChatService {
 	public void sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
 
 		String videoMessage = "동영상을 보냈습니다";
-		
+
 		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
 			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		User user = userRepository.findByNickname(sender)
@@ -269,8 +281,12 @@ public class ChatService {
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
-				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				boolean isActive = sessionService.isSessionExist(nickname);
+				log.info(String.valueOf(isActive));
+				if (!isActive) {
+					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				}
 			}
 		});
 
@@ -286,18 +302,7 @@ public class ChatService {
 
 			}
 		});
-		nicknames.forEach(nickname -> {
-			if (!nickname.equals(chatMessageDto.getSender())) {
 
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
-					nickname);
-				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
-					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
-
-				kafkaProducerService.sendChatUpdate(chatUpdateDto);
-
-			}
-		});
 	}
 
 	@Transactional
@@ -329,8 +334,12 @@ public class ChatService {
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
-				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				boolean isActive = sessionService.isSessionExist(nickname);
+				log.info(String.valueOf(isActive));
+				if (!isActive) {
+					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
+					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+				}
 			}
 		});
 

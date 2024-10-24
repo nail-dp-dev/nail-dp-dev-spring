@@ -29,8 +29,12 @@ public class SessionService {
 	}
 
 	public void deleteSession(String sessionId) {
-		redisSessionTemplate.opsForSet().remove(KEY, sessionId);
-		redisSessionTemplate.delete(generateSessionKey(sessionId));
+		String userId = getUserIdBySessionId(sessionId);
+		if (userId != null) {
+			redisSessionTemplate.opsForSet().remove(KEY, sessionId);
+			redisSessionTemplate.delete(generateSessionKey(sessionId));
+			redisSessionTemplate.delete(generateSessionKey(userId));
+		}
 	}
 
 	private String generateSessionKey(String sessionId) {
