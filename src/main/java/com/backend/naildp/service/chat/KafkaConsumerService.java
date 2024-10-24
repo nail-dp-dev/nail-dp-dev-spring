@@ -1,7 +1,5 @@
 package com.backend.naildp.service.chat;
 
-import java.util.List;
-
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
@@ -38,12 +36,12 @@ public class KafkaConsumerService {
 	@KafkaListener(topics = CHAT_UPDATE_TOPIC)
 	public void listenForChatUpdates(ChatUpdateDto chatUpdateDto) {
 		try {
-			List<String> chatUsers = chatRoomUserRepository.findAllByChatRoomIdAndNotMe(chatUpdateDto.getChatRoomId(),
-				chatUpdateDto.getSender());
-			chatUsers.forEach(nickname -> {
-				String destination = "/sub/chat/list/updates/" + nickname;
-				template.convertAndSend(destination, chatUpdateDto);
-			});
+			// List<String> chatUsers = chatRoomUserRepository.findAllByChatRoomIdAndNotMe(chatUpdateDto.getChatRoomId(),
+			// 	chatUpdateDto.getSender());
+			// chatUsers.forEach(nickname -> {
+			String destination = "/sub/chat/list/updates/" + chatUpdateDto.getReceiver();
+			template.convertAndSend(destination, chatUpdateDto);
+			// });
 			log.info("Update 수신 채팅방: {}", chatUpdateDto.getChatRoomId());
 
 		} catch (Exception e) {

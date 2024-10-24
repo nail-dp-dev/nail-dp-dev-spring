@@ -18,4 +18,5 @@ public class ChatUpdateDto {
 	private String lastMessage;
 	private LocalDateTime modifiedAt;
 	private String sender;
+	private String receiver;
 }

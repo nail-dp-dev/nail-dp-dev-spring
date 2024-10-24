@@ -101,23 +101,29 @@ public class ChatService {
 
 		chatMessageDto.setChatRoomId(chatRoomId.toString());
 
+		kafkaProducerService.send(chatMessageDto);
+
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 				chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
 				messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+
 			}
 		});
 
-		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
-		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
-			LocalDateTime.now(), chatMessageDto.getSender());
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
 
-		log.info("Message [{}] sent by user: {} to chatting room: {}", chatUpdateDto.getUnreadMessageCount(),
-			chatUpdateDto.getSender(), chatRoomId);
-		kafkaProducerService.send(chatMessageDto);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
+					nickname);
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
 
-		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+				kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
+			}
+		});
 
 	}
 
@@ -202,6 +208,7 @@ public class ChatService {
 
 		chatMessageRepository.save(chatMessage);
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+		kafkaProducerService.send(chatMessageDto);
 
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
@@ -211,12 +218,18 @@ public class ChatService {
 			}
 		});
 
-		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
-		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
-			LocalDateTime.now(), chatMessageDto.getSender());
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
 
-		kafkaProducerService.send(chatMessageDto);
-		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
+					nickname);
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
+
+				kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
+			}
+		});
 
 	}
 
@@ -241,6 +254,7 @@ public class ChatService {
 
 		chatMessageRepository.save(chatMessage);
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+		kafkaProducerService.send(chatMessageDto);
 
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
@@ -250,12 +264,30 @@ public class ChatService {
 			}
 		});
 
-		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
-		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
-			LocalDateTime.now(), chatMessageDto.getSender());
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
 
-		kafkaProducerService.send(chatMessageDto);
-		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
+					nickname);
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
+
+				kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
+			}
+		});
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
+
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
+					nickname);
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
+
+				kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
+			}
+		});
 	}
 
 	@Transactional
@@ -270,7 +302,7 @@ public class ChatService {
 			.chatRoomId(chatRoomId.toString())
 			.sender(sender)
 			.profileUrl(user.getThumbnailUrl())
-			.messageType("VIDEO")
+			.messageType("FILE")
 			.content(fileMessage)
 			.media(List.of(fileRequestDto.getFileUrl()))
 			.mention(new ArrayList<>())
@@ -278,6 +310,7 @@ public class ChatService {
 
 		chatMessageRepository.save(chatMessage);
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+		kafkaProducerService.send(chatMessageDto);
 
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
@@ -287,12 +320,18 @@ public class ChatService {
 			}
 		});
 
-		int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), chatMessageDto.getSender());
-		ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
-			LocalDateTime.now(), chatMessageDto.getSender());
+		nicknames.forEach(nickname -> {
+			if (!nickname.equals(chatMessageDto.getSender())) {
 
-		kafkaProducerService.send(chatMessageDto);
-		kafkaProducerService.sendChatUpdate(chatUpdateDto);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
+					nickname);
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
+
+				kafkaProducerService.sendChatUpdate(chatUpdateDto);
+
+			}
+		});
 	}
 
 	@Transactional

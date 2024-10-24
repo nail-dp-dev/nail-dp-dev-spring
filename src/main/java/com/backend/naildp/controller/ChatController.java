@@ -102,10 +102,10 @@ public class ChatController {
 
 	@PostMapping("/chat/{chatRoomId}/file")
 	public ResponseEntity<ApiResponse<?>> sendFileMessages(@PathVariable("chatRoomId") UUID chatRoomId,
-		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("file") MultipartFile video) {
+		@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestPart("file") MultipartFile file) {
 
 		chatService.sendFileMessage(chatRoomId, userDetails.getUser().getNickname(),
-			video);
+			file);
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "파일 메시지 전송 성공", 2001));
 
 	}
