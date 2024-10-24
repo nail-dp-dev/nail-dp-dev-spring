@@ -190,6 +190,8 @@ public class ChatService {
 	public void sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
 		String imageMessage = "사진을 보냈습니다";
 
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		User user = userRepository.findByNickname(sender)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
@@ -207,7 +209,10 @@ public class ChatService {
 			.build();
 
 		chatMessageRepository.save(chatMessage);
+
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+		chatRoom.updateLastMessage(chatMessageDto.getContent());
+
 		kafkaProducerService.send(chatMessageDto);
 
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
@@ -237,6 +242,9 @@ public class ChatService {
 	public void sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
 
 		String videoMessage = "동영상을 보냈습니다";
+		
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		User user = userRepository.findByNickname(sender)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
@@ -254,6 +262,8 @@ public class ChatService {
 
 		chatMessageRepository.save(chatMessage);
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+		chatRoom.updateLastMessage(chatMessageDto.getContent());
+
 		kafkaProducerService.send(chatMessageDto);
 
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
@@ -294,6 +304,8 @@ public class ChatService {
 	public void sendFileMessage(UUID chatRoomId, String sender, MultipartFile file) {
 		String fileMessage = "파일을 보냈습니다";
 
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		User user = userRepository.findByNickname(sender)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
@@ -310,6 +322,8 @@ public class ChatService {
 
 		chatMessageRepository.save(chatMessage);
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+		chatRoom.updateLastMessage(chatMessageDto.getContent());
+
 		kafkaProducerService.send(chatMessageDto);
 
 		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
