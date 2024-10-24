@@ -110,7 +110,7 @@ public class UserInfoService {
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 업로드하면 바로 해당 사진으로 썸네일 설정
-		Profile currentProfile = profileRepository.findProfileByProfileUrl(user.getThumbnailUrl())
+		Profile currentProfile = profileRepository.findProfileByNicknameAndProfileUrl(nickname, user.getThumbnailUrl())
 			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		if (checkProfileType(currentProfile)) {
@@ -177,7 +177,7 @@ public class UserInfoService {
 		User user = userRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Profile currentProfile = profileRepository.findProfileByProfileUrl(user.getThumbnailUrl())
+		Profile currentProfile = profileRepository.findProfileByNicknameAndProfileUrl(nickname, user.getThumbnailUrl())
 			.orElseThrow(() -> new CustomException("현재 프로필 이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		Profile changingProfile = profileRepository.findProfileByProfileUrl(profileRequestDto.getProfileUrl())
