@@ -176,6 +176,7 @@ public class ChatService {
 
 	@Transactional(readOnly = true)
 	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId, String nickname) {
+		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo;
 		String firstUnreadMessageId = messageStatusService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
 
 		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
@@ -185,12 +186,22 @@ public class ChatService {
 		}).collect(Collectors.toList());
 
 		List<User> roomUsers = userRepository.findAllByChatRoomIdNotInMyNickname(chatRoomId, nickname);
-		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo = roomUsers.stream().map(user -> {
-			boolean isActive = sessionService.isSessionExist(user.getNickname());
-			return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(), isActive,
-				false);
-		}).toList();
+		if (roomUsers.isEmpty()) { // 단체 채팅방 모두 나간 경우(본인 제외)
+			User user = userRepository.findByNickname(nickname)
+				.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 
+			boolean isActive = sessionService.isSessionExist(user.getNickname());
+			chatUserInfo = List.of(new MessageSummaryResponse.ChatUserInfoResponse(
+				user.getNickname(), user.getThumbnailUrl(), isActive, false));
+		} else {
+
+			chatUserInfo = roomUsers.stream().map(user -> {
+				boolean isActive = sessionService.isSessionExist(user.getNickname());
+				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
+					isActive,
+					false);
+			}).toList();
+		}
 		return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
 	}
 

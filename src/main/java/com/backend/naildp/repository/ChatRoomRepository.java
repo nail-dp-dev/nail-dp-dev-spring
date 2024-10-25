@@ -30,9 +30,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 			+ "FROM ChatRoomUser cu "
 			+ "WHERE cu.user.nickname = :nickname "
 			+ "AND cu.isExited = false "
-			+ "AND cu.isPinning = true "
+			+ "AND (cu.isPinning = true "
 			+ "OR (:category = 'all' OR (:category = 'personal' AND cu.chatRoom.roomType = 'PERSONAL') "
-			+ "OR (:category = 'group' AND cu.chatRoom.roomType = 'GROUP')) "
+			+ "OR (:category = 'group' AND cu.chatRoom.roomType = 'GROUP'))) "
 			+ "ORDER BY cu.isPinning DESC, cu.chatRoom.lastModifiedDate DESC"
 	)
 	Slice<ChatRoomMapping> findAllChatRoomByNicknameAndCategory(
@@ -45,10 +45,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 			+ "FROM ChatRoomUser cu "
 			+ "WHERE cu.user.nickname = :nickname "
 			+ "AND cu.isExited = false "
-			+ "AND cu.isPinning = false "
+			+ "AND (cu.isPinning = false "
 			+ "AND cu.chatRoom.lastModifiedDate < (SELECT c.lastModifiedDate FROM ChatRoom c WHERE c.id = :cursorId) "
 			+ "AND (:category = 'all' OR (:category = 'personal' AND cu.chatRoom.roomType = 'PERSONAL') "
-			+ "OR (:category = 'group' AND cu.chatRoom.roomType = 'GROUP')) "
+			+ "OR (:category = 'group' AND cu.chatRoom.roomType = 'GROUP'))) "
 			+ "ORDER BY cu.isPinning DESC, cu.chatRoom.lastModifiedDate DESC"
 	)
 	Slice<ChatRoomMapping> findAllChatRoomByNicknameAndCategoryAndId(
