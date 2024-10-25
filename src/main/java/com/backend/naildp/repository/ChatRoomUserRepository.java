@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.entity.ChatRoomUser;
@@ -18,9 +17,7 @@ public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long
 
 	Optional<ChatRoomUser> findByChatRoomIdAndUserNickname(UUID chatRoomId, String nickname);
 
-	@Query("SELECT cu.user.nickname FROM ChatRoomUser cu WHERE cu.chatRoom.id = :chatRoomId AND cu.user.nickname != :nickname")
-	List<String> findAllByChatRoomIdAndNotMe(@Param("chatRoomId") UUID chatRoomId,
-		@Param("nickname") String nickname);
+	List<ChatRoomUser> findAllByChatRoomId(@Param("chatRoomId") UUID chatRoomId);
 
 }
 

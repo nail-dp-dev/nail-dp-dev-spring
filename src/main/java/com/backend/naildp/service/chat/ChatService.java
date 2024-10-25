@@ -434,8 +434,16 @@ public class ChatService {
 	}
 
 	public List<String> getChatRoomNickname(UUID chatRoomId) {
-		List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findAllByChatRoomIdAndIsExitedFalse(chatRoomId);
-
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다.", ErrorCode.NOT_FOUND
+			));
+		List<ChatRoomUser> chatRoomUsers;
+		if (chatRoom.isPersonal()) {
+			chatRoomUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
+			chatRoomUsers.forEach(user -> user.setIsExited(false));
+		} else {
+			chatRoomUsers = chatRoomUserRepository.findAllByChatRoomIdAndIsExitedFalse(chatRoomId);
+		}
 		return chatRoomUsers.stream()
 			.map(chatRoomUser -> chatRoomUser.getUser().getNickname())
 			.collect(Collectors.toList());
