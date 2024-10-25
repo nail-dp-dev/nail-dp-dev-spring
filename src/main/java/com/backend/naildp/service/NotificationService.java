@@ -1,5 +1,7 @@
 package com.backend.naildp.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -8,15 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.backend.naildp.common.NotificationType;
 import com.backend.naildp.dto.notification.NotificationResponseDto;
+import com.backend.naildp.dto.notification.UnreadNotificationIdDto;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Notification;
-import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.User;
 import com.backend.naildp.repository.NotificationRepository;
 import com.backend.naildp.repository.UserRepository;
 
@@ -102,5 +102,12 @@ public class NotificationService {
 
 	public Slice<NotificationResponseDto> allNotifications(Pageable pageable, String username) {
 		return notificationRepository.findNotificationSliceByUsername(pageable, username);
+	}
+
+	@Transactional
+	public void readNotifications(UnreadNotificationIdDto unreadNotificationIdDto, String nickname) {
+		List<Notification> unreadNotifications = notificationRepository.findNotificationsByIdInAndReceiverNickname(
+			unreadNotificationIdDto.getNotificationIds(), nickname);
+		notificationRepository.changeReadStatus(unreadNotifications);
 	}
 }
