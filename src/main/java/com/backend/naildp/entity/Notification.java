@@ -111,4 +111,8 @@ public class Notification extends BaseEntity {
 			.link("/posts/" + comment.getPost().getId().toString())
 			.build();
 	}
+
+	public void readNotification() {
+		this.isRead = true;
+	}
 }
