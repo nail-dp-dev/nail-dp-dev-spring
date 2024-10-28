@@ -164,8 +164,8 @@ public class ChatController {
 
 	@GetMapping("chat/recent")
 	public ResponseEntity<ApiResponse<?>> getRecentUsers(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		List<SearchUserResponse> response = chatService.getRecommendUsers(userDetails.getUser().getNickname());
-		return ResponseEntity.ok(ApiResponse.successResponse(response, "추천 사용자 조회 성공", 2000));
+		List<SearchUserResponse> response = chatService.getRecentUsers(userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "최근 사용자 조회 성공", 2000));
 
 	}
 

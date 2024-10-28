@@ -90,6 +90,25 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 			.fetch();
 	}
 
+	@Override
+	public List<SearchUserResponse> findUserInfoByRecentUsers(String nickname, List<String> recentUsers) {
+
+		return queryFactory
+			.select(Projections.constructor(SearchUserResponse.class,
+				user.nickname,
+				user.thumbnailUrl.as("profileUrl"),
+				ExpressionUtils.as(getPostCount(), "postCount"),
+				ExpressionUtils.as(getSavedPostCount(), "savedPostCount"),
+				ExpressionUtils.as(getFollowerCount(), "followerCount"),
+				JPAExpressions.select(follow.count().when(1L).then(true).otherwise(false))
+					.from(follow)
+					.where(follow.follower.nickname.eq(nickname).and(follow.following.eq(user)))
+			))
+			.from(user)
+			.where(user.nickname.in(recentUsers))
+			.fetch();
+	}
+
 	private NumberExpression<Integer> getPriority(QFollow followCurrentToUser, QFollow followUserToCurrent) {
 		return new CaseBuilder()
 			// 맞팔일 때 1순위

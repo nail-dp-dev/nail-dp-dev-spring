@@ -10,4 +10,6 @@ public interface UserRepositoryCustom {
 	List<SearchUserResponse> searchByKeyword(String keyword, String nickname);
 
 	List<SearchUserResponse> findRecommendedUser(User currentUser);
+
+	List<SearchUserResponse> findUserInfoByRecentUsers(String nickname, List<String> recentUsers);
 }

@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
@@ -107,6 +110,7 @@ public class ChatService {
 			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		User user = userRepository.findByNickname(chatMessageDto.getSender())
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		long timestamp = System.currentTimeMillis();
 
 		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoomId, user);
 		chatMessageRepository.save(chatMessage);
@@ -125,6 +129,8 @@ public class ChatService {
 					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
 					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
 				}
+				chatRoomStatusService.addRecentUsers(chatMessageDto.getSender(), nickname, System.currentTimeMillis());
+				chatRoomStatusService.addRecentUsers(nickname, chatMessageDto.getSender(), System.currentTimeMillis());
 
 			}
 		});
@@ -446,6 +452,19 @@ public class ChatService {
 		}
 		return chatRoomUsers.stream()
 			.map(chatRoomUser -> chatRoomUser.getUser().getNickname())
+			.collect(Collectors.toList());
+	}
+
+	public List<SearchUserResponse> getRecentUsers(String nickname) {
+		List<String> recentUsers = chatRoomStatusService.getRecentUsers(nickname);
+		List<SearchUserResponse> userInfoList = userRepository.findUserInfoByRecentUsers(nickname, recentUsers);
+
+		Map<String, SearchUserResponse> userInfoMap = userInfoList.stream()
+			.collect(Collectors.toMap(SearchUserResponse::getNickname, Function.identity()));
+
+		return recentUsers.stream()
+			.map(userInfoMap::get)
+			.filter(Objects::nonNull)
 			.collect(Collectors.toList());
 	}
 }
