@@ -69,7 +69,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    implementation 'com.github.iamport:iamport-rest-client-java'
+    implementation 'com.github.iamport:iamport-rest-client-java:0.2.23'
 }
 
 tasks.named('test') {
