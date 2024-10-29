@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
@@ -466,5 +467,17 @@ public class ChatService {
 			.map(userInfoMap::get)
 			.filter(Objects::nonNull)
 			.collect(Collectors.toList());
+	}
+
+	public ChatListSummaryResponse searchChatRoomsByName(String nickname, String keyword, Pageable pageable,
+		UUID cursorId) {
+		Slice<ChatListResponse> chatRooms = chatRoomRepository.searchChatRoomsByName(keyword, pageable, cursorId,
+			nickname);
+
+		if (chatRooms.isEmpty()) {
+			return ChatListSummaryResponse.createEmptyResponse();
+		}
+
+		return ChatListSummaryResponse.of(chatRooms);
 	}
 }

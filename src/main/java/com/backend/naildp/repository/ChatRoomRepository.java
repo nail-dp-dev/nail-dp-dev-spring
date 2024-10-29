@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.backend.naildp.entity.ChatRoom;
 
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID>, ChatRoomRepositoryCustom {
 	@Query(
 		"SELECT cu.chatRoom FROM ChatRoomUser cu " + "WHERE cu.user.nickname IN :userNames " + "GROUP BY cu.chatRoom "
 			+ "HAVING COUNT(DISTINCT cu.user.id) = :size ")

@@ -32,8 +32,6 @@ public class ChatRoomUser extends BaseEntity {
 
 	@Column
 	private String name = "default";
-	@Column
-	private int unReadMessage = 0;
 
 	private Boolean isExited = false;
 

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -165,8 +167,17 @@ public class ChatController {
 	@GetMapping("chat/recent")
 	public ResponseEntity<ApiResponse<?>> getRecentUsers(@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		List<SearchUserResponse> response = chatService.getRecentUsers(userDetails.getUser().getNickname());
-		return ResponseEntity.ok(ApiResponse.successResponse(response, "최근 사용자 조회 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "최  사용자 조회 성공", 2000));
+	}
 
+	@GetMapping("chat/search")
+	public ResponseEntity<ApiResponse<?>> searchChatRoomsByName(@AuthenticationPrincipal UserDetailsImpl userDetails,
+		@RequestParam("keyword") String keyword,
+		@PageableDefault(size = 20) Pageable pageable,
+		@RequestParam(name = "cursorId", required = false) UUID cursorId) {
+		ChatListSummaryResponse response = chatService.searchChatRoomsByName(userDetails.getUser().getNickname(),
+			keyword, pageable, cursorId);
+		return ResponseEntity.ok(ApiResponse.successResponse(response, "채팅방 이름 검색 성공", 2000));
 	}
 
 }
