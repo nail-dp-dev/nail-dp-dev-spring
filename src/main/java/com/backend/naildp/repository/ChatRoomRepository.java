@@ -14,8 +14,12 @@ import com.backend.naildp.entity.ChatRoom;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID>, ChatRoomRepositoryCustom {
 	@Query(
-		"SELECT cu.chatRoom FROM ChatRoomUser cu " + "WHERE cu.user.nickname IN :userNames " + "GROUP BY cu.chatRoom "
-			+ "HAVING COUNT(DISTINCT cu.user.id) = :size ")
+		"SELECT cu.chatRoom FROM ChatRoomUser cu "
+			+ "WHERE cu.user.nickname IN :userNames "
+			+ "AND cu.chatRoom.roomType = 'PERSONAL'"
+			+ "GROUP BY cu.chatRoom "
+			+ "HAVING COUNT(DISTINCT cu.user.nickname) = :size"
+	)
 	Optional<ChatRoom> findChatRoomByUsers(@Param("userNames") List<String> userNames, @Param("size") int size);
 
 	@Query(

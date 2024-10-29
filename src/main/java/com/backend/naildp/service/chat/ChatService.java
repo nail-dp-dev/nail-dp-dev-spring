@@ -71,8 +71,9 @@ public class ChatService {
 			Optional<ChatRoom> chatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
 			// 이미 존재한다면
 			if (chatRoom.isPresent()) {
-				ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoom.get()
-						.getId(), myNickname)
+				ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(
+						chatRoom.get()
+							.getId(), myNickname)
 					.orElseThrow(() -> new CustomException("채팅방 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 				chatRoomUser.setIsExited(false);
 				return chatRoom.get().getId();
@@ -383,7 +384,8 @@ public class ChatService {
 
 	@Transactional
 	public void leaveChatRoom(UUID chatRoomId, String nickname) {
-		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNicknameAndIsExitedIsFalse(chatRoomId,
+				nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
 
 		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
@@ -418,21 +420,24 @@ public class ChatService {
 
 	@Transactional
 	public void pinByChatRoomUser(UUID chatRoomId, String nickname) {
-		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNicknameAndIsExitedIsFalse(chatRoomId,
+				nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
 		chatRoomUser.updatePinning(true);
 	}
 
 	@Transactional
 	public void unpinByChatRoomUser(UUID chatRoomId, String nickname) {
-		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNicknameAndIsExitedIsFalse(chatRoomId,
+				nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
 		chatRoomUser.updatePinning(false);
 	}
 
 	@Transactional
 	public void renameChatRoom(UUID chatRoomId, String nickname, RenameChatRoomRequestDto request) {
-		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNicknameAndIsExitedIsFalse(chatRoomId,
+				nickname)
 			.orElseThrow(() -> new CustomException("해당 채팅방에 참여 중이지 않습니다.", ErrorCode.NOT_FOUND));
 
 		chatRoomUser.updateRoomName(request.getChatRoomName());
