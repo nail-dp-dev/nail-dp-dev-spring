@@ -250,6 +250,8 @@ public class ChatService {
 					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
 					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
 				}
+				chatRoomStatusService.addRecentUsers(chatMessageDto.getSender(), nickname, System.currentTimeMillis());
+				chatRoomStatusService.addRecentUsers(nickname, chatMessageDto.getSender(), System.currentTimeMillis());
 			}
 		});
 
@@ -305,6 +307,8 @@ public class ChatService {
 					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
 					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
 				}
+				chatRoomStatusService.addRecentUsers(chatMessageDto.getSender(), nickname, System.currentTimeMillis());
+				chatRoomStatusService.addRecentUsers(nickname, chatMessageDto.getSender(), System.currentTimeMillis());
 			}
 		});
 
@@ -358,6 +362,8 @@ public class ChatService {
 					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
 					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
 				}
+				chatRoomStatusService.addRecentUsers(chatMessageDto.getSender(), nickname, System.currentTimeMillis());
+				chatRoomStatusService.addRecentUsers(nickname, chatMessageDto.getSender(), System.currentTimeMillis());
 			}
 		});
 
