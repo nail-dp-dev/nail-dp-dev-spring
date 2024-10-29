@@ -53,6 +53,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
 			.where(
 				user.nickname.eq(myNickname),
 				chatRoomUser.name.containsIgnoreCase(keyword),
+				chatRoomUser.isExited.eq(false),
 				cursorId == null ? null : chatRoom.id.gt(cursorId)
 			)
 			.orderBy(chatRoom.lastModifiedDate.desc())
