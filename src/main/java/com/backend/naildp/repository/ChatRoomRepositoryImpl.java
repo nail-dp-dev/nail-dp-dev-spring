@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
 import com.backend.naildp.dto.chat.ChatListResponse;
+import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.QChatRoom;
 import com.backend.naildp.entity.QChatRoomUser;
 import com.backend.naildp.entity.QUser;
@@ -91,5 +93,22 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
 					.where(chatRoomUser.chatRoom.id.eq(roomId).and(user.nickname.ne(myNickname)))
 					.fetch()
 			));
+	}
+
+	@Override
+	public Optional<ChatRoom> findMostRecentChatRoomByDuplicatedGroup(List<String> userNames) {
+		return Optional.ofNullable(
+			queryFactory
+				.select(chatRoomUser.chatRoom)
+				.from(chatRoomUser)
+				.where(chatRoomUser.user.nickname.in(userNames)
+					.and(chatRoomUser.isExited.isFalse()))
+				.groupBy(chatRoomUser.chatRoom)
+				.having(chatRoomUser.user.countDistinct().eq((long)userNames.size()))
+				.having(chatRoomUser.chatRoom.participantCnt.eq(userNames.size()))
+				.orderBy(chatRoomUser.chatRoom.lastModifiedDate.desc())
+				.limit(1)
+				.fetchOne()
+		);
 	}
 }

@@ -23,13 +23,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID>, ChatR
 	Optional<ChatRoom> findChatRoomByUsers(@Param("userNames") List<String> userNames, @Param("size") int size);
 
 	@Query(
-		"SELECT cu.chatRoom.id AS id, cu.name AS name, cu.chatRoom.lastMessage AS lastMessage, cu.chatRoom.participantCnt as participantCnt, cu.chatRoom.lastModifiedDate AS modifiedAt"
-			+ " FROM ChatRoomUser cu "
-			+ "WHERE cu.user.nickname = :nickname "
-			+ "ORDER BY cu.chatRoom.lastModifiedDate desc")
-	List<ChatRoomMapping> findAllChatRoomByNickname(@Param("nickname") String nickname);
-
-	@Query(
 		"SELECT cu.chatRoom.id AS id, cu.name AS name, cu.chatRoom.lastMessage AS lastMessage, cu.chatRoom.participantCnt AS participantCnt, cu.chatRoom.lastModifiedDate AS modifiedAt, cu.isPinning AS isPinning "
 			+ "FROM ChatRoomUser cu "
 			+ "WHERE cu.user.nickname = :nickname "
