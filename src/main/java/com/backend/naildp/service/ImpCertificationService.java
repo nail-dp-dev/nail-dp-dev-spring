@@ -1,10 +1,16 @@
 package com.backend.naildp.service;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
@@ -12,13 +18,16 @@ import com.siot.IamportRestClient.response.AccessToken;
 import com.siot.IamportRestClient.response.Certification;
 import com.siot.IamportRestClient.response.IamportResponse;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class PassCertificateService {
+public class ImpCertificationService {
 
 	@Value("${portone.auth.api}")
 	private String apiKey;
@@ -55,6 +64,7 @@ public class PassCertificateService {
 	public IamportResponse<Certification> certificate(String impUid) {
 		IamportClient client = new IamportClient(apiKey, apiSecretKey);
 		try {
+			log.info("impUid:{}",impUid);
 			IamportResponse<Certification> certificationIamportResponse = client.certificationByImpUid(impUid);
 			log.info("certificationImportResponse : {}", certificationIamportResponse.getResponse());
 			return certificationIamportResponse;
@@ -66,7 +76,29 @@ public class PassCertificateService {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
-
 	}
 
+	public ResponseEntity<IamportResponse> certificateV2(String impUid) {
+		String accessToken = getImpAccessToken();
+		URI uri = UriComponentsBuilder
+			.fromUriString("https://api.iamport.kr/certifications/{imp_uid}")
+			.buildAndExpand(impUid)
+			.toUri();
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", accessToken);
+
+		HttpEntity<Object> entity = new HttpEntity<>(headers);
+
+		ResponseEntity<IamportResponse> exchange = restTemplate.exchange(uri, HttpMethod.GET, entity,
+			IamportResponse.class);
+		return exchange;
+	}
+
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class GetTokenDto {
+		private String imp_key;
+		private String imp_secret;
+	}
 }

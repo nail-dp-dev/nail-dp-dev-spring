@@ -1,6 +1,7 @@
 package com.backend.naildp.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -136,7 +137,9 @@ public class WebSecurityConfig {
 			.permitAll()
 			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
-			.requestMatchers("/api/portone/imp/**").permitAll()
+			.requestMatchers("/api/portone/**").permitAll()
+			.requestMatchers("/api/portone").permitAll()
+			.requestMatchers("/certificate.html").permitAll()
 			.requestMatchers("/api/home").permitAll()
 			.anyRequest()
 			.authenticated() // 그 외 모든 요청 인증처리
