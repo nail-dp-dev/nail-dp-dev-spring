@@ -40,21 +40,21 @@ public class UserSettingController {
 	 * 알림 설정 단건 변경
 	 */
 	@PatchMapping("/notifications/{type}")
-	ResponseEntity<?> turnOffNotification(@PathVariable("type") NotificationType notificationType,
+	ResponseEntity<?> changeNotificationStatus(@PathVariable("type") NotificationType notificationType,
 		@RequestParam(value = "status", defaultValue = "true") Boolean status,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		userNotificationService.changeNotificationSetting(notificationType, status, userDetails.getUser().getNickname());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "알림 설정 변경 완료", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "알림설정 변경 완료", 2001));
 	}
 
 	/**
 	 * 알림 설정 한번에 다 변경
 	 */
 	@PatchMapping("/notifications")
-	ResponseEntity<?> turnOffAllNotification(@RequestParam(value = "status", defaultValue = "true") Boolean status,
+	ResponseEntity<?> changeAllNotificationStatus(@RequestParam(value = "status", defaultValue = "true") Boolean status,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		userNotificationService.changeAllNotificationType(status, userDetails.getUser().getNickname());
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "알림 끄기 완료", 2001));
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "알림설정 전체 변경 완료", 2001));
 	}
 
 }
