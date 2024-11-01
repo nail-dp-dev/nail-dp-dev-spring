@@ -28,6 +28,8 @@ public class UserNotification {
 	@Enumerated(EnumType.STRING)
 	private NotificationType notificationType;
 
+	private boolean isEnabled;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
@@ -35,5 +37,6 @@ public class UserNotification {
 	public UserNotification(NotificationType notificationType, User user) {
 		this.notificationType = notificationType;
 		this.user = user;
+		this.isEnabled = true;
 	}
 }
