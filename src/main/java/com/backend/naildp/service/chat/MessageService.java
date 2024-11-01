@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.naildp.common.RoomType;
 import com.backend.naildp.dto.chat.ChatMessageDto;
+import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
@@ -46,28 +48,62 @@ public class MessageService {
 
 	@Transactional
 	public void sendMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
-		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
+		ChatRoom chatRoom;
 		User user = userRepository.findByNickname(chatMessageDto.getSender())
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-		long timestamp = System.currentTimeMillis();
+		log.info("sendMessage:chatRoomId:{}", chatRoomId);
+		ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
 
-		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoomId, user);
+		if (chatRoomRequestDto != null) {
+			// Redis에 있는 데이터를 바탕으로 채팅방 생성
+			log.info("check~@########");
+			chatRoom = new ChatRoom();
+			chatRoomRepository.save(chatRoom);
+
+			int participantCnt = chatRoomRequestDto.getNickname().size();
+			if (participantCnt == 2) {
+				chatRoom.updateRoomType(RoomType.PERSONAL);
+			} else {
+				chatRoom.updateRoomType(RoomType.GROUP);
+			}
+			chatRoom.updateParticipantCnt(participantCnt);
+
+			chatRoomRequestDto.getNickname().forEach(participant -> {
+				User findUser = userRepository.findByNickname(participant)
+					.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+				String roomName = chatRoomRequestDto.getNickname().stream()
+					.filter(nickname -> !nickname.equals(participant))
+					.collect(Collectors.joining(", "));
+
+				ChatRoomUser chatRoomUser = new ChatRoomUser(findUser, chatRoom);
+				chatRoomUserRepository.save(chatRoomUser);
+				chatRoomUser.updateRoomName(roomName);
+			});
+
+			chatRoomStatusService.deleteTempChatRoom(chatRoomId);
+		} else {
+			chatRoom = chatRoomRepository.findById(chatRoomId)
+				.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
+		}
+
+		ChatMessage chatMessage = new ChatMessage(chatMessageDto, chatRoom.getId(), user);
 		chatMessageRepository.save(chatMessage);
 		chatRoom.updateLastMessage(chatMessageDto.getContent());
 
-		chatMessageDto.setChatRoomId(chatRoomId.toString());
+		chatMessageDto.setChatRoomId(chatRoom.getId().toString());
 
 		kafkaProducerService.send(chatMessageDto);
 
-		List<String> nicknames = getChatRoomNickname(chatRoomId); // 방 참여자 목록
+		List<String> nicknames = getChatRoomNickname(chatRoom.getId()); // 방 참여자 목록
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 				boolean isActive = sessionService.isSessionExist(nickname);
 				log.info(String.valueOf(isActive));
 				if (!isActive) {
-					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+					chatRoomStatusService.incrementUnreadCount(chatRoom.getId().toString(), nickname);
+					messageStatusService.setFirstUnreadMessageId(chatRoom.getId().toString(), nickname,
+						chatMessage.getId());
 				}
 				chatRoomStatusService.addRecentUsers(chatMessageDto.getSender(), nickname, System.currentTimeMillis());
 				chatRoomStatusService.addRecentUsers(nickname, chatMessageDto.getSender(), System.currentTimeMillis());
@@ -78,9 +114,10 @@ public class MessageService {
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(),
 					nickname);
-				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoom.getId(), unreadCount,
+					chatMessageDto.getContent(),
 					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
 
 				kafkaProducerService.sendChatUpdate(chatUpdateDto);
@@ -262,6 +299,7 @@ public class MessageService {
 	@Transactional(readOnly = true)
 	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId, String nickname) {
 		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo;
+
 		String firstUnreadMessageId = messageStatusService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
 
 		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
@@ -269,6 +307,21 @@ public class MessageService {
 			Long unreadUserCount = messageStatusService.getUnreadUserCount(chatRoomId.toString(), message.getId());
 			return MessageResponseDto.of(message, unreadUserCount);
 		}).collect(Collectors.toList());
+
+		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
+		if (chatRoom == null) {
+			ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
+			chatRoomRequestDto.getNickname().remove(nickname);
+			chatUserInfo = chatRoomRequestDto.getNickname().stream().map(name -> {
+				User user = userRepository.findByNickname(name)
+					.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+				boolean isActive = sessionService.isSessionExist(user.getNickname());
+				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
+					isActive,
+					false);
+			}).toList();
+			return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
+		}
 
 		List<User> roomUsers = userRepository.findAllByChatRoomIdNotInMyNickname(chatRoomId, nickname);
 		if (roomUsers.isEmpty()) { // 단체 채팅방 모두 나간 경우(본인 제외)

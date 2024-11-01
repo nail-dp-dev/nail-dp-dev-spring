@@ -15,7 +15,6 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.common.RoomType;
 import com.backend.naildp.dto.chat.ChatListResponse;
 import com.backend.naildp.dto.chat.ChatListSummaryResponse;
 import com.backend.naildp.dto.chat.ChatRoomRequestDto;
@@ -49,48 +48,47 @@ public class ChatRoomService {
 		chatRoomRequestDto.getNickname().add(myNickname);
 		int participantCnt = chatRoomRequestDto.getNickname().size();
 		List<String> userNames = chatRoomRequestDto.getNickname();
-		Optional<ChatRoom> duplicatedChatRoom;
-		if (participantCnt == 2) {
-			duplicatedChatRoom = chatRoomRepository.findChatRoomByUsers(userNames, userNames.size());
-		} else {
-			duplicatedChatRoom = chatRoomRepository.findMostRecentChatRoomByDuplicatedGroup(userNames);
+		UUID tempRoomId = UUID.randomUUID(); // 임시 채팅방 ID 생성
 
-		}
-		// 이미 존재한다면
+		// 채팅방이 이미 존재하는지 확인
+		Optional<ChatRoom> duplicatedChatRoom = participantCnt == 2
+			? chatRoomRepository.findChatRoomByUsers(userNames, userNames.size())
+			: chatRoomRepository.findMostRecentChatRoomByDuplicatedGroup(userNames);
+
 		if (duplicatedChatRoom.isPresent()) {
-			ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(
-					duplicatedChatRoom.get()
-						.getId(), myNickname)
-				.orElseThrow(() -> new CustomException("채팅방 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-			// chatRoomUser.setIsExited(false);
 			return duplicatedChatRoom.get().getId();
 		}
 
-		ChatRoom chatRoom = new ChatRoom();
-		chatRoomRepository.save(chatRoom);
+		// ChatRoom chatRoom = new ChatRoom();
+		// chatRoomRepository.save(chatRoom);
+		//
+		// if (participantCnt == 2) {
+		// 	chatRoom.updateRoomType(RoomType.PERSONAL);
+		// } else {
+		// 	chatRoom.updateRoomType(RoomType.GROUP);
+		// }
+		//
+		// chatRoom.updateParticipantCnt(participantCnt);
+		//
+		// chatRoomRequestDto.getNickname().forEach(participant -> {
+		// 	User user = userRepository.findByNickname(participant)
+		// 		.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		//
+		// 	String roomName = chatRoomRequestDto.getNickname()
+		// 		.stream()
+		// 		.filter(nickname -> !nickname.equals(participant))
+		// 		.collect(Collectors.joining(", "));
+		//
+		// 	ChatRoomUser chatRoomUser = new ChatRoomUser(user, chatRoom);
+		// 	chatRoomUserRepository.save(chatRoomUser);
+		// 	chatRoomUser.updateRoomName(roomName);
+		// });
+		// return chatRoom.getId();
 
-		if (participantCnt == 2) {
-			chatRoom.updateRoomType(RoomType.PERSONAL);
-		} else {
-			chatRoom.updateRoomType(RoomType.GROUP);
-		}
-
-		chatRoom.updateParticipantCnt(participantCnt);
-
-		chatRoomRequestDto.getNickname().forEach(participant -> {
-			User user = userRepository.findByNickname(participant)
-				.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
-			String roomName = chatRoomRequestDto.getNickname()
-				.stream()
-				.filter(nickname -> !nickname.equals(participant))
-				.collect(Collectors.joining(", "));
-
-			ChatRoomUser chatRoomUser = new ChatRoomUser(user, chatRoom);
-			chatRoomUserRepository.save(chatRoomUser);
-			chatRoomUser.updateRoomName(roomName);
-		});
-		return chatRoom.getId();
+		// 채팅방을 임시로 Redis에 저장 (10분 만료)
+		chatRoomStatusService.setTempChatRoom(tempRoomId, chatRoomRequestDto);
+		log.info("tempRoomId:{}", tempRoomId);
+		return tempRoomId;
 	}
 
 	@Transactional(readOnly = true)

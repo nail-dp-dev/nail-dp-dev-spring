@@ -3,10 +3,13 @@ package com.backend.naildp.service.chat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -56,5 +59,21 @@ public class ChatRoomStatusService {
 		return recentUsers.stream()
 			.map(Object::toString)
 			.collect(Collectors.toList());
+	}
+
+	public void setTempChatRoom(UUID tempRoomId, ChatRoomRequestDto chatRoomRequestDto) {
+		chatRedisTemplate.opsForValue().set("tempChatRoom:" + tempRoomId.toString(), chatRoomRequestDto);
+	}
+
+	public ChatRoomRequestDto getTempChatRoom(UUID tempRoomId) {
+		Object tempChatRoom = chatRedisTemplate.opsForValue().get("tempChatRoom:" + tempRoomId.toString());
+		if (tempChatRoom instanceof ChatRoomRequestDto) {
+			return (ChatRoomRequestDto)tempChatRoom;
+		}
+		return null;
+	}
+
+	public void deleteTempChatRoom(UUID tempRoomId) {
+		chatRedisTemplate.delete("tempChatRoom:" + tempRoomId.toString());
 	}
 }
