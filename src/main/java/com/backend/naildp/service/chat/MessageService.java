@@ -47,7 +47,7 @@ public class MessageService {
 	private final KafkaProducerService kafkaProducerService;
 
 	@Transactional
-	public void sendMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
+	public UUID sendMessage(ChatMessageDto chatMessageDto, UUID chatRoomId) {
 		ChatRoom chatRoom;
 		User user = userRepository.findByNickname(chatMessageDto.getSender())
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
@@ -124,7 +124,7 @@ public class MessageService {
 
 			}
 		});
-
+		return chatRoomId;
 	}
 
 	@Transactional

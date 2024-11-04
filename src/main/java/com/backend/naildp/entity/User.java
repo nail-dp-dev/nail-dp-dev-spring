@@ -50,11 +50,12 @@ public class User extends BaseEntity {
 	private int archiveCount;
 
 	@Builder
-	public User(String nickname, String phoneNumber, UserRole role, boolean agreement) {
+	public User(String nickname, String phoneNumber, UserRole role, boolean agreement, String thumbnailUrl) {
 		this.nickname = nickname;
 		this.phoneNumber = phoneNumber;
 		this.role = role;
 		this.agreement = agreement;
+		this.thumbnailUrl = thumbnailUrl;
 	}
 
 	public User(LoginRequestDto loginRequestDto, UserRole role) {

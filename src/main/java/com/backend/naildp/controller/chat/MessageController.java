@@ -34,11 +34,11 @@ public class MessageController {
 	@MessageMapping("/chat/{chatRoomId}/message")
 	public ResponseEntity<ApiResponse<?>> sendMessage(ChatMessageDto chatMessageDto,
 		@DestinationVariable("chatRoomId") UUID chatRoomId) {
-		messageService.sendMessage(chatMessageDto, chatRoomId);
+		UUID currentRoomId = messageService.sendMessage(chatMessageDto, chatRoomId);
 
 		log.info("Message [{}] sent by user: {} to chatting room: {}", chatMessageDto.getContent(),
 			chatMessageDto.getSender(), chatRoomId);
-		return ResponseEntity.ok(ApiResponse.successResponse(null, "메시지 전송 성공", 2000));
+		return ResponseEntity.ok(ApiResponse.successResponse(currentRoomId, "메시지 전송 성공", 2000));
 
 	}
 

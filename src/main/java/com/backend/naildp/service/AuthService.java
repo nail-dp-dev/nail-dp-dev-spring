@@ -62,6 +62,7 @@ public class AuthService {
 			.phoneNumber(loginRequestDto.getPhoneNumber())
 			.agreement(loginRequestDto.isAgreement())
 			.role(UserRole.USER)
+			.thumbnailUrl("default")
 			.build();
 
 		userRepository.save(user);
