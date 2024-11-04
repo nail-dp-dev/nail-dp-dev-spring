@@ -1,5 +1,7 @@
 package com.backend.naildp.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -37,6 +39,8 @@ public class ChatRoomUser extends BaseEntity {
 
 	private Boolean isPinning = false;
 
+	private LocalDateTime rejoinedAt;
+
 	public ChatRoomUser(User user, ChatRoom chatRoom) {
 		this.user = user;
 		this.chatRoom = chatRoom;
@@ -52,5 +56,10 @@ public class ChatRoomUser extends BaseEntity {
 
 	public void setIsExited(boolean isExited) {
 		this.isExited = isExited;
+	}
+
+	public void setRejoinedAt(LocalDateTime rejoinedAt) {
+		this.rejoinedAt = rejoinedAt;
+		this.isExited = false;
 	}
 }

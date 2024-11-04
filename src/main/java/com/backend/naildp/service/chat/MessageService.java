@@ -55,7 +55,6 @@ public class MessageService {
 		ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
 
 		if (chatRoomRequestDto != null) {
-			// Redis에 있는 데이터를 바탕으로 채팅방 생성
 			log.info("check~@########");
 			chatRoom = new ChatRoom();
 			chatRoomRepository.save(chatRoom);
@@ -300,9 +299,20 @@ public class MessageService {
 	public MessageSummaryResponse getMessagesByRoomId(UUID chatRoomId, String nickname) {
 		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo;
 
+		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
+			.orElseThrow(() -> new CustomException("해당 방을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
 		String firstUnreadMessageId = messageStatusService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
 
-		List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+		List<ChatMessage> messages;
+
+		LocalDateTime rejoinedAt = chatRoomUser.getRejoinedAt();
+
+		if (rejoinedAt == null) {
+			messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+		} else {
+			messages = chatMessageRepository.findAllByChatRoomIdAndCreatedAtAfter(chatRoomId.toString(), rejoinedAt);
+		}
 		List<MessageResponseDto> messageDto = messages.stream().map(message -> {
 			Long unreadUserCount = messageStatusService.getUnreadUserCount(chatRoomId.toString(), message.getId());
 			return MessageResponseDto.of(message, unreadUserCount);
@@ -350,7 +360,7 @@ public class MessageService {
 		List<ChatRoomUser> chatRoomUsers;
 		if (chatRoom.isPersonal()) {
 			chatRoomUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
-			chatRoomUsers.forEach(user -> user.setIsExited(false));
+			chatRoomUsers.forEach(user -> user.setRejoinedAt(LocalDateTime.now()));
 		} else {
 			chatRoomUsers = chatRoomUserRepository.findAllByChatRoomIdAndIsExitedFalse(chatRoomId);
 		}
