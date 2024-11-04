@@ -3,6 +3,7 @@ package com.backend.naildp.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,8 +15,9 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
 	@Query("select un from UserNotification un where un.user.nickname = :nickname")
 	List<UserNotification> findNotificationTypeByUserNickname(@Param("nickname") String nickname);
 
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("update UserNotification un set un.isEnabled = :status"
-		+ " where un.user.nickname = :nickname and un.notificationType = :notificationType")
+		+ " where un.user.nickname = :nickname and un.notificationType = :type")
 	int updateUserNotificationByNotificationType(@Param("status") boolean status, @Param("nickname") String nickname,
 		@Param("type") NotificationType notificationType);
 

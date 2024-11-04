@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +56,12 @@ public class UserSettingController {
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		userNotificationService.changeAllNotificationType(status, userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "알림설정 전체 변경 완료", 2001));
+	}
+
+	@PostMapping("/notifications/new")
+	ResponseEntity<?> addAll(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		userNotificationService.addAllNotificationType(userDetails.getUser().getNickname());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "알림설정 전체 추가 완료", 2001));
 	}
 
 }
