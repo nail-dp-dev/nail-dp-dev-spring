@@ -71,7 +71,8 @@ public class MessageService {
 				User findUser = userRepository.findByNickname(participant)
 					.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-				String roomName = chatRoomRequestDto.getNickname().stream()
+				String roomName = chatRoomRequestDto.getNickname()
+					.stream()
 					.filter(nickname -> !nickname.equals(participant))
 					.collect(Collectors.joining(", "));
 
@@ -81,6 +82,8 @@ public class MessageService {
 			});
 
 			chatRoomStatusService.deleteTempChatRoom(chatRoomId);
+
+			chatRoomId = chatRoom.getId();
 		} else {
 			chatRoom = chatRoomRepository.findById(chatRoomId)
 				.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
@@ -113,11 +116,9 @@ public class MessageService {
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(),
-					nickname);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(), nickname);
 				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoom.getId(), unreadCount,
-					chatMessageDto.getContent(),
-					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
+					chatMessageDto.getContent(), LocalDateTime.now(), chatMessageDto.getSender(), nickname);
 
 				kafkaProducerService.sendChatUpdate(chatUpdateDto);
 
@@ -130,10 +131,46 @@ public class MessageService {
 	public void sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
 		String imageMessage = "사진을 보냈습니다";
 
-		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
+		ChatRoom chatRoom;
 		User user = userRepository.findByNickname(sender)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
+
+		if (chatRoomRequestDto != null) {
+			log.info("check~@########");
+			chatRoom = new ChatRoom();
+			chatRoomRepository.save(chatRoom);
+
+			int participantCnt = chatRoomRequestDto.getNickname().size();
+			if (participantCnt == 2) {
+				chatRoom.updateRoomType(RoomType.PERSONAL);
+			} else {
+				chatRoom.updateRoomType(RoomType.GROUP);
+			}
+			chatRoom.updateParticipantCnt(participantCnt);
+
+			chatRoomRequestDto.getNickname().forEach(participant -> {
+				User findUser = userRepository.findByNickname(participant)
+					.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+				String roomName = chatRoomRequestDto.getNickname()
+					.stream()
+					.filter(nickname -> !nickname.equals(participant))
+					.collect(Collectors.joining(", "));
+
+				ChatRoomUser chatRoomUser = new ChatRoomUser(findUser, chatRoom);
+				chatRoomUserRepository.save(chatRoomUser);
+				chatRoomUser.updateRoomName(roomName);
+			});
+
+			chatRoomStatusService.deleteTempChatRoom(chatRoomId);
+
+			chatRoomId = chatRoom.getId();
+		} else {
+			chatRoom = chatRoomRepository.findById(chatRoomId)
+				.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
+		}
 
 		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(imageFiles);
 		List<String> imageUrls = fileRequestDtos.stream().map(FileRequestDto::getFileUrl).collect(Collectors.toList());
@@ -161,8 +198,9 @@ public class MessageService {
 				boolean isActive = sessionService.isSessionExist(nickname);
 				log.info(String.valueOf(isActive));
 				if (!isActive) {
-					chatRoomStatusService.incrementUnreadCount(chatRoomId.toString(), nickname);
-					messageStatusService.setFirstUnreadMessageId(chatRoomId.toString(), nickname, chatMessage.getId());
+					chatRoomStatusService.incrementUnreadCount(chatRoom.getId().toString(), nickname);
+					messageStatusService.setFirstUnreadMessageId(chatRoom.getId().toString(), nickname,
+						chatMessage.getId());
 				}
 				chatRoomStatusService.addRecentUsers(chatMessageDto.getSender(), nickname, System.currentTimeMillis());
 				chatRoomStatusService.addRecentUsers(nickname, chatMessageDto.getSender(), System.currentTimeMillis());
@@ -172,9 +210,9 @@ public class MessageService {
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
-					nickname);
-				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoom.getId().toString(), nickname);
+				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoom.getId(), unreadCount,
+					chatMessageDto.getContent(),
 					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
 
 				kafkaProducerService.sendChatUpdate(chatUpdateDto);
@@ -229,8 +267,7 @@ public class MessageService {
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
-					nickname);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), nickname);
 				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
 					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
 
@@ -284,8 +321,7 @@ public class MessageService {
 		nicknames.forEach(nickname -> {
 			if (!nickname.equals(chatMessageDto.getSender())) {
 
-				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(),
-					nickname);
+				int unreadCount = chatRoomStatusService.getUnreadCount(chatRoomId.toString(), nickname);
 				ChatUpdateDto chatUpdateDto = new ChatUpdateDto(chatRoomId, unreadCount, chatMessageDto.getContent(),
 					LocalDateTime.now(), chatMessageDto.getSender(), nickname);
 
@@ -300,18 +336,22 @@ public class MessageService {
 		List<MessageSummaryResponse.ChatUserInfoResponse> chatUserInfo;
 
 		ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserNickname(chatRoomId, nickname)
-			.orElseThrow(() -> new CustomException("해당 방을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+			.orElse(null);
 
 		String firstUnreadMessageId = messageStatusService.getFirstUnreadMessageId(chatRoomId.toString(), nickname);
 
 		List<ChatMessage> messages;
+		if (chatRoomUser != null) {
+			LocalDateTime rejoinedAt = chatRoomUser.getRejoinedAt();
 
-		LocalDateTime rejoinedAt = chatRoomUser.getRejoinedAt();
-
-		if (rejoinedAt == null) {
-			messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+			if (rejoinedAt == null) {
+				messages = chatMessageRepository.findAllByChatRoomId(chatRoomId.toString());
+			} else {
+				messages = chatMessageRepository.findAllByChatRoomIdAndCreatedAtAfter(chatRoomId.toString(),
+					rejoinedAt);
+			}
 		} else {
-			messages = chatMessageRepository.findAllByChatRoomIdAndCreatedAtAfter(chatRoomId.toString(), rejoinedAt);
+			messages = new ArrayList<>();
 		}
 		List<MessageResponseDto> messageDto = messages.stream().map(message -> {
 			Long unreadUserCount = messageStatusService.getUnreadUserCount(chatRoomId.toString(), message.getId());
@@ -327,8 +367,7 @@ public class MessageService {
 					.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 				boolean isActive = sessionService.isSessionExist(user.getNickname());
 				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
-					isActive,
-					false);
+					isActive, false);
 			}).toList();
 			return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
 		}
@@ -339,15 +378,15 @@ public class MessageService {
 				.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 
 			boolean isActive = sessionService.isSessionExist(user.getNickname());
-			chatUserInfo = List.of(new MessageSummaryResponse.ChatUserInfoResponse(
-				user.getNickname(), user.getThumbnailUrl(), isActive, false));
+			chatUserInfo = List.of(
+				new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(), isActive,
+					false));
 		} else {
 
 			chatUserInfo = roomUsers.stream().map(user -> {
 				boolean isActive = sessionService.isSessionExist(user.getNickname());
 				return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(),
-					isActive,
-					false);
+					isActive, false);
 			}).toList();
 		}
 		return new MessageSummaryResponse(messageDto, firstUnreadMessageId, chatUserInfo);
@@ -355,12 +394,15 @@ public class MessageService {
 
 	public List<String> getChatRoomNickname(UUID chatRoomId) {
 		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다.", ErrorCode.NOT_FOUND
-			));
+			.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 		List<ChatRoomUser> chatRoomUsers;
 		if (chatRoom.isPersonal()) {
 			chatRoomUsers = chatRoomUserRepository.findAllByChatRoomId(chatRoomId);
-			chatRoomUsers.forEach(user -> user.setRejoinedAt(LocalDateTime.now()));
+			chatRoomUsers.forEach(user -> {
+				if (user.getIsExited()) {
+					user.setRejoinedAt(LocalDateTime.now());
+				}
+			});
 		} else {
 			chatRoomUsers = chatRoomUserRepository.findAllByChatRoomIdAndIsExitedFalse(chatRoomId);
 		}
