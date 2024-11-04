@@ -35,8 +35,6 @@ public class ImpCertificationService {
 	@Value("${portone.auth.api_secret}")
 	private String apiSecretKey;
 
-	private final RestTemplate restTemplate;
-
 	public String getImpAccessToken() {
 		IamportClient client = new IamportClient(apiKey, apiSecretKey);
 		try {
@@ -76,29 +74,5 @@ public class ImpCertificationService {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
-	}
-
-	public ResponseEntity<IamportResponse> certificateV2(String impUid) {
-		String accessToken = getImpAccessToken();
-		URI uri = UriComponentsBuilder
-			.fromUriString("https://api.iamport.kr/certifications/{imp_uid}")
-			.buildAndExpand(impUid)
-			.toUri();
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", accessToken);
-
-		HttpEntity<Object> entity = new HttpEntity<>(headers);
-
-		ResponseEntity<IamportResponse> exchange = restTemplate.exchange(uri, HttpMethod.GET, entity,
-			IamportResponse.class);
-		return exchange;
-	}
-
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	public static class GetTokenDto {
-		private String imp_key;
-		private String imp_secret;
 	}
 }
