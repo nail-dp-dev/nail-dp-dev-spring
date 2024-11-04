@@ -9,9 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.backend.naildp.dto.auth.ImpCertificationRequestDto;
+import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.ImpCertificationService;
-import com.siot.IamportRestClient.response.Certification;
-import com.siot.IamportRestClient.response.IamportResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +25,10 @@ public class ImpCertificationController {
 
 	@ResponseBody
 	@PostMapping("/certification")
-	public ResponseEntity<?> passCertificate(@RequestBody ImpCertificationRequestDto impCertificationRequestDto) {
-		IamportResponse<Certification> certificate = impCertificationService.certificate(impCertificationRequestDto.getImp_uid());
-		return ResponseEntity.ok(certificate.getResponse());
+	public ResponseEntity<ApiResponse<?>> passCertificate(
+		@RequestBody ImpCertificationRequestDto impCertificationRequestDto) {
+		String phone = impCertificationService.certificate(impCertificationRequestDto.getImp_uid());
+		return ResponseEntity.ok(ApiResponse.successResponse(phone, "전화번호 인증 성공", 2000));
 	}
 
 	@ResponseBody

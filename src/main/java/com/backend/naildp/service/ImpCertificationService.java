@@ -1,26 +1,19 @@
 package com.backend.naildp.service;
 
 import java.io.IOException;
-import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
+import com.backend.naildp.exception.CustomException;
+import com.backend.naildp.exception.ErrorCode;
+import com.backend.naildp.repository.UserRepository;
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
 import com.siot.IamportRestClient.response.AccessToken;
 import com.siot.IamportRestClient.response.Certification;
 import com.siot.IamportRestClient.response.IamportResponse;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Service
 public class ImpCertificationService {
+
+	private final UserRepository userRepository;
 
 	@Value("${portone.auth.api}")
 	private String apiKey;
@@ -59,13 +54,17 @@ public class ImpCertificationService {
 		return null;
 	}
 
-	public IamportResponse<Certification> certificate(String impUid) {
+	public String certificate(String impUid) {
 		IamportClient client = new IamportClient(apiKey, apiSecretKey);
 		try {
-			log.info("impUid:{}",impUid);
+			log.info("impUid:{}", impUid);
 			IamportResponse<Certification> certificationIamportResponse = client.certificationByImpUid(impUid);
 			log.info("certificationImportResponse : {}", certificationIamportResponse.getResponse());
-			return certificationIamportResponse;
+			String phone = certificationIamportResponse.getResponse().getPhone();
+			if (userRepository.existsUserByPhoneNumber(phone)) {
+				throw new CustomException("이미 존재하는 전화번호입니다.", ErrorCode.ALREADY_EXIST);
+			}
+			return phone;
 		} catch (IamportResponseException e) {
 			log.info("IamResponseException:{}", e.getMessage());
 			throw new RuntimeException(e.getMessage());
