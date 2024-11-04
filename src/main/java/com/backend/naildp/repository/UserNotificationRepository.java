@@ -21,6 +21,7 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
 	int updateUserNotificationByNotificationType(@Param("status") boolean status, @Param("nickname") String nickname,
 		@Param("type") NotificationType notificationType);
 
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("update UserNotification un set un.isEnabled = :status where un.user.nickname = :nickname")
 	int updateAllNotificationType(@Param("status") boolean status, @Param("nickname") String nickname);
 }
