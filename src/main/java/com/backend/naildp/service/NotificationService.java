@@ -25,13 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class NotificationService {
 
 	private final NotificationRepository notificationRepository;
 	private final UserRepository userRepository;
-	private final SseService sseService;
+	private final SseEmitterService sseEmitterService;
 
 	/**
 	 * 팔로우 알림 생성 및 푸시알림 전송
@@ -45,7 +44,8 @@ public class NotificationService {
 		Notification savedNotification = notificationRepository.save(followNotification);
 
 		//팔로우 푸시 알림 전송
-		sseService.sendPushNotification(savedNotification);
+		// sseEmitterService.sendPushNotification(savedNotification);
+		sseEmitterService.sendPushNotificationV2(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -61,7 +61,8 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(postLikeNotification);
 
-		sseService.sendPushNotification(savedNotification);
+		// sseEmitterService.sendPushNotification(savedNotification);
+		sseEmitterService.sendPushNotificationV2(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -78,7 +79,8 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(commentLikeNotification);
 
-		sseService.sendPushNotification(savedNotification);
+		// sseEmitterService.sendPushNotification(savedNotification);
+		sseEmitterService.sendPushNotificationV2(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -95,11 +97,13 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(commentNotification);
 
-		sseService.sendPushNotification(savedNotification);
+		// sseEmitterService.sendPushNotification(savedNotification);
+		sseEmitterService.sendPushNotificationV2(savedNotification);
 
 		return savedNotification.getId();
 	}
 
+	@Transactional(readOnly = true)
 	public Slice<NotificationResponseDto> allNotifications(Pageable pageable, String username) {
 		return notificationRepository.findNotificationSliceByUsername(pageable, username);
 	}
