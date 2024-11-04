@@ -17,6 +17,8 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.backend.naildp.dto.PushNotificationResponseDto;
+import com.backend.naildp.dto.notification.PushNotificationDto;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -63,6 +65,27 @@ public class RedisConfig {
 			objectMapper, PushNotificationResponseDto.class);
 
 		RedisTemplate<String, PushNotificationResponseDto> eventRedisTemplate = new RedisTemplate<>();
+		eventRedisTemplate.setConnectionFactory(redisConnectionFactory());
+		eventRedisTemplate.setKeySerializer(RedisSerializer.string());
+		eventRedisTemplate.setValueSerializer(jsonRedisSerializer);
+		eventRedisTemplate.setHashKeySerializer(RedisSerializer.string());
+		eventRedisTemplate.setHashValueSerializer(jsonRedisSerializer);
+		return eventRedisTemplate;
+	}
+
+	/**
+	 * 리펙토링
+	 */
+	@Bean
+	public RedisTemplate<String, PushNotificationDto> eventRedisTemplate() {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+		Jackson2JsonRedisSerializer<PushNotificationDto> jsonRedisSerializer = new Jackson2JsonRedisSerializer<>(
+			objectMapper, PushNotificationDto.class);
+
+		RedisTemplate<String, PushNotificationDto> eventRedisTemplate = new RedisTemplate<>();
 		eventRedisTemplate.setConnectionFactory(redisConnectionFactory());
 		eventRedisTemplate.setKeySerializer(RedisSerializer.string());
 		eventRedisTemplate.setValueSerializer(jsonRedisSerializer);

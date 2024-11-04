@@ -7,13 +7,11 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.backend.naildp.dto.PushNotificationResponseDto;
+import com.backend.naildp.dto.notification.PushNotificationDto;
 import com.backend.naildp.entity.Notification;
 import com.backend.naildp.repository.EmitterRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,14 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SseService {
+public class SseEmitterService {
 
-	private static final long DEFAULT_TIMEOUT = 60 * 1000L; // 30분
+	private static final long DEFAULT_TIMEOUT = 10 * 60 * 1000L; // 30분
 
 	private final RedisMessageListenerContainer redisMessageListenerContainer;
 	private final RedisOperations<String, PushNotificationResponseDto> eventRedisOperations;
 	private final ObjectMapper objectMapper;
 	private final EmitterRepository emitterRepository;
+	private final RedisMessageService redisMessageService;
 
 	public SseEmitter subscribe(String username, String lastEventId) {
 		String emitterKey = username;
@@ -39,18 +38,22 @@ public class SseService {
 
 		emitterRepository.save(emitterKey, emitter);
 
-		// MessageListener 익명함수 사용해서 onMessage 구현, Redis 에서 새로운 알림이 발생하면 자동적으로 onMessage 가 호출
-		// 즉 알림을 serialize 하고 해당 Client 에게 알림을 전송한다.
-		final MessageListener messageListener = (message, pattern) -> {
-			final PushNotificationResponseDto notificationResponse = serialize(message);
-			sendPush(emitter, emitterKey, notificationResponse);
-		};
+		// // MessageListener 익명함수 사용해서 onMessage 구현, Redis 에서 새로운 알림이 발생하면 자동적으로 onMessage 가 호출
+		// // 즉 알림을 serialize 하고 해당 Client 에게 알림을 전송한다.
+		// final MessageListener messageListener = (message, pattern) -> {
+		// 	final PushNotificationResponseDto notificationResponse = serialize(message);
+		// 	sendPush(emitter, emitterKey, notificationResponse);
+		// };
+		//
+		// // redisMessageListenerContainer 에 새로운 MessageListener 를 추가함
+		// redisMessageListenerContainer.addMessageListener(messageListener, ChannelTopic.of(getChannelName(emitterKey)));
 
-		// redisMessageListenerContainer 에 새로운 MessageListener 를 추가함
-		redisMessageListenerContainer.addMessageListener(messageListener, ChannelTopic.of(getChannelName(emitterKey)));
+		redisMessageService.subscribe(emitterKey);
 
-		// emitter 의 상태를 체크함, 완료되었는지 타임아웃이 났는지
-		checkEmitterStatus(emitter, messageListener, emitterKey);
+		// // emitter 의 상태를 체크함, 완료되었는지 타임아웃이 났는지
+		// checkEmitterStatus(emitter, messageListener, emitterKey);
+
+		checkEmitterStatusV2(emitter, emitterKey);
 
 		String dummyData = "EventStream Created. [username=" + username + "]";
 		sendPush(emitter, emitterKey, dummyData);
@@ -59,8 +62,6 @@ public class SseService {
 	}
 
 	public void checkEmitterStatus(final SseEmitter emitter, final MessageListener messageListener, String emitterKey) {
-		SecurityContext securityContext = SecurityContextHolder.getContext();
-		log.info("SseService SecurityContext authentication: {}", securityContext.getAuthentication());
 		emitter.onTimeout(() -> {
 			log.info("sse timeout");
 			emitterRepository.deleteById(emitterKey);
@@ -71,31 +72,34 @@ public class SseService {
 			emitterRepository.deleteById(emitterKey);
 			redisMessageListenerContainer.removeMessageListener(messageListener);
 		});
+	}
 
-		// emitter.onTimeout(new DelegatingSecurityContextRunnable(() -> {
-		// 	log.info("Timeout Thread: {}, SecurityContext: {}", Thread.currentThread().getName(), SecurityContextHolder.getContext());
-		// 	// emitter.complete();
-		// 	emitterRepository.deleteById(emitterKey);
-		// 	redisMessageListenerContainer.removeMessageListener(messageListener);
-		// }));
-		//
-		// emitter.onCompletion(new DelegatingSecurityContextRunnable(() -> {
-		// 	log.info("Completion Thread: {}, SecurityContext: {}", Thread.currentThread().getName(), SecurityContextHolder.getContext());
-		// 	emitterRepository.deleteById(emitterKey);
-		// 	redisMessageListenerContainer.removeMessageListener(messageListener);
-		// }));
+	public void checkEmitterStatusV2(final SseEmitter emitter, String emitterKey) {
+		emitter.onTimeout(() -> {
+			log.info("sse timeout");
+			emitterRepository.deleteById(emitterKey);
+			redisMessageService.removeSubscribe(emitterKey);
+		});
+		emitter.onCompletion(() -> {
+			log.info("sse complete");
+			emitterRepository.deleteById(emitterKey);
+			redisMessageService.removeSubscribe(emitterKey);
+		});
 	}
 
 	/**
 	 * 팔로우 알림 전송 : convertAndSend() 로 해당 채널에 데이터를 전송한다.
 	 */
 	public void sendPushNotification(Notification notification) {
-		log.info("{} 알림 전송 : {}", notification.getNotificationType().toString(),
-			notification.getSender().getNickname());
 		this.eventRedisOperations.convertAndSend(getChannelName(notification.getReceiver().getNickname()),
 			PushNotificationResponseDto.fromV2(notification));
-		log.info("{} 알림 전송 성공 : {}", notification.getNotificationType().toString(),
-			notification.getSender().getNickname());
+	}
+
+	public void sendPushNotificationV2(Notification notification) {
+		log.info("푸시알림 v2");
+		log.info("receiver nickname : {}", notification.getReceiver().getNickname());
+		redisMessageService.publish(notification.getReceiver().getNickname(),
+			PushNotificationDto.from(notification));
 	}
 
 	private void sendPush(SseEmitter emitter, String emitterKey, Object data) {

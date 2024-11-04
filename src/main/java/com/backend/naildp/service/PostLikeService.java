@@ -45,9 +45,10 @@ public class PostLikeService {
 				return savedPostLike;
 			});
 
-		if (post.notWrittenBy(user.getNickname())) {
-			applicationEventPublisher.publishEvent(postLike);
-		}
+		applicationEventPublisher.publishEvent(postLike);
+		// if (post.notWrittenBy(user.getNickname())) {
+		// 	applicationEventPublisher.publishEvent(postLike);
+		// }
 
 		return postLike.getId();
 	}
