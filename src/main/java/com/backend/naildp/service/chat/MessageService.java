@@ -16,6 +16,7 @@ import com.backend.naildp.dto.chat.ChatRoomRequestDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
 import com.backend.naildp.dto.chat.MessageResponseDto;
 import com.backend.naildp.dto.chat.MessageSummaryResponse;
+import com.backend.naildp.dto.chat.TempRoomSwitchDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.ChatRoom;
 import com.backend.naildp.entity.ChatRoomUser;
@@ -82,8 +83,8 @@ public class MessageService {
 			});
 
 			chatRoomStatusService.deleteTempChatRoom(chatRoomId);
-
-			chatRoomId = chatRoom.getId();
+			TempRoomSwitchDto tempRoomSwitchDto = new TempRoomSwitchDto(chatMessageDto.getSender(), chatRoom.getId());
+			kafkaProducerService.sendChatRoomSwitchEvent(tempRoomSwitchDto);
 		} else {
 			chatRoom = chatRoomRepository.findById(chatRoomId)
 				.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));

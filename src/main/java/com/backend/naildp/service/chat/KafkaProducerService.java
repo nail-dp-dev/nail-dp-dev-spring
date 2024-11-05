@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
+import com.backend.naildp.dto.chat.TempRoomSwitchDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class KafkaProducerService {
 
 	private final KafkaTemplate<String, ChatMessageDto> kafkaTemplate;
 	private final KafkaTemplate<String, ChatUpdateDto> updateKafkaTemplate;
+	private final KafkaTemplate<String, TempRoomSwitchDto> switchKafkaTemplate;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -52,5 +54,9 @@ public class KafkaProducerService {
 					chatUpdateDto.getLastMessage());
 			}
 		});
+	}
+
+	public void sendChatRoomSwitchEvent(TempRoomSwitchDto switchDto) {
+		switchKafkaTemplate.send("chatRoomSwitch", switchDto);
 	}
 }

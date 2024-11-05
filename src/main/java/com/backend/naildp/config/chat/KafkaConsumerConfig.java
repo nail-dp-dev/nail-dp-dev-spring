@@ -16,6 +16,7 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
+import com.backend.naildp.dto.chat.TempRoomSwitchDto;
 
 @EnableKafka
 @Configuration
@@ -60,6 +61,19 @@ public class KafkaConsumerConfig {
 	public ConcurrentKafkaListenerContainerFactory<String, ChatUpdateDto> chatUpdateKafkaListenerContainerFactory() {
 		ConcurrentKafkaListenerContainerFactory<String, ChatUpdateDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(chatUpdateConsumerFactory());
+		return factory;
+	}
+
+	@Bean
+	public ConsumerFactory<String, TempRoomSwitchDto> chatRoomSwitchConsumerFactory() {
+		return new DefaultKafkaConsumerFactory<>(consumerConfigurations(), new StringDeserializer(),
+			new JsonDeserializer<>(TempRoomSwitchDto.class));
+	}
+
+	@Bean
+	public ConcurrentKafkaListenerContainerFactory<String, TempRoomSwitchDto> chatRoomSwitchKafkaListenerContainerFactory() {
+		ConcurrentKafkaListenerContainerFactory<String, TempRoomSwitchDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
+		factory.setConsumerFactory(chatRoomSwitchConsumerFactory());
 		return factory;
 	}
 }

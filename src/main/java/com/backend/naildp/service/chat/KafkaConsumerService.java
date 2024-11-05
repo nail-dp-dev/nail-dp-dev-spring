@@ -1,11 +1,14 @@
 package com.backend.naildp.service.chat;
 
+import java.util.UUID;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
+import com.backend.naildp.dto.chat.TempRoomSwitchDto;
 import com.backend.naildp.repository.ChatRoomUserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -36,9 +39,6 @@ public class KafkaConsumerService {
 	@KafkaListener(topics = CHAT_UPDATE_TOPIC)
 	public void listenForChatUpdates(ChatUpdateDto chatUpdateDto) {
 		try {
-			// List<String> chatUsers = chatRoomUserRepository.findAllByChatRoomIdAndNotMe(chatUpdateDto.getChatRoomId(),
-			// 	chatUpdateDto.getSender());
-			// chatUsers.forEach(nickname -> {
 			String destination = "/sub/chat/list/updates/" + chatUpdateDto.getReceiver();
 			template.convertAndSend(destination, chatUpdateDto);
 			// });
@@ -47,5 +47,13 @@ public class KafkaConsumerService {
 		} catch (Exception e) {
 			throw new RuntimeException("예외 발생 : " + e.getMessage());
 		}
+	}
+
+	@KafkaListener(topics = "chatRoomSwitch")
+	public void listenChatRoomSwitch(TempRoomSwitchDto tempRoomSwitchDto) {
+		UUID newChatRoomId = tempRoomSwitchDto.getNewChatRoomId();
+		String sender = tempRoomSwitchDto.getSender();
+
+		template.convertAndSend("/topic/chat/" + sender + "/newRoom", newChatRoomId);
 	}
 }

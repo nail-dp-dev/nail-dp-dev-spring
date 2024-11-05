@@ -16,6 +16,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
 import com.backend.naildp.dto.chat.ChatUpdateDto;
+import com.backend.naildp.dto.chat.TempRoomSwitchDto;
 
 @EnableKafka
 @Configuration
@@ -50,5 +51,15 @@ public class KafkaProducerConfig {
 	@Bean
 	public KafkaTemplate<String, ChatUpdateDto> chatUpdateKafkaTemplate() {
 		return new KafkaTemplate<>(chatUpdateProducerFactory());
+	}
+
+	@Bean
+	public ProducerFactory<String, TempRoomSwitchDto> chatRoomSwitchProducerFactory() {
+		return new DefaultKafkaProducerFactory<>(producerConfigurations());
+	}
+
+	@Bean
+	public KafkaTemplate<String, TempRoomSwitchDto> chatRoomSwitchKafkaTemplate() {
+		return new KafkaTemplate<>(chatRoomSwitchProducerFactory());
 	}
 }
