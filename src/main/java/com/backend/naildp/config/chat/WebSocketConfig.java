@@ -29,7 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
 		// 메시지를 브로드캐스팅할 때 사용할 prefix 설정
-		registry.enableSimpleBroker("/sub", "topic");
+		registry.enableSimpleBroker("/sub", "/topic");
 		// 클라이언트에서 메시지를 보낼 때 사용할 prefix 설정
 		registry.setApplicationDestinationPrefixes("/pub");
 	}
