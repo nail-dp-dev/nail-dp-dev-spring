@@ -57,6 +57,16 @@ public class KafkaProducerService {
 	}
 
 	public void sendChatRoomSwitchEvent(TempRoomSwitchDto switchDto) {
-		switchKafkaTemplate.send("chatRoomSwitch", switchDto);
+
+		CompletableFuture<SendResult<String, TempRoomSwitchDto>> future = switchKafkaTemplate.send("chatRoomSwitch",
+			switchDto);
+
+		future.whenComplete((result, ex) -> {
+			if (ex != null) {
+				log.error("Unable to send update=[" + switchDto.getNewChatRoomId() + "] due to : " + ex.getMessage());
+			} else {
+				log.info("Update sender: {}", switchDto.getSender());
+			}
+		});
 	}
 }
