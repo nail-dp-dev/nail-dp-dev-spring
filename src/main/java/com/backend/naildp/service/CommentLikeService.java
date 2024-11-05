@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
+import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
@@ -31,6 +32,7 @@ public class CommentLikeService {
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
 	private final CommentLikeRepository commentLikeRepository;
+	private final NotificationService notificationService;
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
@@ -67,7 +69,13 @@ public class CommentLikeService {
 
 		CommentLike commentLike = commentLikeRepository.saveAndFlush(new CommentLike(user, findComment));
 
-		applicationEventPublisher.publishEvent(commentLike);
+		if (findComment.notRegisteredBy(user)) {
+			Notification savedNotification = notificationService.save(Notification.fromCommentLike(commentLike));
+
+			if (savedNotification.getReceiver().allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
+		}
 
 		return commentLike.getId();
 	}

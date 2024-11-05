@@ -120,6 +120,10 @@ public class Post extends BaseEntity {
 		return !user.equalsNickname(username);
 	}
 
+	public boolean notWrittenBy(User user) {
+		return !this.user.equals(user);
+	}
+
 	public void changeBoundary(PostBoundaryRequest postBoundaryRequest) {
 		this.boundary = postBoundaryRequest.getCloser();
 	}

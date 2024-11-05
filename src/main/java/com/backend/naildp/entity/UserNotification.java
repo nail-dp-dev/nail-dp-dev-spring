@@ -39,4 +39,8 @@ public class UserNotification {
 		this.user = user;
 		this.isEnabled = true;
 	}
+
+	public boolean isEnableType(NotificationType notificationType) {
+		return isEnabled && this.notificationType.equals(notificationType);
+	}
 }

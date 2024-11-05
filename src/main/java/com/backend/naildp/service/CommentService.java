@@ -11,6 +11,7 @@ import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.entity.Comment;
+import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
@@ -31,6 +32,7 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
+	private final NotificationService notificationService;
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
@@ -61,7 +63,13 @@ public class CommentService {
 		Comment comment = new Comment(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
 
-		applicationEventPublisher.publishEvent(comment);
+		if (comment.notRegisteredBy(user)) {
+			Notification savedNotification = notificationService.save(Notification.fromComment(comment));
+
+			if (savedNotification.getReceiver().allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
+		}
 
 		return commentRepository.save(comment).getId();
 	}
