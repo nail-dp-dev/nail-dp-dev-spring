@@ -9,14 +9,17 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.backend.naildp.dto.notification.NotificationResponseDto;
+import com.backend.naildp.dto.notification.PushNotificationDto;
 import com.backend.naildp.dto.notification.UnreadNotificationIdDto;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
 import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.repository.EmitterRepository;
 import com.backend.naildp.repository.NotificationRepository;
 import com.backend.naildp.repository.UserRepository;
 
@@ -29,8 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationService {
 
 	private final NotificationRepository notificationRepository;
-	private final UserRepository userRepository;
-	private final SseEmitterService sseEmitterService;
+	private final RedisMessageService redisMessageService;
 
 	/**
 	 * 팔로우 알림 생성 및 푸시알림 전송
@@ -44,8 +46,7 @@ public class NotificationService {
 		Notification savedNotification = notificationRepository.save(followNotification);
 
 		//팔로우 푸시 알림 전송
-		// sseEmitterService.sendPushNotification(savedNotification);
-		sseEmitterService.sendPushNotificationV2(savedNotification);
+		publishNotificationEvent(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -61,8 +62,7 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(postLikeNotification);
 
-		// sseEmitterService.sendPushNotification(savedNotification);
-		sseEmitterService.sendPushNotificationV2(savedNotification);
+		publishNotificationEvent(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -79,8 +79,7 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(commentLikeNotification);
 
-		// sseEmitterService.sendPushNotification(savedNotification);
-		sseEmitterService.sendPushNotificationV2(savedNotification);
+		publishNotificationEvent(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -97,8 +96,7 @@ public class NotificationService {
 
 		Notification savedNotification = notificationRepository.save(commentNotification);
 
-		// sseEmitterService.sendPushNotification(savedNotification);
-		sseEmitterService.sendPushNotificationV2(savedNotification);
+		publishNotificationEvent(savedNotification);
 
 		return savedNotification.getId();
 	}
@@ -113,5 +111,15 @@ public class NotificationService {
 		List<Notification> unreadNotifications = notificationRepository.findNotificationsByIdInAndReceiverNickname(
 			unreadNotificationIdDto.getNotificationIds(), nickname);
 		notificationRepository.changeReadStatus(unreadNotifications);
+	}
+
+	/**
+	 * 알림 이벤트 메시지 밣행 -> redisMessageService
+	 */
+	public void publishNotificationEvent(Notification notification) {
+		log.info("푸시알림 v2");
+		log.info("receiver nickname : {}", notification.getReceiver().getNickname());
+		redisMessageService.publish(notification.getReceiver().getNickname(),
+			PushNotificationDto.from(notification));
 	}
 }
