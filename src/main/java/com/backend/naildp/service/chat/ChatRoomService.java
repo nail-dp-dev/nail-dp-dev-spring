@@ -59,32 +59,6 @@ public class ChatRoomService {
 			return duplicatedChatRoom.get().getId();
 		}
 
-		// ChatRoom chatRoom = new ChatRoom();
-		// chatRoomRepository.save(chatRoom);
-		//
-		// if (participantCnt == 2) {
-		// 	chatRoom.updateRoomType(RoomType.PERSONAL);
-		// } else {
-		// 	chatRoom.updateRoomType(RoomType.GROUP);
-		// }
-		//
-		// chatRoom.updateParticipantCnt(participantCnt);
-		//
-		// chatRoomRequestDto.getNickname().forEach(participant -> {
-		// 	User user = userRepository.findByNickname(participant)
-		// 		.orElseThrow(() -> new CustomException("해당 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-		//
-		// 	String roomName = chatRoomRequestDto.getNickname()
-		// 		.stream()
-		// 		.filter(nickname -> !nickname.equals(participant))
-		// 		.collect(Collectors.joining(", "));
-		//
-		// 	ChatRoomUser chatRoomUser = new ChatRoomUser(user, chatRoom);
-		// 	chatRoomUserRepository.save(chatRoomUser);
-		// 	chatRoomUser.updateRoomName(roomName);
-		// });
-		// return chatRoom.getId();
-
 		// 채팅방을 임시로 Redis에 저장 (10분 만료)
 		chatRoomStatusService.setTempChatRoom(tempRoomId, chatRoomRequestDto);
 		log.info("tempRoomId:{}", tempRoomId);
@@ -198,6 +172,7 @@ public class ChatRoomService {
 		return userRepository.findRecommendedUser(user);
 	}
 
+	@Transactional(readOnly = true)
 	public List<SearchUserResponse> getRecentUsers(String nickname) {
 		List<String> recentUsers = chatRoomStatusService.getRecentUsers(nickname);
 		List<SearchUserResponse> userInfoList = userRepository.findUserInfoByRecentUsers(nickname, recentUsers);
@@ -211,6 +186,7 @@ public class ChatRoomService {
 			.collect(Collectors.toList());
 	}
 
+	@Transactional(readOnly = true)
 	public ChatListSummaryResponse searchChatRoomsByName(String nickname, String keyword, Pageable pageable,
 		UUID cursorId) {
 		Slice<ChatListResponse> chatRooms = chatRoomRepository.searchChatRoomsByName(keyword, pageable, cursorId,

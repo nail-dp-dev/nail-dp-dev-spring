@@ -96,5 +96,4 @@ public class StompHandler implements ChannelInterceptor {
 		}
 		return destination.replace("/sub/chat/", "");
 	}
-
 }

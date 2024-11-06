@@ -86,11 +86,8 @@ public class MessageService {
 
 	@Transactional
 	public void sendImageMessages(UUID chatRoomId, String sender, List<MultipartFile> imageFiles) {
-		String imageMessage = "사진을 보냈습니다";
-
 		ChatRoom chatRoom;
-		User user = userRepository.findByNickname(sender)
-			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
 		// 임시 채팅방 가져오기(메시지를 한번도 보낸적 없는 채팅방)
 		ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
 
@@ -108,22 +105,13 @@ public class MessageService {
 				.orElseThrow(() -> new CustomException("채팅방을 찾을 수 없습니다", ErrorCode.NOT_FOUND));
 		}
 
-		List<FileRequestDto> fileRequestDtos = s3Service.saveFiles(imageFiles);
-		List<String> imageUrls = fileRequestDtos.stream().map(FileRequestDto::getFileUrl).collect(Collectors.toList());
+		List<FileRequestDto> fileRequestDto = s3Service.saveFiles(imageFiles);
+		List<String> imageUrls = fileRequestDto.stream().map(FileRequestDto::getFileUrl).collect(Collectors.toList());
 
-		ChatMessage chatMessage = ChatMessage.builder()
-			.chatRoomId(chatRoomId.toString())
-			.sender(sender)
-			.profileUrl(user.getThumbnailUrl())
-			.messageType("IMAGE")
-			.content(imageMessage)
-			.media(imageUrls)
-			.mention(new ArrayList<>())
-			.build();
-
+		ChatMessage chatMessage = handleMediaMessage(chatRoomId, sender, imageUrls, "IMAGE", "사진을 보냈습니다");
 		chatMessageRepository.save(chatMessage);
-
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
+
 		chatRoom.updateLastMessage(chatMessageDto.getContent());
 
 		kafkaProducerService.send(chatMessageDto);
@@ -134,12 +122,7 @@ public class MessageService {
 
 	@Transactional
 	public void sendVideoMessage(UUID chatRoomId, String sender, MultipartFile video) {
-
-		String videoMessage = "동영상을 보냈습니다";
-
 		ChatRoom chatRoom;
-		User user = userRepository.findByNickname(sender)
-			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 임시 채팅방 가져오기(메시지를 한번도 보낸적 없는 채팅방)
 		ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
@@ -159,16 +142,8 @@ public class MessageService {
 		}
 
 		FileRequestDto fileRequestDto = s3Service.saveFile(video, false);
-
-		ChatMessage chatMessage = ChatMessage.builder()
-			.chatRoomId(chatRoomId.toString())
-			.sender(sender)
-			.profileUrl(user.getThumbnailUrl())
-			.messageType("VIDEO")
-			.content(videoMessage)
-			.media(List.of(fileRequestDto.getFileUrl()))
-			.mention(new ArrayList<>())
-			.build();
+		List<String> videoUrls = List.of(fileRequestDto.getFileUrl());
+		ChatMessage chatMessage = handleMediaMessage(chatRoomId, sender, videoUrls, "VIDEO", "동영상을 보냈습니다");
 
 		chatMessageRepository.save(chatMessage);
 
@@ -183,11 +158,7 @@ public class MessageService {
 
 	@Transactional
 	public void sendFileMessage(UUID chatRoomId, String sender, MultipartFile file) {
-		String fileMessage = "파일을 보냈습니다";
-
 		ChatRoom chatRoom;
-		User user = userRepository.findByNickname(sender)
-			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		// 임시 채팅방 가져오기(메시지를 한번도 보낸적 없는 채팅방)
 		ChatRoomRequestDto chatRoomRequestDto = chatRoomStatusService.getTempChatRoom(chatRoomId);
@@ -207,15 +178,8 @@ public class MessageService {
 		}
 
 		FileRequestDto fileRequestDto = s3Service.saveFile(file, true);
-		ChatMessage chatMessage = ChatMessage.builder()
-			.chatRoomId(chatRoomId.toString())
-			.sender(sender)
-			.profileUrl(user.getThumbnailUrl())
-			.messageType("FILE")
-			.content(fileMessage)
-			.media(List.of(fileRequestDto.getFileUrl()))
-			.mention(new ArrayList<>())
-			.build();
+		List<String> videoUrls = List.of(fileRequestDto.getFileUrl());
+		ChatMessage chatMessage = handleMediaMessage(chatRoomId, sender, videoUrls, "FILE", "파일을 보냈습니다");
 
 		chatMessageRepository.save(chatMessage);
 		ChatMessageDto chatMessageDto = ChatMessageDto.of(chatMessage);
@@ -370,6 +334,23 @@ public class MessageService {
 		boolean isActive = sessionService.isSessionExist(user.getNickname());
 		return new MessageSummaryResponse.ChatUserInfoResponse(user.getNickname(), user.getThumbnailUrl(), isActive,
 			false);
+	}
+
+	// media message 생성
+	private ChatMessage handleMediaMessage(UUID chatRoomId, String sender, List<String> mediaUrls, String messageType,
+		String content) {
+		User user = userRepository.findByNickname(sender)
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+
+		return ChatMessage.builder()
+			.chatRoomId(chatRoomId.toString())
+			.sender(sender)
+			.profileUrl(user.getThumbnailUrl())
+			.messageType(messageType)
+			.content(content)
+			.media(mediaUrls)
+			.mention(new ArrayList<>())
+			.build();
 	}
 
 }
