@@ -41,7 +41,7 @@ public class NotificationRepositoryImpl implements NotificationCustomRepository 
 			.where(notification.receiver.nickname.eq(username)
 				.and(notification.createdDate.after(LocalDateTime.now().minusDays(30)))
 			)
-			.orderBy(notification.isRead.desc(), notification.createdDate.desc())
+			.orderBy(notification.isRead.asc(), notification.createdDate.desc())
 			.limit(pageable.getPageSize() + 1)
 			.fetch();
 
