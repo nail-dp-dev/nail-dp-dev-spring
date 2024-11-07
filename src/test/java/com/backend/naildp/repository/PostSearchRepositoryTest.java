@@ -3,11 +3,15 @@ package com.backend.naildp.repository;
 import static com.backend.naildp.entity.QFollow.*;
 import static com.backend.naildp.entity.QPost.*;
 import static com.backend.naildp.entity.QPostLike.*;
+import static com.backend.naildp.entity.QTag.*;
+import static com.backend.naildp.entity.QTagPost.*;
+import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +41,8 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.QTag;
+import com.backend.naildp.entity.QTagPost;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
@@ -467,6 +473,61 @@ public class PostSearchRepositoryTest {
 		);
 	}
 
+	@Test
+	void searchForYouPost() {
+		//given
+		User likeUser = createUserByNickname("likeUser");
+		User postWriter = createUserByNickname("postWriter");
+		User anotherWriter = createUserByNickname("anotherWriter");
+		Tag likeTag1 = createTag("likeTag1");
+		Tag likeTag2 = createTag("likeTag2");
+		Tag likeTag3 = createTag("likeTag3");
+
+		List<Post> posts = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag1, likeTag2, likeTag3));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag1));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag2));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag3));
+
+		posts.forEach(savedPost -> em.persist(new PostLike(likeUser, savedPost)));
+
+		em.flush();
+		em.clear();
+
+		String nickname = likeUser.getNickname();
+
+		//when
+		List<Post> likedPosts = queryFactory
+			.select(post)
+			.from(post).join(post.postLikes, postLike).fetchJoin()
+			.where(postLike.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		List<Long> tagsInLikedPost = queryFactory
+			.select(tagPost.tag.id)
+			.from(tagPost)
+			.where(tagPost.post.in(likedPosts))
+			.fetch();
+
+		List<Post> forYouPosts = queryFactory
+			.select(post)
+			.from(post).join(post.tagPosts, tagPost)
+			.where(tagPost.tag.id.in(tagsInLikedPost)
+				.and(post.notIn(likedPosts))
+				.and(post.tempSave.isFalse())
+				.and(isAllowedToViewPosts(nickname)))
+			.orderBy(post.createdDate.desc())
+			.limit(51)
+			.fetch();
+
+		//then
+		assertThat(forYouPosts).hasSize(3);
+		assertThat(forYouPosts).doesNotContainSequence(likedPosts);
+		assertThat(forYouPosts).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.containsOnly(anotherWriter.getNickname());
+	}
+
 	/**
 	 * 자정부터 현시각까지 좋아요가 많은 게시물 조회
 	 */
@@ -627,10 +688,13 @@ public class PostSearchRepositoryTest {
 		return post;
 	}
 
-	private void savePostByCnt(User writer, int postCnt, Boundary boundary, List<Tag> tags) {
+	private List<Post> savePostByCnt(User writer, int postCnt, Boundary boundary, List<Tag> tags) {
+		List<Post> savedPosts = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
-			createPostByUserAndBoundaryAndTag(writer, boundary, tags);
+			Post postByUserAndBoundaryAndTag = createPostByUserAndBoundaryAndTag(writer, boundary, tags);
+			savedPosts.add(postByUserAndBoundaryAndTag);
 		}
+		return savedPosts;
 	}
 
 	private void createFollow(User follower, User following) {
