@@ -1,5 +1,6 @@
 package com.backend.naildp.repository;
 
+import static com.backend.naildp.entity.QArchivePost.*;
 import static com.backend.naildp.entity.QFollow.*;
 import static com.backend.naildp.entity.QPost.*;
 import static com.backend.naildp.entity.QPostLike.*;
@@ -41,6 +42,8 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.QArchivePost;
+import com.backend.naildp.entity.QPhoto;
 import com.backend.naildp.entity.QTag;
 import com.backend.naildp.entity.QTagPost;
 import com.backend.naildp.entity.Tag;
@@ -474,7 +477,7 @@ public class PostSearchRepositoryTest {
 	}
 
 	@Test
-	void searchForYouPost() {
+	void findForYouPost() {
 		//given
 		User likeUser = createUserByNickname("likeUser");
 		User postWriter = createUserByNickname("postWriter");
@@ -483,12 +486,17 @@ public class PostSearchRepositoryTest {
 		Tag likeTag2 = createTag("likeTag2");
 		Tag likeTag3 = createTag("likeTag3");
 
-		List<Post> posts = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag1, likeTag2, likeTag3));
+		Archive archive = createArchive(likeUser);
+
+		List<Post> posts1 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag1, likeTag2));
+		List<Post> posts2 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag2, likeTag3));
+
 		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag1));
 		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag2));
 		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag3));
 
-		posts.forEach(savedPost -> em.persist(new PostLike(likeUser, savedPost)));
+		posts1.forEach(post1 -> em.persist(new PostLike(likeUser, post1)));
+		posts2.forEach(post2 -> em.persist(new ArchivePost(archive, post2)));
 
 		em.flush();
 		em.clear();
@@ -502,6 +510,15 @@ public class PostSearchRepositoryTest {
 			.where(postLike.user.nickname.eq(nickname))
 			.distinct()
 			.fetch();
+
+		List<Post> savedPosts = queryFactory
+			.select(archivePost.post)
+			.from(archivePost)
+			.where(archivePost.archive.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		likedPosts.addAll(savedPosts);
 
 		List<Long> tagsInLikedPost = queryFactory
 			.select(tagPost.tag.id)
@@ -526,6 +543,17 @@ public class PostSearchRepositoryTest {
 		assertThat(forYouPosts).extracting(Post::getUser)
 			.extracting(User::getNickname)
 			.containsOnly(anotherWriter.getNickname());
+	}
+
+	private Archive createArchive(User likeUser) {
+		Archive archive = Archive.builder()
+			.user(likeUser)
+			.archiveImgUrl("")
+			.boundary(Boundary.ALL)
+			.name("archive")
+			.build();
+		em.persist(archive);
+		return archive;
 	}
 
 	/**
