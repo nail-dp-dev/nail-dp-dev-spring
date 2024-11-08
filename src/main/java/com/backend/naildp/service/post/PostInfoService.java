@@ -1,4 +1,4 @@
-package com.backend.naildp.service;
+package com.backend.naildp.service.post;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +47,7 @@ public class PostInfoService {
 		}
 
 		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
-		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, pageRequest);
+		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, nickname, pageRequest);
 
 		if (recentPosts.isEmpty()) {
 			log.info("최신 게시물이 없습니다.");
@@ -104,11 +104,11 @@ public class PostInfoService {
 		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL, pageRequest);
 	}
 
-	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, PageRequest pageRequest) {
+	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, String username, PageRequest pageRequest) {
 		if (isFirstPage(cursorPostId)) {
-			return postRepository.findRecentPostsByFollowing(followingUser, pageRequest);
+			return postRepository.findRecentPostsByFollowing(followingUser, username, pageRequest);
 		}
-		return postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followingUser, pageRequest);
+		return postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followingUser, username, pageRequest);
 	}
 
 	private boolean isFirstPage(long cursorPostId) {

@@ -25,10 +25,7 @@ public class Profile extends BaseEntity {
 	private Long id;
 
 	@Column(nullable = false)
-	private String profileUrl;
-
-	@Column(nullable = false)
-	private Boolean thumbnail;
+	private String profileUrl = "default";
 
 	@Column(nullable = false)
 	private String name;
@@ -38,15 +35,10 @@ public class Profile extends BaseEntity {
 	private ProfileType profileType;
 
 	@Builder
-	public Profile(String profileUrl, String name, boolean thumbnail, ProfileType profileType) {
+	public Profile(String profileUrl, String name, ProfileType profileType) {
 		this.profileUrl = profileUrl;
 		this.name = name;
-		this.thumbnail = thumbnail;
 		this.profileType = profileType;
-	}
-
-	public void updateThumbnail(Boolean thumbnail) {
-		this.thumbnail = thumbnail;
 	}
 
 }

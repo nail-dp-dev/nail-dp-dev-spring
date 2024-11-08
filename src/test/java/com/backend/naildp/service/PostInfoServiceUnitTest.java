@@ -33,6 +33,7 @@ import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.service.post.PostInfoService;
 
 @ExtendWith(MockitoExtension.class)
 @Import(JpaAuditingConfiguration.class)
@@ -75,7 +76,7 @@ class PostInfoServiceUnitTest {
 		List<PostLike> postLikes = likePosts(recentPosts);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
-		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
+		when(postRepository.findRecentPostsByFollowing(anyList(), anyString(), eq(pageRequest)))
 			.thenReturn(recentPosts);
 		when(archivePostRepository.findAllByArchiveUserNickname(eq(NICKNAME))).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(eq(NICKNAME))).thenReturn(postLikes);
@@ -87,11 +88,13 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
-		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
-		verify(postRepository, never()).findRecentPostsByIdAndFollowing(anyLong(),
-			anyList(), any(PageRequest.class));
+		verify(postRepository).findRecentPostsByFollowing(anyList(), anyString(), eq(pageRequest));
+
 		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
+
+		verify(postRepository, never()).findRecentPostsByIdAndFollowing(anyLong(), anyList(), anyString(),
+			any(PageRequest.class));
 
 		assertThat(homePostResponses.getNumber()).isEqualTo(0);
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
@@ -113,7 +116,7 @@ class PostInfoServiceUnitTest {
 		List<PostLike> postLikes = likePosts(pagedPost);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
-		when(postRepository.findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest)))
+		when(postRepository.findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), anyString(), eq(pageRequest)))
 			.thenReturn(pagedPost);
 		when(archivePostRepository.findAllByArchiveUserNickname(NICKNAME)).thenReturn(archivePosts);
 		when(postLikeRepository.findAllByUserNickname(NICKNAME)).thenReturn(postLikes);
@@ -124,10 +127,11 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
-		verify(postRepository).findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), eq(pageRequest));
-		verify(postRepository, never()).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		verify(postRepository).findRecentPostsByIdAndFollowing(eq(cursorPostId), anyList(), anyString(), eq(pageRequest));
 		verify(archivePostRepository).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository).findAllByUserNickname(NICKNAME);
+
+		verify(postRepository, never()).findRecentPostsByFollowing(anyList(), anyString(), eq(pageRequest));
 
 		assertThat(homePostResponses.getNumber()).isEqualTo(0);
 		assertThat(homePostResponses.getSize()).isEqualTo(20);
@@ -147,7 +151,7 @@ class PostInfoServiceUnitTest {
 		Slice<Post> recentPosts = new SliceImpl<>(posts, pageRequest, false);
 
 		when(followRepository.findFollowingUserByFollowerNickname(anyString())).thenReturn(followingUser);
-		when(postRepository.findRecentPostsByFollowing(anyList(), eq(pageRequest)))
+		when(postRepository.findRecentPostsByFollowing(anyList(), anyString(), eq(pageRequest)))
 			.thenReturn(recentPosts);
 
 		//when
@@ -161,7 +165,7 @@ class PostInfoServiceUnitTest {
 		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(0);
 
 		verify(followRepository).findFollowingUserByFollowerNickname(anyString());
-		verify(postRepository).findRecentPostsByFollowing(anyList(), eq(pageRequest));
+		verify(postRepository).findRecentPostsByFollowing(anyList(), anyString(), eq(pageRequest));
 		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}
@@ -243,11 +247,6 @@ class PostInfoServiceUnitTest {
 
 		//then
 		verify(postRepository).findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
-		// verify(postRepository, never())
-		// 	.findPostsByBoundaryNotAndTempSaveFalse(any(Boundary.class), any(PageRequest.class));
-		// verify(postRepository, never())
-		// 	.findPostsByIdBeforeAndBoundaryNotAndTempSaveIsFalse(anyLong(), any(Boundary.class),
-		// 		any(PageRequest.class));
 		verify(archivePostRepository, never()).findAllByArchiveUserNickname(NICKNAME);
 		verify(postLikeRepository, never()).findAllByUserNickname(NICKNAME);
 	}

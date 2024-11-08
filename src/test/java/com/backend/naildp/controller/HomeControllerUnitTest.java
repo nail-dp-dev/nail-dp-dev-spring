@@ -28,7 +28,7 @@ import org.springframework.util.MultiValueMap;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
-import com.backend.naildp.service.PostInfoService;
+import com.backend.naildp.service.post.PostInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -57,7 +57,7 @@ class HomeControllerUnitTest {
 		when(postInfoService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
 
 		//when & then
-		mvc.perform(get("/home").param("choice", "NEW"))
+		mvc.perform(get("/api/home").param("choice", "NEW"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -83,7 +83,7 @@ class HomeControllerUnitTest {
 		paramMap.add("cursorPostId", "10");
 		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
 
-		mvc.perform((get("/home").queryParams(paramMap)))
+		mvc.perform((get("/api/home").queryParams(paramMap)))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -105,7 +105,7 @@ class HomeControllerUnitTest {
 		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		// when & then
-		mvc.perform((get("/home").param("choice", "NEW")))
+		mvc.perform((get("/api/home").param("choice", "NEW")))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -127,7 +127,7 @@ class HomeControllerUnitTest {
 		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		// when & then
-		mvc.perform((get("/home").param("choice", "NEW")))
+		mvc.perform((get("/api/home").param("choice", "NEW")))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -148,7 +148,7 @@ class HomeControllerUnitTest {
 		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
 
 		//when & then
-		mvc.perform(get("/home").param("choice", "NEW"))
+		mvc.perform(get("/api/home").param("choice", "NEW"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -170,7 +170,7 @@ class HomeControllerUnitTest {
 		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(postSummaryResponse);
 
 		//when & then
-		mvc.perform(get("/posts/like"))
+		mvc.perform(get("/api/posts/like"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -193,7 +193,7 @@ class HomeControllerUnitTest {
 		when(postInfoService.findLikedPost(anyString(), eq(20), anyLong())).thenReturn(emptyResponse);
 
 		//when & then
-		mvc.perform(get("/posts/like"))
+		mvc.perform(get("/api/posts/like"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))

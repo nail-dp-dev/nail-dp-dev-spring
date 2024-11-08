@@ -36,7 +36,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 		Authentication authentication) throws IOException, ServletException {
-		log.info("3333333333");
 
 		UserDetailsImpl userDetails = getOAuth2UserPrincipal(authentication);
 
@@ -46,9 +45,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		jwtUtil.addJwtToCookie(jwtUtil.createRefreshToken(), "refreshToken", response);
 
 		redisUtil.saveRefreshToken(userDetails.getUser().getNickname(), jwtUtil.createRefreshToken());
-		log.info("444444444");
 
-		log.info(domain);
 		getRedirectStrategy().sendRedirect(request, response, domain);
 	}
 

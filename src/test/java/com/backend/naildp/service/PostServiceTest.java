@@ -260,7 +260,6 @@ public class PostServiceTest {
 		Profile profile = Profile.builder()
 			.name(user.getNickname() + "Profile")
 			.profileUrl(user.getNickname() + "Url")
-			.thumbnail(true)
 			.profileType(ProfileType.BASIC)
 			.build();
 		UsersProfile usersProfile = UsersProfile.builder().profile(profile).user(user).build();

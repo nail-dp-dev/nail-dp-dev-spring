@@ -17,5 +17,9 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
 
 	Optional<Profile> findProfileByProfileUrl(String profileUrl);
 
+	@Query("SELECT p FROM Profile p JOIN UsersProfile up ON p.id = up.profile.id WHERE up.user.nickname = :nickname AND p.profileUrl = :profileUrl")
+	Optional<Profile> findProfileByNicknameAndProfileUrl(@Param("nickname") String nickname,
+		@Param("profileUrl") String profileUrl);
+
 	boolean existsProfileByProfileUrlStartsWith(String profileUrl);
 }

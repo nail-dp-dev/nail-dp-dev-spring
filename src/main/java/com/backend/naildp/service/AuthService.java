@@ -62,6 +62,7 @@ public class AuthService {
 			.phoneNumber(loginRequestDto.getPhoneNumber())
 			.agreement(loginRequestDto.isAgreement())
 			.role(UserRole.USER)
+			.thumbnailUrl("default")
 			.build();
 
 		userRepository.save(user);
@@ -75,7 +76,6 @@ public class AuthService {
 			Profile profile = Profile.builder()
 				.profileUrl(userInfo.getProfileUrl())
 				.name(userInfo.getProfileUrl())
-				.thumbnail(true)
 				.profileType(ProfileType.AUTO)
 				.build();
 

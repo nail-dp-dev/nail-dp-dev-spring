@@ -116,7 +116,7 @@ public class JwtUtil {
 	// JWT에서 사용자 정보 가져오기
 	public Claims getUserInfoFromToken(String token) {
 		try {
-			return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+			return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
 		} catch (ExpiredJwtException e) {
 			// 만료된 토큰에서도 Claims 반환
 			return e.getClaims();

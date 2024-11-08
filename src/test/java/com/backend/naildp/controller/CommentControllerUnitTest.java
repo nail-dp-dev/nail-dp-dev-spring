@@ -69,15 +69,15 @@ class CommentControllerUnitTest {
 
 		//when
 		ResultActions nullResultActions = mvc.perform(
-			post("/posts/{postId}/comment", 1L)
+			post("/api/posts/{postId}/comment", 1L)
 				.content(nullRequest)
 				.contentType(MediaType.APPLICATION_JSON));
 		ResultActions emptyStringResultActions = mvc.perform(
-			post("/posts/{postId}/comment", 1L)
+			post("/api/posts/{postId}/comment", 1L)
 				.content(emptyStringRequest)
 				.contentType(MediaType.APPLICATION_JSON));
 		ResultActions blankResultActions = mvc.perform(
-			post("/posts/{postId}/comment", 1L)
+			post("/api/posts/{postId}/comment", 1L)
 				.content(blankStringRequest)
 				.contentType(MediaType.APPLICATION_JSON));
 
@@ -108,7 +108,7 @@ class CommentControllerUnitTest {
 
 		//when
 		ResultActions resultActions = mvc.perform(
-			post("/posts/{postId}/comment", 1L)
+			post("/api/posts/{postId}/comment", 1L)
 				.content(request)
 				.contentType(MediaType.APPLICATION_JSON));
 
@@ -132,15 +132,15 @@ class CommentControllerUnitTest {
 
 		//when
 		ResultActions nullResultActions = mvc.perform(
-			patch("/posts/{postId}/comment/{commentId}", 1L, 2L)
+			patch("/api/posts/{postId}/comment/{commentId}", 1L, 2L)
 				.content(nullRequest)
 				.contentType(MediaType.APPLICATION_JSON));
 		ResultActions emptyStringResultActions = mvc.perform(
-			patch("/posts/{postId}/comment/{commentId}", 1L, 2L)
+			patch("/api/posts/{postId}/comment/{commentId}", 1L, 2L)
 				.content(emptyStringRequest)
 				.contentType(MediaType.APPLICATION_JSON));
 		ResultActions blankResultActions = mvc.perform(
-			patch("/posts/{postId}/comment/{commentId}", 1L, 2L)
+			patch("/api/posts/{postId}/comment/{commentId}", 1L, 2L)
 				.content(blankStringRequest)
 				.contentType(MediaType.APPLICATION_JSON));
 
@@ -171,7 +171,7 @@ class CommentControllerUnitTest {
 
 		//when
 		ResultActions resultActions = mvc.perform(
-			patch("/posts/{postId}/comment/{commentId}", 1L, 2L)
+			patch("/api/posts/{postId}/comment/{commentId}", 1L, 2L)
 				.content(request)
 				.contentType(MediaType.APPLICATION_JSON));
 
@@ -194,7 +194,7 @@ class CommentControllerUnitTest {
 		when(commentService.findComments(anyLong(), anyInt(), eq(-1L), anyString())).thenReturn(response);
 
 		//when
-		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment", 1L));
+		ResultActions resultActions = mvc.perform(get("/api/posts/{postId}/comment", 1L));
 
 		//then
 		resultActions
@@ -233,7 +233,7 @@ class CommentControllerUnitTest {
 		when(commentService.findComments(anyLong(), anyInt(), eq(-1L), anyString())).thenReturn(response);
 
 		//when
-		ResultActions resultActions = mvc.perform(get("/posts/{postId}/comment", 1L).param("size", "2"));
+		ResultActions resultActions = mvc.perform(get("/api/posts/{postId}/comment", 1L).param("size", "2"));
 
 		//then
 		resultActions

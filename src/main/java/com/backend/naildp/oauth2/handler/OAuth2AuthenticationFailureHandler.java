@@ -33,7 +33,6 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			// 회원가입이 필요한 경우 signup 페이지로 리다이렉트
 			getRedirectStrategy().sendRedirect(request, response, domain + "/sign-up");
 		} else {
-			logger.error("OAuth2 authentication failed. Error message: {}", exception);
 
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			response.setContentType(MediaType.APPLICATION_JSON_VALUE);

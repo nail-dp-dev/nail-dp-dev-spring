@@ -368,7 +368,9 @@ class ArchiveServiceTest {
 		archiveService.unsaveFromArchive(nickname, unsaveRequestDto);
 
 		// Then
-		verify(archivePostRepository, times(1)).deleteAllByPostIdAndArchiveId(any(Long.class), anyList());
+		verify(archivePostRepository, times(2)).deleteByPostIdAndArchiveId(any(Long.class), any(Long.class));
+		verify(archivePostRepository, times(2)).findFirstByArchiveIdOrderByLastModifiedDateDesc(any(Long.class));
+
 	}
 
 	@Test

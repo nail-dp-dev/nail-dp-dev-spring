@@ -12,6 +12,8 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.TagPost;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -27,6 +29,15 @@ public class TagPostRepositoryImpl implements TagPostSearchRepository {
 
 	@Override
 	public List<TagPost> searchRelatedTags(List<String> keywords, String userNickname) {
+		BooleanBuilder builder = new BooleanBuilder();
+		for (String keyword : keywords) {
+			builder.or(tag.name.startsWithIgnoreCase(keyword));
+		}
+
+		CaseBuilder caseBuilder = new CaseBuilder();
+		NumberExpression<Integer> startWithAnyKeyword = caseBuilder.when(builder).then(1)
+			.otherwise(0);
+
 		return queryFactory
 			.select(tagPost)
 			.from(tagPost)
@@ -35,7 +46,7 @@ public class TagPostRepositoryImpl implements TagPostSearchRepository {
 				.and(usernamePermitted(userNickname))
 				.and(keywordContainedInTag(keywords))
 			)
-			.orderBy(tag.name.length().asc(), tag.name.asc())
+			.orderBy(tag.name.length().asc(), startWithAnyKeyword.desc(), tag.name.asc())
 			.fetch();
 	}
 
@@ -46,7 +57,7 @@ public class TagPostRepositoryImpl implements TagPostSearchRepository {
 
 		BooleanBuilder builder = new BooleanBuilder();
 
-		keywords.forEach(keyword -> builder.or(tag.name.like(keyword + "%")));
+		keywords.forEach(keyword -> builder.or(tag.name.containsIgnoreCase(keyword)));
 
 		return builder;
 	}

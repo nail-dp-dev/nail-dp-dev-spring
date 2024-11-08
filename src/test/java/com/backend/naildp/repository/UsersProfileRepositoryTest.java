@@ -48,8 +48,8 @@ class UsersProfileRepositoryTest {
 		user1 = createTestMember("mj@naver.com", "mj", "0101111", 1L);
 		user2 = createTestMember("jw@naver.com", "jw", "0102222", 2L);
 
-		profile1 = createTestProfile("mjProfileUrl.jpg", "mjName", true, ProfileType.CUSTOMIZATION);
-		profile2 = createTestProfile("jwProfile.jpg", "jwName", false, ProfileType.CUSTOMIZATION);
+		profile1 = createTestProfile("mjProfileUrl.jpg", "mjName", ProfileType.CUSTOMIZATION);
+		profile2 = createTestProfile("jwProfile.jpg", "jwName", ProfileType.CUSTOMIZATION);
 
 		userProfile1 = createTestUsersProfile(user1, profile1);
 		userProfile2 = createTestUsersProfile(user2, profile2);
@@ -62,16 +62,16 @@ class UsersProfileRepositoryTest {
 	@Test
 	void testFindProfileUrlByThumbnailIsTrueAndUser() {
 		// Given
+		String profileUrl1 = "mjProfileUrl.jpg";
+		String profileUrl2 = "jwProfile.jpg";
 
 		// When
-		Optional<String> foundProfile1 = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(
-			user1.getNickname());
-		Optional<String> foundProfile2 = usersProfileRepository.findProfileUrlByNicknameAndThumbnailTrue(
-			user2.getNickname());
-
+		Optional<Profile> foundProfile1 = profileRepository.findProfileByProfileUrl(
+			profileUrl1);
+		Optional<Profile> foundProfile2 = profileRepository.findProfileByProfileUrl("NotExist.jpg");
 		// Then
 		assertThat(foundProfile1).isPresent();
-		assertThat(foundProfile1.get()).isEqualTo("mjProfileUrl.jpg");
+		assertThat(foundProfile1.get().getProfileUrl()).isEqualTo("mjProfileUrl.jpg");
 
 		assertThat(foundProfile2).isNotPresent();
 	}
@@ -88,10 +88,9 @@ class UsersProfileRepositoryTest {
 		return user;
 	}
 
-	private Profile createTestProfile(String url, String name, boolean thumb, ProfileType profileType) {
+	private Profile createTestProfile(String url, String name, ProfileType profileType) {
 		Profile profile = Profile.builder()
 			.profileUrl(url)
-			.thumbnail(thumb)
 			.name(name)
 			.profileType(profileType)
 			.build();
