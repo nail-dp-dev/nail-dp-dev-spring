@@ -15,6 +15,9 @@ public interface TagPostRepository extends JpaRepository<TagPost, Long>, TagPost
 	@Query("select tp from TagPost tp join fetch tp.tag t where tp.post = :post")
 	List<TagPost> findTagPostAndTagByPost(@Param("post") Post post);
 
+	@Query("select tp.tag.id from TagPost tp where tp.post in :posts")
+	List<Long> findTagIdsInPosts(@Param("posts") List<Post> posts);
+
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("delete from TagPost tp where tp.post.id = :postId")
 	void deleteAllByPostId(@Param("postId") Long postId);

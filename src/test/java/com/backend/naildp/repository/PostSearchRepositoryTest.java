@@ -476,6 +476,7 @@ public class PostSearchRepositoryTest {
 		);
 	}
 
+	@DisplayName("사용자 맞춤형 게시물 조회 테스트")
 	@Test
 	void findForYouPost() {
 		//given
@@ -543,6 +544,69 @@ public class PostSearchRepositoryTest {
 		assertThat(forYouPosts).extracting(Post::getUser)
 			.extracting(User::getNickname)
 			.containsOnly(anotherWriter.getNickname());
+	}
+
+	@DisplayName("PostRepositoryImpl - 사용자 맞춤형 게시물 조회 테스트")
+	@Test
+	void PostRepositoryFindForYouPostsTest() {
+		//given
+		User likeUser = createUserByNickname("likeUser");
+		User postWriter = createUserByNickname("postWriter");
+		User anotherWriter = createUserByNickname("anotherWriter");
+		Tag likeTag1 = createTag("likeTag1");
+		Tag likeTag2 = createTag("likeTag2");
+		Tag likeTag3 = createTag("likeTag3");
+
+		Archive archive = createArchive(likeUser);
+
+		List<Post> posts1 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag1, likeTag2));
+		List<Post> posts2 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag2, likeTag3));
+
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag1));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag2));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag3));
+
+		posts1.forEach(post1 -> em.persist(new PostLike(likeUser, post1)));
+		posts2.forEach(post2 -> em.persist(new ArchivePost(archive, post2)));
+
+		em.flush();
+		em.clear();
+
+		String nickname = likeUser.getNickname();
+
+		//when
+		List<Post> likedPosts = queryFactory
+			.select(post)
+			.from(post).join(post.postLikes, postLike).fetchJoin()
+			.where(postLike.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		List<Post> savedPosts = queryFactory
+			.select(archivePost.post)
+			.from(archivePost)
+			.where(archivePost.archive.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		likedPosts.addAll(savedPosts);
+
+		List<Long> tagIdsInLikedPosts = queryFactory
+			.select(tagPost.tag.id)
+			.from(tagPost)
+			.where(tagPost.post.in(likedPosts))
+			.distinct()
+			.fetch();
+
+		Slice<Post> forYouPostSlice = postRepository.findForYouPostSlice(nickname, null, tagIdsInLikedPosts,
+			PageRequest.of(0, 10));
+
+		//then
+		assertThat(forYouPostSlice).hasSize(5);
+		assertThat(forYouPostSlice).containsAll(likedPosts);
+		assertThat(forYouPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.containsOnly(postWriter.getNickname(), anotherWriter.getNickname());
 	}
 
 	private Archive createArchive(User likeUser) {
@@ -687,6 +751,7 @@ public class PostSearchRepositoryTest {
 			.nickname(nickname)
 			.phoneNumber("pn")
 			.agreement(true)
+			.thumbnailUrl("default")
 			.role(UserRole.USER)
 			.build();
 		em.persist(user);
