@@ -45,18 +45,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		Map<String, Object> attributes = oAuth2User.getAttributes();
 		System.out.println("OAuth2 User Attributes: " + attributes);
 
-		if (registrationId.equals("kakao")) {
-			oAuth2UserInfo = new KakaoOAuth2UserInfo(attributes);
-
-		} else if (registrationId.equals("google")) {
-			oAuth2UserInfo = new GoogleOAuth2UserInfo(attributes);
-		} else if (registrationId.equals("naver")) {
-			oAuth2UserInfo = new NaverOAuth2UserInfo(attributes);
-		} else {
-			System.out.println("지원하지않음.");
-			throw new OAuth2AuthenticationException("지원하지 않는 소셜로그인입니다.");
+		switch (registrationId) {
+			case "kakao" -> oAuth2UserInfo = new KakaoOAuth2UserInfo(attributes);
+			case "google" -> oAuth2UserInfo = new GoogleOAuth2UserInfo(attributes);
+			case "naver" -> oAuth2UserInfo = new NaverOAuth2UserInfo(attributes);
+			default -> {
+				System.out.println("지원하지않음.");
+				throw new OAuth2AuthenticationException("지원하지 않는 소셜로그인입니다.");
+			}
 		}
-
 		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
 			oAuth2UserInfo.getProvider()).orElse(null);
 
@@ -69,7 +66,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		} else {
 			cookieUtil.deleteCookie("userInfo", request, response);
 			return new UserDetailsImpl(socialUser.getUser(), oAuth2User.getAttributes());
-
 		}
 	}
 }
