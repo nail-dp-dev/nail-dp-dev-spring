@@ -134,7 +134,7 @@ public class WebSecurityConfig {
 
 		http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/")
 			.permitAll()
-			// .requestMatchers("/ws-stomp/**").permitAll()  // WebSocket 엔드포인트 예외 처리
+			.requestMatchers("/ws-stomp/**").permitAll()  // WebSocket 엔드포인트 예외 처리
 			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 			.requestMatchers("/api/home").permitAll()
