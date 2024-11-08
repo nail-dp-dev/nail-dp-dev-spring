@@ -102,8 +102,8 @@ public class WebSecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 
-		configuration.addAllowedOrigin("http://127.0.0.1:3000");
 		configuration.addAllowedOrigin("http://localhost:3000");
+		configuration.addAllowedOrigin("https://localhost:3000");
 		configuration.addAllowedOrigin(domain + ":3000");
 		configuration.addAllowedOrigin(domain);
 
@@ -134,6 +134,7 @@ public class WebSecurityConfig {
 
 		http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/")
 			.permitAll()
+			// .requestMatchers("/ws-stomp/**").permitAll()  // WebSocket 엔드포인트 예외 처리
 			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
 			.requestMatchers("/api/home").permitAll()
