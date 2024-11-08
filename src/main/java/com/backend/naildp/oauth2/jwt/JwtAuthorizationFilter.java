@@ -120,6 +120,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		// 새로운 AccessToken 발급
 		log.info("새로운 Access Token 발급");
 		String newAccessToken = jwtUtil.createToken(findUser.getNickname(), findUser.getRole());
+		jwtUtil.addJwtToCookie(newAccessToken, "Authorization", res); // 쿠키에 새 토큰 저장
+
 	}
 
 	// 인증 처리

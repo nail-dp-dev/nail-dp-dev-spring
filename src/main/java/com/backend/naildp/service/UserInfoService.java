@@ -136,7 +136,7 @@ public class UserInfoService {
 			s3Service.deleteFile(oldestProfile.getProfileUrl());
 		}
 
-		FileRequestDto fileRequestDto = s3Service.saveFile(file);
+		FileRequestDto fileRequestDto = s3Service.saveFile(file, false);
 
 		Profile newProfile = Profile.builder()
 			.profileUrl(fileRequestDto.getFileUrl())
