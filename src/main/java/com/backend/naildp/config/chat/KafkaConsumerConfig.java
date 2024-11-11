@@ -23,7 +23,8 @@ import com.backend.naildp.dto.chat.TempRoomSwitchDto;
 public class KafkaConsumerConfig {
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String bootstrapAddress;
-	@Value("${spring.kafka.chat-consumer.group-id}")
+
+	@Value("${KAFKA_GROUP_ID:default-group}")
 	private String groupId;
 
 	@Bean
