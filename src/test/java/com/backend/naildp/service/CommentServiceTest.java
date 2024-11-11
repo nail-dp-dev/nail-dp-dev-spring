@@ -184,7 +184,13 @@ class CommentServiceTest {
 	}
 
 	private User createUser(String postWriter) {
-		User user = User.builder().nickname(postWriter).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		User user = User.builder()
+			.nickname(postWriter)
+			.phoneNumber("pn")
+			.agreement(true)
+			.thumbnailUrl("")
+			.role(UserRole.USER)
+			.build();
 		em.persist(user);
 		return user;
 	}

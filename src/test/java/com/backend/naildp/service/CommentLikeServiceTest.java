@@ -208,7 +208,13 @@ public class CommentLikeServiceTest {
 	}
 
 	private User createUser(String nickname) {
-		User user = User.builder().nickname(nickname).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("pn")
+			.agreement(true)
+			.role(UserRole.USER)
+			.thumbnailUrl("")
+			.build();
 		em.persist(user);
 		return user;
 	}
