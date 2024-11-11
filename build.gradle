@@ -83,18 +83,18 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// QueryDSL 설정 추가
-sourceSets {
-    main {
-        java {
-            srcDirs += 'src/main/generated'
-        }
-    }
-}
-
-tasks.withType(JavaCompile) {
-    options.annotationProcessorGeneratedSourcesDirectory = file("src/main/generated")
-}
+//// QueryDSL 설정 추가
+//sourceSets {
+//    main {
+//        java {
+//            srcDirs += 'src/main/generated'
+//        }
+//    }
+//}
+//
+//tasks.withType(JavaCompile) {
+//    options.annotationProcessorGeneratedSourcesDirectory = file("src/main/generated")
+//}
 
 clean {
     delete file('src/main/generated')
