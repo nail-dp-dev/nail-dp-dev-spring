@@ -20,7 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws-stomp")
-			.setAllowedOriginPatterns("*")
+			.setAllowedOriginPatterns("https://www.naildp.com", "http://localhost:3000")
 			.addInterceptors(handshakeInterceptor)
 			.withSockJS()
 			.setWebSocketEnabled(true);
