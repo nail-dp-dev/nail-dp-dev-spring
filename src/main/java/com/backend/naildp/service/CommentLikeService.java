@@ -1,15 +1,15 @@
 package com.backend.naildp.service;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
+import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
@@ -32,6 +32,8 @@ public class CommentLikeService {
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
 	private final CommentLikeRepository commentLikeRepository;
+	private final NotificationService notificationService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long likeComment(Long postId, Long commentId, String username) {
@@ -65,7 +67,17 @@ public class CommentLikeService {
 		User user = userRepository.findByNickname(username)
 			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		return commentLikeRepository.saveAndFlush(new CommentLike(user, findComment)).getId();
+		CommentLike commentLike = commentLikeRepository.saveAndFlush(new CommentLike(user, findComment));
+
+		if (findComment.notRegisteredBy(user)) {
+			Notification savedNotification = notificationService.save(Notification.fromCommentLike(commentLike));
+
+			if (savedNotification.getReceiver().allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
+		}
+
+		return commentLike.getId();
 	}
 
 
