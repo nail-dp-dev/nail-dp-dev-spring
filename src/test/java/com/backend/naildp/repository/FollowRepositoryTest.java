@@ -218,6 +218,7 @@ public class FollowRepositoryTest {
 			.role(UserRole.USER)
 			.phoneNumber("")
 			.agreement(true)
+			.thumbnailUrl("")
 			.build();
 		em.persist(user);
 		return user;
