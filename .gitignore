@@ -39,3 +39,4 @@ out/
 application-testdb.properties
 .DS_Store
 application-secret.properties
+application-test.properties
