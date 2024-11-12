@@ -40,7 +40,7 @@ public class NotificationService {
 		Notification savedNotification = notificationRepository.save(followNotification);
 
 		//팔로우 푸시 알림 전송
-		sseService.sendFollowPush(followerUser.getNickname(), savedNotification);
+		sseService.sendFollowPush(receiver.getNickname(), savedNotification);
 
 		return savedNotification.getId();
 	}
