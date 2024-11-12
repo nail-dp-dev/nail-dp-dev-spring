@@ -190,7 +190,7 @@ class CommentServiceTest {
 			.nickname(postWriter)
 			.phoneNumber("pn")
 			.agreement(true)
-			.thumbnailUrl("")
+			.thumbnailUrl("default")
 			.role(UserRole.USER)
 			.build();
 		em.persist(user);

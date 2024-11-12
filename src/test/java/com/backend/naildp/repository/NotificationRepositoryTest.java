@@ -90,7 +90,13 @@ class NotificationRepositoryTest {
 	}
 
 	private User createUserByNickname(String receiver) {
-		User user = User.builder().nickname(receiver).phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User user = User.builder()
+			.nickname(receiver)
+			.phoneNumber("")
+			.agreement(true)
+			.role(UserRole.USER)
+			.thumbnailUrl("")
+			.build();
 		em.persist(user);
 		return user;
 	}

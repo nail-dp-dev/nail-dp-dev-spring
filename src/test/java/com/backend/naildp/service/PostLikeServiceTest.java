@@ -171,7 +171,13 @@ class PostLikeServiceTest {
 	}
 
 	private User createTestMember(String nickname) {
-		User user = User.builder().nickname(nickname).phoneNumber("").agreement(true).role(UserRole.USER).build();
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("")
+			.agreement(true)
+			.thumbnailUrl("")
+			.role(UserRole.USER)
+			.build();
 		return userRepository.save(user);
 	}
 
