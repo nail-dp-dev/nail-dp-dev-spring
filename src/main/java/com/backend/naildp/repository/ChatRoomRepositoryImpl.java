@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -27,7 +28,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 	private final ChatRoomStatusService chatRoomStatusService;
 
-	public ChatRoomRepositoryImpl(EntityManager em, ChatRoomStatusService chatRoomStatusService) {
+	public ChatRoomRepositoryImpl(EntityManager em, @Lazy ChatRoomStatusService chatRoomStatusService) {
 		this.queryFactory = new JPAQueryFactory(em);
 		this.chatRoomStatusService = chatRoomStatusService;
 	}

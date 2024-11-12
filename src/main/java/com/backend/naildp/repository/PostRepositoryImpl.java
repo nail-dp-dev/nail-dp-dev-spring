@@ -117,6 +117,34 @@ public class PostRepositoryImpl implements PostSearchRepository {
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
+	@Override
+	public Slice<Post> findForYouPostSlice(String username, Long cursorPostId, List<Long> tagIdsInPosts, Pageable pageable) {
+		// 자정부터 현재 시간까지 게시물의 좋아요 개수 추출 서브쿼리
+		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate
+					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
+
+		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
+
+		// 특정 tag를 가지면서 당일 좋아요 개수가 cursorPost보다 작은 게시물 조회
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post).join(post.tagPosts, tagPost)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(tagPost.tag.id.in(tagIdsInPosts))
+				.and(hasLessLikeThanCursorPost(cursorPostId))
+			)
+			.orderBy(orderSpecifier, post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
 	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
 		if (cursorPostId == null) {
 			return null;

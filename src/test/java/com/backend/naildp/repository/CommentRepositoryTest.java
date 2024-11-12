@@ -33,20 +33,10 @@ class CommentRepositoryTest {
 	@Test
 	void 댓글_좋아요_개수_세기() {
 		//given
-		User user = User.builder().nickname("nickname").phoneNumber("pn").agreement(true).role(UserRole.USER).build();
-		User commentLiker = User.builder()
-			.nickname("commentLiker")
-			.phoneNumber("pn")
-			.agreement(true)
-			.role(UserRole.USER)
-			.build();
-		Post post = Post.builder().user(user).postContent("content").boundary(Boundary.ALL).tempSave(false).build();
-		Comment comment = new Comment(user, post, "comment");
-
-		em.persist(user);
-		em.persist(commentLiker);
-		em.persist(post);
-		em.persist(comment);
+		User user = createUser("nickname");
+		User commentLiker = createUser("commentLiker");
+		Post post = createPost(user);
+		Comment comment = registerComment(user, post);
 
 		int likeCnt = 5;
 		for (int i = 0; i < likeCnt; i++) {
@@ -61,5 +51,29 @@ class CommentRepositoryTest {
 
 		//then
 		assertEquals(likeCnt, commentLikeCount);
+	}
+
+	private Comment registerComment(User user, Post post) {
+		Comment comment = new Comment(user, post, "comment");
+		em.persist(comment);
+		return comment;
+	}
+
+	private Post createPost(User user) {
+		Post post = Post.builder().user(user).postContent("content").boundary(Boundary.ALL).tempSave(false).build();
+		em.persist(post);
+		return post;
+	}
+
+	private User createUser(String nickname) {
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("pn")
+			.agreement(true)
+			.role(UserRole.USER)
+			.thumbnailUrl("")
+			.build();
+		em.persist(user);
+		return user;
 	}
 }

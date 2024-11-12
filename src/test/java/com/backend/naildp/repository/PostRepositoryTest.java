@@ -54,9 +54,9 @@ class PostRepositoryTest {
 
 	@BeforeEach
 	void setup() {
-		mj = createTestMember("x@naver.com", "mj", "0101111", 1L);
-		jw = createTestMember("y@naver.com", "jw", "0102222", 2L);
-		gw = createTestMember("z@naver.com", "gw", "0103333", 3L);
+		mj = createTestMember("mj");
+		jw = createTestMember( "jw");
+		gw = createTestMember( "gw");
 
 		createFollow(jw, mj);
 
@@ -226,9 +226,14 @@ class PostRepositoryTest {
 		}
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLoginId) {
-		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
-		User user = new User(loginRequestDto, UserRole.USER);
+	private User createTestMember(String nickname) {
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("pn")
+			.agreement(true)
+			.thumbnailUrl("")
+			.role(UserRole.USER)
+			.build();
 		em.persist(user);
 		return user;
 	}
