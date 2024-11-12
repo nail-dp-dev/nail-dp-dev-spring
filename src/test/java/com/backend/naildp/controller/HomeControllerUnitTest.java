@@ -12,8 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -22,17 +21,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.service.post.PostInfoContext;
 import com.backend.naildp.service.post.PostInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(controllers = HomeController.class)
 class HomeControllerUnitTest {
 
 	@Autowired
@@ -40,6 +40,9 @@ class HomeControllerUnitTest {
 
 	@MockBean
 	PostInfoService postInfoService;
+
+	@MockBean
+	PostInfoContext postInfoContext;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -54,16 +57,20 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.homePosts(eq("NEW"), anyInt(), eq(-1L), eq("testUser"))).thenReturn(postSummaryResponse);
+		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
 
-		//when & then
-		mvc.perform(get("/api/home").param("choice", "NEW"))
-			.andExpect(status().isOk())
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().json(jsonResponse))
-			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data.postSummaryList.last").value(false))
+		//when
+		ResultActions resultAction = mvc.perform(get("/api/home")
+			.param("choice", "new")
+			.param("size", "10"));
+
+		//then
+		resultAction
+			.andExpectAll(
+				status().isOk(),
+				content().contentType(MediaType.APPLICATION_JSON),
+				content().json(jsonResponse)
+			)
 			.andDo(print());
 	}
 
@@ -81,15 +88,19 @@ class HomeControllerUnitTest {
 		paramMap.add("choice", "NEW");
 		paramMap.add("size", "20");
 		paramMap.add("cursorPostId", "10");
-		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq("testUser"))).thenReturn(postSummaryResponse);
 
-		mvc.perform((get("/api/home").queryParams(paramMap)))
-			.andExpect(status().isOk())
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().json(jsonResponse))
-			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
-			.andExpect(jsonPath("$.data.postSummaryList.last").value(true))
+		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
+
+		//when
+		ResultActions resultActions = mvc.perform((get("/api/home").queryParams(paramMap)));
+
+		//then
+		resultActions
+			.andExpectAll(
+				status().isOk(),
+				content().contentType(MediaType.APPLICATION_JSON),
+				content().json(jsonResponse)
+			)
 			.andDo(print());
 	}
 
@@ -102,7 +113,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
 
 		// when & then
 		mvc.perform((get("/api/home").param("choice", "NEW")))
@@ -124,7 +135,7 @@ class HomeControllerUnitTest {
 			2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
 
 		// when & then
 		mvc.perform((get("/api/home").param("choice", "NEW")))
@@ -139,21 +150,26 @@ class HomeControllerUnitTest {
 
 	@DisplayName("최신 게시글 조회 API 테스트 - 게시글이 존재하지 않을때")
 	@Test
+	@WithMockUser(username = "testUser", roles = {"USER"})
 	void newPostsApiExceptionTest() throws Exception {
 		//given
 		PostSummaryResponse postSummaryResponse = PostSummaryResponse.createEmptyResponse();
 		ApiResponse<?> apiResponse = ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000);
 		String jsonResponse = objectMapper.writeValueAsString(apiResponse);
 
-		when(postInfoService.homePosts(eq("NEW"), anyInt(), anyLong(), eq(""))).thenReturn(postSummaryResponse);
+		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
 
 		//when & then
-		mvc.perform(get("/api/home").param("choice", "NEW"))
-			.andExpect(status().isOk())
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(content().json(jsonResponse))
-			.andExpect(jsonPath("$.message").value(apiResponse.getMessage()))
-			.andExpect(jsonPath("$.code").value(apiResponse.getCode()))
+		ResultActions perform = mvc.perform(get("/api/home")
+			.param("choice", "new")
+			.param("size", "20"));
+
+		perform
+			.andExpectAll(
+				status().isOk(),
+				content().contentType(MediaType.APPLICATION_JSON),
+				content().json(jsonResponse)
+			)
 			.andDo(print());
 	}
 

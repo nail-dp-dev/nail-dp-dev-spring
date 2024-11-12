@@ -19,9 +19,6 @@ public class PostInfoContext {
 	private final Map<String, PostStrategy> postStrategyMap;
 
 	public PostSummaryResponse posts(String choice, int size, Long cursorPostId) {
-		for (Map.Entry<String, PostStrategy> entry : postStrategyMap.entrySet()) {
-			System.out.println("key = " + entry.getKey() + ", value = " + entry.getValue());
-		}
 		PostStrategy postStrategy = postStrategyMap.get(choice);
 		return postStrategy.homePosts(size, cursorPostId, getUsernameFromAuthentication());
 	}

@@ -60,4 +60,8 @@ public class Comment extends BaseEntity {
 	public boolean notRegisteredBy(String username) {
 		return !user.equalsNickname(username);
 	}
+
+	public boolean notRegisteredBy(User user) {
+		return !this.user.equals(user);
+	}
 }
