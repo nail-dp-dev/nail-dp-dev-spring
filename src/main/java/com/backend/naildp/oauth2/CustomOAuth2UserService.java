@@ -13,6 +13,7 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.dto.auth.SocialUserInfoDto;
+import com.backend.naildp.entity.SocialLogin;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.SignUpRequiredException;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
@@ -42,7 +43,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
 		OAuth2User oAuth2User = super.loadUser(userRequest);
-		OAuth2UserInfo oAuth2UserInfo = null;
+		OAuth2UserInfo oAuth2UserInfo;
 		String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
 		Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -60,10 +61,26 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication != null && authentication.isAuthenticated()) {
-			User currentUser = ((UserDetailsImpl) authentication.getPrincipal()).getUser();
-			return
+			User currentUser = ((UserDetailsImpl)authentication.getPrincipal()).getUser();
+			return connectSocialAccount(currentUser, oAuth2UserInfo, oAuth2User);
+		} else {
+			return registerOrLoginSocialUser(oAuth2UserInfo, oAuth2User);
 		}
 
+	}
+
+	private OAuth2User connectSocialAccount(User currentUser, OAuth2UserInfo oAuth2UserInfo, OAuth2User oAuth2User) {
+		SocialLogin socialLogin = new SocialLogin(oAuth2UserInfo.getProviderId(), oAuth2UserInfo.getProvider(),
+			oAuth2UserInfo.getEmail(), currentUser);
+		socialLoginRepository.save(socialLogin);
+
+		log.info("소셜 계정 연동 성공: {} -> {}", oAuth2UserInfo.getProvider(), currentUser.getNickname());
+
+		return new UserDetailsImpl(currentUser, oAuth2User.getAttributes());
+
+	}
+
+	private OAuth2User registerOrLoginSocialUser(OAuth2UserInfo oAuth2UserInfo, OAuth2User oAuth2User) {
 		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
 			oAuth2UserInfo.getProvider()).orElse(null);
 
@@ -72,26 +89,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			SocialUserInfoDto socialUserInfoDto = new SocialUserInfoDto(oAuth2UserInfo);
 			cookieUtil.setUserInfoCookie(response, socialUserInfoDto);
 			throw new SignUpRequiredException("회원가입이 필요합니다.");
-
 		} else {
 			cookieUtil.deleteCookie("userInfo", request, response);
 			return new UserDetailsImpl(socialUser.getUser(), oAuth2User.getAttributes());
-		}
-	}
-	private OAuth2User registerOrLoginSocialUser(OAuth2UserInfo oAuth2UserInfo) {
-		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
-			oAuth2UserInfo.getProvider()).orElse(null);
-
-		if (socialUser == null) {
-			// 연동된 계정이 없으면 회원가입이 필요함 -> 회원가입 유도
-			log.info("userInfo 쿠키 생성");
-			SocialUserInfoDto socialUserInfoDto = new SocialUserInfoDto(oAuth2UserInfo);
-			cookieUtil.setUserInfoCookie(response, socialUserInfoDto);
-			throw new SignUpRequiredException("회원가입이 필요합니다.");
-		} else {
-			// 기존 소셜 계정이 있으면 로그인 처리
-			cookieUtil.deleteCookie("userInfo", request, response);
-			return new UserDetailsImpl(socialUser.getUser(), oAuth2UserInfo.getAttributes());
 		}
 	}
 }
