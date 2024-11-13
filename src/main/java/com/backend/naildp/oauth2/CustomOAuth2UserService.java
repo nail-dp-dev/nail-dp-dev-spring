@@ -2,6 +2,8 @@ package com.backend.naildp.oauth2;
 
 import java.util.Map;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -11,6 +13,7 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.dto.auth.SocialUserInfoDto;
+import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.SignUpRequiredException;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
@@ -54,6 +57,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 				throw new OAuth2AuthenticationException("지원하지 않는 소셜로그인입니다.");
 			}
 		}
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.isAuthenticated()) {
+			User currentUser = ((UserDetailsImpl) authentication.getPrincipal()).getUser();
+			return
+		}
+
 		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
 			oAuth2UserInfo.getProvider()).orElse(null);
 
@@ -66,6 +76,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		} else {
 			cookieUtil.deleteCookie("userInfo", request, response);
 			return new UserDetailsImpl(socialUser.getUser(), oAuth2User.getAttributes());
+		}
+	}
+	private OAuth2User registerOrLoginSocialUser(OAuth2UserInfo oAuth2UserInfo) {
+		UserMapping socialUser = socialLoginRepository.findBySocialIdAndPlatform(oAuth2UserInfo.getProviderId(),
+			oAuth2UserInfo.getProvider()).orElse(null);
+
+		if (socialUser == null) {
+			// 연동된 계정이 없으면 회원가입이 필요함 -> 회원가입 유도
+			log.info("userInfo 쿠키 생성");
+			SocialUserInfoDto socialUserInfoDto = new SocialUserInfoDto(oAuth2UserInfo);
+			cookieUtil.setUserInfoCookie(response, socialUserInfoDto);
+			throw new SignUpRequiredException("회원가입이 필요합니다.");
+		} else {
+			// 기존 소셜 계정이 있으면 로그인 처리
+			cookieUtil.deleteCookie("userInfo", request, response);
+			return new UserDetailsImpl(socialUser.getUser(), oAuth2UserInfo.getAttributes());
 		}
 	}
 }
