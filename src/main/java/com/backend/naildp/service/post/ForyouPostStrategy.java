@@ -36,6 +36,10 @@ public class ForyouPostStrategy implements PostStrategy {
 		Slice<Post> forYouPostSlice = postRepository.findForYouPostSlice(username, cursorPostId, tagIdsInPosts,
 			PageRequest.of(0, size));
 
+		if (forYouPostSlice.isEmpty()) {
+			return PostSummaryResponse.createEmptyResponse();
+		}
+
 		return new PostSummaryResponse(forYouPostSlice, savedPostsInArchive, likedPosts);
 	}
 

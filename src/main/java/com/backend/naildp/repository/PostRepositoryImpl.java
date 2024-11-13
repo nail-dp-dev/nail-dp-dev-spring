@@ -135,7 +135,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.from(post).join(post.tagPosts, tagPost)
 			.where(post.tempSave.isFalse()
 				.and(isAllowedToViewPosts(username))
-				.and(tagPost.tag.id.in(tagIdsInPosts))
+				.and(isContainedInPost(tagIdsInPosts))
 				.and(hasLessLikeThanCursorPost(cursorPostId))
 			)
 			.orderBy(orderSpecifier, post.createdDate.desc())
@@ -143,6 +143,13 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.fetch();
 
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
+	private BooleanExpression isContainedInPost(List<Long> tagIdsInPosts) {
+		if (tagIdsInPosts.isEmpty()) {
+			return null;
+		}
+		return tagPost.tag.id.in(tagIdsInPosts);
 	}
 
 	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {

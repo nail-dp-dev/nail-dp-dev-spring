@@ -35,34 +35,6 @@ public class PostInfoService {
 	private final PostLikeRepository postLikeRepository;
 	private final FollowRepository followRepository;
 
-	public PostSummaryResponse homePosts(String choice, int size, long cursorPostId, String nickname) {
-		PageRequest pageRequest = createPageRequest(size, "id");
-
-		if (!StringUtils.hasText(nickname)) {
-			log.info("익명사용자 응답");
-			Slice<Post> recentPosts = getRecentOpenedPosts(cursorPostId, pageRequest);
-
-			return recentPosts.isEmpty() ? PostSummaryResponse.createEmptyResponse() :
-				PostSummaryResponse.createForAnonymous(recentPosts);
-		}
-
-		List<User> followingUser = followRepository.findFollowingUserByFollowerNickname(nickname);
-		Slice<Post> recentPosts = getRecentPosts(cursorPostId, followingUser, nickname, pageRequest);
-
-		if (recentPosts.isEmpty()) {
-			log.info("최신 게시물이 없습니다.");
-			return PostSummaryResponse.createEmptyResponse();
-		}
-
-		List<ArchivePost> archivePosts = archivePostRepository.findAllByArchiveUserNickname(nickname);
-		List<Post> savedPosts = archivePosts.stream().map(ArchivePost::getPost).collect(Collectors.toList());
-
-		List<PostLike> postLikes = postLikeRepository.findAllByUserNickname(nickname);
-		List<Post> likedPosts = postLikes.stream().map(PostLike::getPost).collect(Collectors.toList());
-
-		return new PostSummaryResponse(recentPosts, savedPosts, likedPosts);
-	}
-
 	public PostSummaryResponse findLikedPost(String nickname, int pageSize, long cursorId) {
 		PageRequest pageRequest = createPageRequest(pageSize, "createdDate");
 
@@ -84,8 +56,8 @@ public class PostInfoService {
 		return PostSummaryResponse.createLikedPostSummary(likedPosts, savedPosts);
 	}
 
-	private PageRequest createPageRequest(int size, String id) {
-		return PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, id));
+	private PageRequest createPageRequest(int size, String property) {
+		return PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, property));
 	}
 
 	private Slice<PostLike> getOpenedPostLikes(long cursorPostLikeId, String nickname, List<User> followingUsers,
@@ -95,20 +67,6 @@ public class PostInfoService {
 		}
 		return postLikeRepository.findPostLikesByIdAndFollowing(nickname, cursorPostLikeId, followingUsers,
 			pageRequest);
-	}
-
-	private Slice<Post> getRecentOpenedPosts(long cursorPostId, PageRequest pageRequest) {
-		if (isFirstPage(cursorPostId)) {
-			return postRepository.findPostsByBoundaryAndTempSaveFalse(Boundary.ALL, pageRequest);
-		}
-		return postRepository.findPostsByIdBeforeAndBoundaryAndTempSaveFalse(cursorPostId, Boundary.ALL, pageRequest);
-	}
-
-	private Slice<Post> getRecentPosts(long cursorPostId, List<User> followingUser, String username, PageRequest pageRequest) {
-		if (isFirstPage(cursorPostId)) {
-			return postRepository.findRecentPostsByFollowing(followingUser, username, pageRequest);
-		}
-		return postRepository.findRecentPostsByIdAndFollowing(cursorPostId, followingUser, username, pageRequest);
 	}
 
 	private boolean isFirstPage(long cursorPostId) {
