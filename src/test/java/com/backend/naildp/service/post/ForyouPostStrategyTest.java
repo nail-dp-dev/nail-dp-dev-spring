@@ -3,13 +3,13 @@ package com.backend.naildp.service.post;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Slice;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +26,7 @@ import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.repository.PostRepository;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +61,7 @@ class ForyouPostStrategyTest {
 		Post post = createPostOfUser(postWriter, false, Boundary.ALL);
 		addTagToPost(List.of(tag), post);
 		Post postContainingSelectedTags = createPostOfUser(postWriter, false, Boundary.ALL);
-		addTagToPost(List.of(likedTag, savedTag), post);
+		addTagToPost(List.of(likedTag, savedTag), postContainingSelectedTags);
 
 		em.persist(new PostLike(user, postContainingLikedTag));
 		em.persist(new ArchivePost(archive, postContainingSavedTag));
@@ -78,10 +79,26 @@ class ForyouPostStrategyTest {
 
 		//when
 		PostSummaryResponse response = foryouPostStrategy.homePosts(size, null, username);
-		Slice<?> postSummaryList = response.getPostSummaryList();
 
 		//then
-		assertThat(postSummaryList).hasSize(3);
+		List<HomePostResponse> homePostResponses = (List<HomePostResponse>)response.getPostSummaryList().getContent();
+		List<Long> findPostIds = homePostResponses.stream().map(HomePostResponse::getPostId).collect(Collectors.toList());
+		List<Post> posts = findPostsById(findPostIds);
+		List<String> findTagNames = posts.stream()
+			.flatMap(post -> post.getTagPosts().stream())
+			.map(tagPost -> tagPost.getTag().getName())
+			.distinct()
+			.toList();
+
+		assertThat(homePostResponses).hasSize(3);
+		assertThat(findTagNames).containsExactlyInAnyOrder("좋아요태그", "저장태그");
+		assertThat(findTagNames).doesNotContain("그냥 태그");
+	}
+
+	private List<Post> findPostsById(List<Long> postIds) {
+		return em.createQuery("select p from Post p where p.id in :ids", Post.class)
+			.setParameter("ids", postIds)
+			.getResultList();
 	}
 
 	private User createUserWithNickname(String nickname) {
@@ -132,12 +149,6 @@ class ForyouPostStrategyTest {
 				post.addTagPost(tagPost);
 				em.persist(tagPost);
 			});
-	}
-
-	private List<Tag> findTagsByTagNamesIn(List<String> tagNames) {
-		return em.createQuery("select t from Tag t where t.name in :tagNames", Tag.class)
-			.setParameter("tagNames", tagNames)
-			.getResultList();
 	}
 
 	private Tag createTag(String tagName) {

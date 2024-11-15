@@ -140,6 +140,7 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			)
 			.orderBy(orderSpecifier, post.createdDate.desc())
 			.limit(pageable.getPageSize() + 1)
+			.distinct()
 			.fetch();
 
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
