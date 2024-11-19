@@ -1,7 +1,5 @@
 package com.backend.naildp.service;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,24 +35,22 @@ public class CommentLikeService {
 
 		postAccessValidator.isAvailablePost(post, username);
 
-		Optional<CommentLike> commentLikeOptional = commentLikeRepository.findCommentLikeByCommentIdAndUserNickname(
-			commentId, username);
+		CommentLike savedCommentLike = commentLikeRepository.findCommentLikeByCommentIdAndUserNickname(commentId, username)
+			.orElseGet(() -> {
+				Comment findComment = commentRepository.findById(commentId)
+					.orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		if (commentLikeOptional.isPresent()) {
-			return commentLikeOptional.get().getId();
-		}
+				User user = userRepository.findByNickname(username)
+					.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		Comment findComment = commentRepository.findById(commentId)
-			.orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+				CommentLike commentLike = commentLikeRepository.saveAndFlush(new CommentLike(user, findComment));
 
-		User user = userRepository.findByNickname(username)
-			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+				notificationManager.handleNotificationFromCommentLike(findComment, user, commentLike);
 
-		CommentLike commentLike = commentLikeRepository.saveAndFlush(new CommentLike(user, findComment));
+				return commentLike;
+			});
 
-		notificationManager.handleNotificationFromCommentLike(findComment, user, commentLike);
-
-		return commentLike.getId();
+		return savedCommentLike.getId();
 	}
 
 	@Transactional
