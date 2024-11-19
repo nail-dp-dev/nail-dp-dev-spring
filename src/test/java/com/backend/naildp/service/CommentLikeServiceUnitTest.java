@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,14 +45,16 @@ class CommentLikeServiceUnitTest {
 	CommentRepository commentRepository;
 	@Mock
 	CommentLikeRepository commentLikeRepository;
+	@Mock
+	NotificationManager notificationManager;
 
 	@DisplayName("임시저장 게시물에 접근할 때 예외 테스트")
 	@Test
 	void accessToTempSavePostException() {
 		User user = createUser("nickname");
-		Post post = createPost(user, true, Boundary.ALL);
+		Post tempSavedPost = createPost(user, true, Boundary.ALL);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(tempSavedPost));
 
 		//when
 		CustomException exception = assertThrows(CustomException.class,
@@ -69,9 +70,9 @@ class CommentLikeServiceUnitTest {
 	void accessToPrivatePostException() {
 		String wrongNickname = "wrongNickname";
 		User user = createUser("nickname");
-		Post post = createPost(user, false, Boundary.NONE);
+		Post postVisibleToWriter = createPost(user, false, Boundary.NONE);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(postVisibleToWriter));
 
 		//when
 		CustomException exception = assertThrows(CustomException.class,
@@ -87,9 +88,9 @@ class CommentLikeServiceUnitTest {
 	void accessToFollowPostException() {
 		String notFollowNickname = "notFollowNickname";
 		User user = createUser("nickname");
-		Post post = createPost(user, false, Boundary.FOLLOW);
+		Post postVisibleToFollower = createPost(user, false, Boundary.FOLLOW);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(postVisibleToFollower));
 		when(followRepository.existsByFollowerNicknameAndFollowing(eq(notFollowNickname), eq(user))).thenReturn(false);
 
 		//when
@@ -117,6 +118,8 @@ class CommentLikeServiceUnitTest {
 		when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
 		when(userRepository.findByNickname(anyString())).thenReturn(Optional.of(writer));
 		when(commentLikeRepository.saveAndFlush(any(CommentLike.class))).thenReturn(commentLike);
+		doNothing().when(notificationManager)
+			.handleNotificationFromCommentLike(any(Comment.class), any(User.class), any(CommentLike.class));
 
 		//when
 		Long commentLikeId = commentLikeService.likeComment(1L, 2L, writer.getNickname());
