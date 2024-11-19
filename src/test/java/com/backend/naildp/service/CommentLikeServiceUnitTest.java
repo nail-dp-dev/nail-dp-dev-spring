@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +19,6 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
-import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
@@ -48,7 +46,7 @@ class CommentLikeServiceUnitTest {
 	@Mock
 	CommentLikeRepository commentLikeRepository;
 	@Mock
-	NotificationService notificationService;
+	NotificationManager notificationManager;
 
 	@DisplayName("임시저장 게시물에 접근할 때 예외 테스트")
 	@Test
@@ -113,7 +111,6 @@ class CommentLikeServiceUnitTest {
 		Post post = createPost(writer, false, boundary);
 		Comment comment = new Comment(commenter, post, "comment");
 		CommentLike commentLike = new CommentLike(writer, comment);
-		Notification notification = Notification.fromCommentLike(commentLike);
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
 		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), eq(writer)))
@@ -121,7 +118,8 @@ class CommentLikeServiceUnitTest {
 		when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
 		when(userRepository.findByNickname(anyString())).thenReturn(Optional.of(writer));
 		when(commentLikeRepository.saveAndFlush(any(CommentLike.class))).thenReturn(commentLike);
-		when(notificationService.save(any(Notification.class))).thenReturn(notification);
+		doNothing().when(notificationManager)
+			.handleNotificationFromCommentLike(any(Comment.class), any(User.class), any(CommentLike.class));
 
 		//when
 		Long commentLikeId = commentLikeService.likeComment(1L, 2L, writer.getNickname());

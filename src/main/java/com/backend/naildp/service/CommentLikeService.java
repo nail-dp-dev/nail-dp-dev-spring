@@ -31,8 +31,9 @@ public class CommentLikeService {
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
 	private final CommentLikeRepository commentLikeRepository;
-	private final NotificationService notificationService;
-	private final ApplicationEventPublisher applicationEventPublisher;
+	private final NotificationManager notificationManager;
+	// private final NotificationService notificationService;
+	// private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long likeComment(Long postId, Long commentId, String username) {
@@ -53,7 +54,8 @@ public class CommentLikeService {
 
 		CommentLike commentLike = commentLikeRepository.saveAndFlush(new CommentLike(user, findComment));
 
-		handleNotificationFromCommentLike(findComment, user, commentLike);
+		// handleNotificationFromCommentLike(findComment, user, commentLike);
+		notificationManager.handleNotificationFromCommentLike(findComment, user, commentLike);
 
 		return commentLike.getId();
 	}
@@ -92,13 +94,13 @@ public class CommentLikeService {
 		}
 	}
 
-	private void handleNotificationFromCommentLike(Comment findComment, User user, CommentLike commentLike) {
-		if (findComment.notRegisteredBy(user)) {
-			Notification savedNotification = notificationService.save(Notification.fromCommentLike(commentLike));
-
-			if (savedNotification.getReceiver().allowsNotificationType(savedNotification.getNotificationType())) {
-				applicationEventPublisher.publishEvent(savedNotification);
-			}
-		}
-	}
+	// private void handleNotificationFromCommentLike(Comment findComment, User user, CommentLike commentLike) {
+	// 	if (findComment.notRegisteredBy(user)) {
+	// 		Notification savedNotification = notificationService.save(Notification.fromCommentLike(commentLike));
+	//
+	// 		if (savedNotification.getReceiver().allowsNotificationType(savedNotification.getNotificationType())) {
+	// 			applicationEventPublisher.publishEvent(savedNotification);
+	// 		}
+	// 	}
+	// }
 }
