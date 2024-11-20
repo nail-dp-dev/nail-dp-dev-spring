@@ -28,4 +28,16 @@ public class NotificationManager {
 			}
 		}
 	}
+
+	public void handleCommentNotification(Comment comment, User postWriter) {
+		if (comment.notRegisteredBy(postWriter)) {
+			Notification savedNotification = notificationService.save(Notification.fromComment(comment));
+
+			User receiver = savedNotification.getReceiver();
+			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
+
+		}
+	}
 }
