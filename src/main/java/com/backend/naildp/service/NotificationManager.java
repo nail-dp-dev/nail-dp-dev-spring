@@ -24,32 +24,32 @@ public class NotificationManager {
 			Notification notificationByCommentLike = Notification.fromCommentLike(commentLike);
 			Notification savedNotification = notificationService.save(notificationByCommentLike);
 
-			User receiver = savedNotification.getReceiver();
-			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
-				applicationEventPublisher.publishEvent(savedNotification);
-			}
+			sendNotificationEvent(savedNotification);
 		}
 	}
 
 	public void handleCommentNotification(Comment comment, User postWriter) {
 		if (comment.notRegisteredBy(postWriter)) {
-			Notification savedNotification = notificationService.save(Notification.fromComment(comment));
+			Notification notificationByRegisteredComment = Notification.fromComment(comment);
+			Notification savedNotification = notificationService.save(notificationByRegisteredComment);
 
-			User receiver = savedNotification.getReceiver();
-			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
-				applicationEventPublisher.publishEvent(savedNotification);
-			}
+			sendNotificationEvent(savedNotification);
 		}
 	}
 
 	public void handlePostLikeNotification(User user, Post post, PostLike postLike) {
 		if (post.notWrittenBy(user)) {
-			Notification savedNotification = notificationService.save(Notification.fromPostLike(postLike));
+			Notification notificationByPostLike = Notification.fromPostLike(postLike);
+			Notification savedNotification = notificationService.save(notificationByPostLike);
 
-			User receiver = savedNotification.getReceiver();
-			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
-				applicationEventPublisher.publishEvent(savedNotification);
-			}
+			sendNotificationEvent(savedNotification);
+		}
+	}
+
+	private void sendNotificationEvent(Notification notification) {
+		User receiver = notification.getReceiver();
+		if (receiver.allowsNotificationType(notification.getNotificationType())) {
+			applicationEventPublisher.publishEvent(notification);
 		}
 	}
 }
