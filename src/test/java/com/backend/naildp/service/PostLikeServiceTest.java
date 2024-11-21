@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Photo;
@@ -45,10 +44,9 @@ class PostLikeServiceTest {
 
 	@BeforeEach
 	void setup() {
-		User user = createTestMember("test@naver.com", "testUser", "0100000", 1L);
-		User userAlreadyLikePost = createTestMember("testUserLikePost@naver.com", "testUserLikePost", "0102222",
-			2L);
-		User writer = createTestMember("writer@naver.com", "writer", "0101111", 3L);
+		User user = createTestMember("testUser");
+		User userAlreadyLikePost = createTestMember("testUserLikePost");
+		User writer = createTestMember("writer");
 
 		createTestPostAndPhoto(writer, 5);
 
@@ -114,12 +112,41 @@ class PostLikeServiceTest {
 		assertThat(deletedPostLike).hasSize(0);
 	}
 
+	@DisplayName("이미 좋아요한 게시물은 좋아요 되지 않는다")
+	@Test
+	void likedPostIsNotLikedAnymore() {
+		//given
+		User user = createTestMember("user");
+		Post post = findPostByNickname("writer");
+		PostLike postLike = new PostLike(user, post);
+		post.addPostLike(postLike);
+		em.persist(postLike);
+
+		em.flush();
+		em.clear();
+
+		Long beforePostLikeCount = em.createQuery("select count(pl) from PostLike pl where pl.post.id = :postId",
+				Long.class)
+			.setParameter("postId", post.getId())
+			.getSingleResult();
+
+		//when
+		postLikeService.likeByPostId(post.getId(), user.getNickname());
+
+		//then
+		Long afterPostLikeCount = em.createQuery("select count(pl) from PostLike pl where pl.post.id = :postId",
+				Long.class)
+			.setParameter("postId", post.getId())
+			.getSingleResult();
+		assertThat(beforePostLikeCount).isEqualTo(afterPostLikeCount);
+	}
+
 	@DisplayName("게시물 좋아요 조회 테스트")
 	@Test
 	void countPostLike() {
 		//given
-		User normalUser = createTestMember("normalUserEmail", "normalUser", "pn", 4L);
-		User postWriter = createTestMember("postWriterEmail", "postWriter", "pn", 5L);
+		User normalUser = createTestMember("normalUser");
+		User postWriter = createTestMember("postWriter");
 		Post post = Post.builder()
 			.user(normalUser)
 			.postContent("content")
@@ -143,18 +170,22 @@ class PostLikeServiceTest {
 		assertThat(response.getLikeCount()).isEqualTo(10);
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {
-		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
-		User user = new User(loginRequestDto, UserRole.USER);
-		User savedUser = userRepository.save(user);
-		return savedUser;
+	private User createTestMember(String nickname) {
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("")
+			.agreement(true)
+			.thumbnailUrl("")
+			.role(UserRole.USER)
+			.build();
+		return userRepository.save(user);
 	}
 
 	private void createTestPostAndPhoto(User writer, int postCnt) {
 		List<Post> postList = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
 			FileRequestDto fileRequestDto = new FileRequestDto("thumbnailPhoto" + i, 1L, "thumbnailURL" + i);
-			Post post = new Post(writer, "content" + i, 0L, Boundary.ALL, false);
+			Post post = Post.builder().user(writer).postContent("").boundary(Boundary.ALL).tempSave(false).build();
 			Photo photo = new Photo(post, fileRequestDto);
 			post.addPhoto(photo);
 

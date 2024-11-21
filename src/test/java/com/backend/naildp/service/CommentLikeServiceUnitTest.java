@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,21 +38,25 @@ class CommentLikeServiceUnitTest {
 	@Mock
 	PostRepository postRepository;
 	@Mock
-	FollowRepository followRepository;
+	PostAccessValidator postAccessValidator;
 	@Mock
 	UserRepository userRepository;
 	@Mock
 	CommentRepository commentRepository;
 	@Mock
 	CommentLikeRepository commentLikeRepository;
+	@Mock
+	NotificationManager notificationManager;
 
 	@DisplayName("임시저장 게시물에 접근할 때 예외 테스트")
 	@Test
 	void accessToTempSavePostException() {
 		User user = createUser("nickname");
-		Post post = createPost(user, true, Boundary.ALL);
+		Post tempSavedPost = createPost(user, true, Boundary.ALL);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(tempSavedPost));
+		doThrow(new CustomException("임시저장한 게시물에는 댓글을 등록할 수 없습니다.", ErrorCode.NOT_FOUND))
+			.when(postAccessValidator).isAvailablePost(eq(tempSavedPost), eq(user.getNickname()));
 
 		//when
 		CustomException exception = assertThrows(CustomException.class,
@@ -69,9 +72,11 @@ class CommentLikeServiceUnitTest {
 	void accessToPrivatePostException() {
 		String wrongNickname = "wrongNickname";
 		User user = createUser("nickname");
-		Post post = createPost(user, false, Boundary.NONE);
+		Post postVisibleToWriter = createPost(user, false, Boundary.NONE);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(postVisibleToWriter));
+		doThrow(new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY))
+			.when(postAccessValidator).isAvailablePost(eq(postVisibleToWriter), eq(wrongNickname));
 
 		//when
 		CustomException exception = assertThrows(CustomException.class,
@@ -87,10 +92,11 @@ class CommentLikeServiceUnitTest {
 	void accessToFollowPostException() {
 		String notFollowNickname = "notFollowNickname";
 		User user = createUser("nickname");
-		Post post = createPost(user, false, Boundary.FOLLOW);
+		Post postVisibleToFollower = createPost(user, false, Boundary.FOLLOW);
 
-		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
-		when(followRepository.existsByFollowerNicknameAndFollowing(eq(notFollowNickname), eq(user))).thenReturn(false);
+		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(postVisibleToFollower));
+		doThrow(new CustomException("팔로우 공개 게시물은 팔로워와 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY))
+			.when(postAccessValidator).isAvailablePost(eq(postVisibleToFollower), eq(notFollowNickname));
 
 		//when
 		CustomException exception = assertThrows(CustomException.class,
@@ -112,11 +118,12 @@ class CommentLikeServiceUnitTest {
 		CommentLike commentLike = new CommentLike(writer, comment);
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.of(post));
-		lenient().when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), eq(writer)))
-			.thenReturn(true);
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
 		when(userRepository.findByNickname(anyString())).thenReturn(Optional.of(writer));
 		when(commentLikeRepository.saveAndFlush(any(CommentLike.class))).thenReturn(commentLike);
+		doNothing().when(notificationManager)
+			.handleNotificationFromCommentLike(any(Comment.class), any(User.class), any(CommentLike.class));
 
 		//when
 		Long commentLikeId = commentLikeService.likeComment(1L, 2L, writer.getNickname());

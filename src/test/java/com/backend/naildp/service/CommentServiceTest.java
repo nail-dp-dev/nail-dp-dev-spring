@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Slice;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -24,6 +25,7 @@ import com.backend.naildp.entity.User;
 
 import jakarta.persistence.EntityManager;
 
+@ActiveProfiles(profiles = {"test", "secret"})
 @SpringBootTest
 @Transactional
 class CommentServiceTest {
@@ -184,7 +186,13 @@ class CommentServiceTest {
 	}
 
 	private User createUser(String postWriter) {
-		User user = User.builder().nickname(postWriter).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		User user = User.builder()
+			.nickname(postWriter)
+			.phoneNumber("pn")
+			.agreement(true)
+			.thumbnailUrl("default")
+			.role(UserRole.USER)
+			.build();
 		em.persist(user);
 		return user;
 	}

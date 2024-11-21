@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
@@ -31,6 +32,7 @@ import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@ActiveProfiles("test")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PostLikeRepositoryTest {
@@ -46,11 +48,11 @@ class PostLikeRepositoryTest {
 
 	@BeforeEach
 	void setup() {
-		User user1 = createTestMember("user1@naver.com", "user1", "0100000", 1L);
-		User user2 = createTestMember("user2@naver.com", "user2", "0109999", 2L);
-		User writer1 = createTestMember("writer1@naver.com", "writer1", "0101111", 3L);
-		User writer2 = createTestMember("writer2@naver.com", "writer2", "0102222", 4L);
-		User writer3 = createTestMember("writer3@naver.com", "writer3", "0103333", 5L);
+		User user1 = createTestMember("user1");
+		User user2 = createTestMember( "user2");
+		User writer1 = createTestMember("writer1");
+		User writer2 = createTestMember("writer2");
+		User writer3 = createTestMember("writer3");
 
 		//팔로우 생성
 		createFollow(user1, writer1);
@@ -205,9 +207,14 @@ class PostLikeRepositoryTest {
 		return PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "id"));
 	}
 
-	private User createTestMember(String email, String nickname, String phoneNumber, Long socialLogInId) {
-		LoginRequestDto loginRequestDto = new LoginRequestDto(nickname, phoneNumber, true);
-		User user = new User(loginRequestDto, UserRole.USER);
+	private User createTestMember(String nickname) {
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("pn")
+			.agreement(true)
+			.thumbnailUrl("")
+			.role(UserRole.USER)
+			.build();
 		em.persist(user);
 		return user;
 	}

@@ -127,6 +127,7 @@ public class UserSearchRepositoryTest {
 			.nickname(nickname)
 			.phoneNumber("pn")
 			.agreement(true)
+			.thumbnailUrl("")
 			.role(UserRole.USER)
 			.build();
 		em.persist(user);
