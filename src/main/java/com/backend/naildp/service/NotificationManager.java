@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
 import com.backend.naildp.entity.Notification;
+import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -37,7 +39,17 @@ public class NotificationManager {
 			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
 				applicationEventPublisher.publishEvent(savedNotification);
 			}
+		}
+	}
 
+	public void handlePostLikeNotification(User user, Post post, PostLike postLike) {
+		if (post.notWrittenBy(user)) {
+			Notification savedNotification = notificationService.save(Notification.fromPostLike(postLike));
+
+			User receiver = savedNotification.getReceiver();
+			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
 		}
 	}
 }
