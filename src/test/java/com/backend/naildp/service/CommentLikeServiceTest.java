@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -29,6 +30,7 @@ import com.backend.naildp.repository.PostRepository;
 
 import jakarta.persistence.EntityManager;
 
+@ActiveProfiles(profiles = {"test", "secret"})
 @SpringBootTest
 @Transactional
 public class CommentLikeServiceTest {
@@ -60,7 +62,7 @@ public class CommentLikeServiceTest {
 
 		publicPostId = publicPost.getId();
 		privatePostId = privatePost.getId();
-		followPostId =followPost.getId();
+		followPostId = followPost.getId();
 
 		for (int i = 0; i < 10; i++) {
 			Comment followComment = new Comment(followerUser, followPost, "" + i);
@@ -167,7 +169,8 @@ public class CommentLikeServiceTest {
 		commentLikeService.cancelCommentLike(post.getId(), comment.getId(), writer.getNickname());
 
 		//then
-		Long commentLikeCnt = em.createQuery("select count(cl) from CommentLike cl where cl.comment = :comment", Long.class)
+		Long commentLikeCnt = em.createQuery("select count(cl) from CommentLike cl where cl.comment = :comment",
+				Long.class)
 			.setParameter("comment", comment)
 			.getSingleResult();
 		assertEquals(0, commentLikeCnt);
@@ -208,7 +211,13 @@ public class CommentLikeServiceTest {
 	}
 
 	private User createUser(String nickname) {
-		User user = User.builder().nickname(nickname).phoneNumber("pn").agreement(true).role(UserRole.USER).build();
+		User user = User.builder()
+			.nickname(nickname)
+			.phoneNumber("pn")
+			.agreement(true)
+			.role(UserRole.USER)
+			.thumbnailUrl("")
+			.build();
 		em.persist(user);
 		return user;
 	}

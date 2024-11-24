@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -10,6 +11,7 @@ import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.entity.Comment;
+import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
@@ -30,6 +32,8 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
+	private final NotificationService notificationService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
@@ -58,6 +62,14 @@ public class CommentService {
 			.orElseThrow(() -> new CustomException("다시 시도해주세요.", ErrorCode.NOT_FOUND));
 		Comment comment = new Comment(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
+
+		if (comment.notRegisteredBy(user)) {
+			Notification savedNotification = notificationService.save(Notification.fromComment(comment));
+
+			if (savedNotification.getReceiver().allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
+		}
 
 		return commentRepository.save(comment).getId();
 	}

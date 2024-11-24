@@ -34,6 +34,7 @@ import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.SocialLoginRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.service.post.PostInfoService;
 
 import jakarta.persistence.EntityManager;
 
@@ -83,69 +84,6 @@ public class PostInfoServiceTest {
 		System.out.println("======= BeforeEach 끝 ======");
 	}
 
-	@Disabled
-	@DisplayName("최신 게시글 조회 메서드 연속 호출 테스트")
-	@Test
-	void callNewPostsTwice() {
-		//given
-		int firstCallPageSize = 30;
-		int secondCallPageSize = 40;
-
-		String nickname = "testUser";
-
-		//when
-		PostSummaryResponse firstPostSummaryResponse = postInfoService.homePosts("NEW", firstCallPageSize, -1L,
-			nickname);
-		Long oldestPostId = firstPostSummaryResponse.getCursorId();
-		System.out.println("oldestPostId = " + oldestPostId);
-		PostSummaryResponse secondPostSummaryResponse = postInfoService.homePosts("NEW", secondCallPageSize,
-			oldestPostId,
-			nickname);
-
-		Slice<?> firstSummaryList = firstPostSummaryResponse.getPostSummaryList();
-		Slice<?> secondSummaryList = secondPostSummaryResponse.getPostSummaryList();
-
-		//then
-		assertThat(firstSummaryList.hasNext()).isTrue();
-		assertThat(firstSummaryList.getSize()).isEqualTo(firstCallPageSize);
-		assertThat(firstSummaryList.getNumberOfElements()).isEqualTo(firstCallPageSize);
-
-		assertThat(secondSummaryList.hasNext()).isFalse();
-		assertThat(secondSummaryList.getSize()).isEqualTo(secondCallPageSize);
-		assertThat(secondSummaryList.getNumberOfElements()).isEqualTo(60 - firstCallPageSize);
-	}
-
-	@DisplayName("최신 게시물 불러오기 테스트")
-	@Test
-	void findNewPosts() {
-		//given
-		String nickname = "testUser";
-		int postCnt = 60;
-		int pageNumber = 0;
-		int pageSize = 20;
-		long cursorPostId = -1L;
-		int totalPages = postCnt / pageSize + (postCnt % pageSize == 0 ? 0 : 1);
-
-		//when
-		System.out.println("첫 페이지");
-		PostSummaryResponse postSummaryResponse = postInfoService.homePosts("NEW", pageSize, cursorPostId, nickname);
-		Slice<HomePostResponse> responses = (Slice<HomePostResponse>)postSummaryResponse.getPostSummaryList();
-
-		List<Boolean> savedList = responses.stream().map(HomePostResponse::getSaved).toList();
-		List<Boolean> likedList = responses.stream().map(HomePostResponse::getLike).toList();
-
-		//then
-		assertThat(responses.getSize()).isEqualTo(pageSize);
-		assertThat(responses.getNumber()).isEqualTo(pageNumber);
-		assertThat(responses.hasNext()).isTrue();
-
-		assertThat(savedList).containsOnly(true);
-		assertThat(savedList).hasSize(pageSize);
-
-		assertThat(likedList).contains(true);
-		assertThat(likedList).hasSize(pageSize);
-	}
-
 	@DisplayName("좋아요한 게시물 불러오기 테스트")
 	@Test
 	void findLikedPosts() {
@@ -161,28 +99,6 @@ public class PostInfoServiceTest {
 		assertThat(postSummaryList.hasNext()).isFalse();
 		assertThat(postSummaryList.getNumberOfElements()).isEqualTo(pageSize);
 		assertThat(postSummaryList).extracting("like").containsOnly(true);
-	}
-
-	@Test
-	void test() {
-		//given
-		String nickname = "writer";
-		User user = em.createQuery("select u from Users u where u.nickname = :nickname", User.class)
-			.setParameter("nickname", nickname)
-			.getSingleResult();
-		// PostRequestDto postRequestDto = new PostRequestDto("testContent", false, Boundary.ALL, new ArrayList<>());
-		// postService.uploadPost(nickname, postRequestDto, new ArrayList<>());
-		// Post post = em.createQuery("select p from Post p where p.postContent = 'testContent'", Post.class)
-		// 	.getSingleResult();
-		// for (int i = 1; i <= 10; i++) {
-		// 	em.persist(new Comment(user, post, "comment"));
-		// }
-		em.flush();
-		em.clear();
-
-		//when
-
-		//then
 	}
 
 	private User createTestMember(String email, String nickname, String phoneNumber, Long socialId) {

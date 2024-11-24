@@ -246,7 +246,8 @@ class UserInfoServiceUnitTest {
 		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(4);
 		given(usersProfileRepository.findFirstByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(
 			Optional.of(usersProfile1));
-		given(s3Service.saveFile(any(MultipartFile.class))).willReturn(new FileRequestDto("file1", 12345L, "fileUrl1"));
+		given(s3Service.saveFile(any(MultipartFile.class), false)).willReturn(
+			new FileRequestDto("file1", 12345L, "fileUrl1"));
 
 		userInfoService.uploadProfile(user1.getNickname(), mock(MultipartFile.class));
 
@@ -265,7 +266,8 @@ class UserInfoServiceUnitTest {
 		given(userRepository.findByNickname(anyString())).willReturn(Optional.of(user1));
 		given(profileRepository.findProfileByProfileUrl(profileUrl)).willReturn(Optional.of(profile1));
 		given(usersProfileRepository.countByUserNicknameAndProfileProfileType(anyString(), any())).willReturn(3);
-		given(s3Service.saveFile(any(MultipartFile.class))).willReturn(new FileRequestDto("file1", 12345L, "fileUrl1"));
+		given(s3Service.saveFile(any(MultipartFile.class), false)).willReturn(
+			new FileRequestDto("file1", 12345L, "fileUrl1"));
 
 		userInfoService.uploadProfile(user1.getNickname(), mock(MultipartFile.class));
 

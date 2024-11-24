@@ -7,6 +7,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.PostLike;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -70,6 +71,24 @@ public class HomePostResponse {
 			.isPhoto(FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl()))
 			.isVideo(FileExtensionChecker.isVideoExtension(photo.getPhotoUrl()))
 			.like(false)
+			.saved(false)
+			.createdDate(post.getCreatedDate())
+			.boundary(post.getBoundary())
+			.build();
+	}
+
+	public static HomePostResponse create(Post post, String username) {
+		Photo photo = post.getPhotos().get(0);
+		List<PostLike> postLikes = post.getPostLikes();
+		boolean isLiked = postLikes.stream().anyMatch(postLike -> postLike.getUser().equalsNickname(username));
+
+		return HomePostResponse.builder()
+			.postId(post.getId())
+			.photoId(photo.getId())
+			.photoUrl(photo.getPhotoUrl())
+			.isPhoto(FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl()))
+			.isVideo(FileExtensionChecker.isVideoExtension(photo.getPhotoUrl()))
+			.like(isLiked)
 			.saved(false)
 			.createdDate(post.getCreatedDate())
 			.boundary(post.getBoundary())

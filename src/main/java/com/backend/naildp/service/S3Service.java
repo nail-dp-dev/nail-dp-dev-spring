@@ -1,6 +1,8 @@
 package com.backend.naildp.service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,13 +11,16 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
@@ -45,7 +50,7 @@ public class S3Service {
 				throw new CustomException("isDuplicate error", ErrorCode.FILE_EXCEPTION);
 			}
 
-			FileRequestDto uploadedUrl = saveFile(multipartFile);
+			FileRequestDto uploadedUrl = saveFile(multipartFile, false);
 			uploadedUrls.add(uploadedUrl);
 		}
 
@@ -86,11 +91,11 @@ public class S3Service {
 	}
 
 	// 단일 파일 저장
-	public FileRequestDto saveFile(MultipartFile file) {
+	public FileRequestDto saveFile(MultipartFile file, boolean skipExtensionCheck) {
 		if (file == null || file.isEmpty()) { //.isEmpty()도 되는지 확인해보기
 			throw new CustomException("Not Input files", ErrorCode.FILE_EXCEPTION);
 		}
-		String randomFilename = generateRandomFilename(file);
+		String randomFilename = generateRandomFilename(file, skipExtensionCheck);
 
 		log.info("File upload started: " + randomFilename);
 
@@ -114,8 +119,7 @@ public class S3Service {
 		log.info("File upload completed: " + randomFilename);
 
 		FileRequestDto fileRequestDto = new FileRequestDto();
-		String fileUrl = amazonS3.getUrl(bucket, randomFilename).toString();
-		fileRequestDto.setFileUrl(fileUrl);
+		fileRequestDto.setFileUrl(randomFilename);
 		fileRequestDto.setFileName(file.getOriginalFilename());
 		fileRequestDto.setFileSize(file.getSize());
 		return fileRequestDto;
@@ -142,10 +146,12 @@ public class S3Service {
 	}
 
 	// 랜덤파일명 생성 (파일명 중복 방지)
-	private String generateRandomFilename(MultipartFile multipartFile) {
+	private String generateRandomFilename(MultipartFile multipartFile, boolean skipExtensionCheck) {
 		String originalFilename = multipartFile.getOriginalFilename();
-		String fileExtension = validateFileExtension(originalFilename);
-		String randomFilename = UUID.randomUUID() + "." + fileExtension;
+		String fileNameWithoutExtension = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
+		String fileExtension =
+			skipExtensionCheck ? getFileExtension(originalFilename) : validateFileExtension(originalFilename);
+		String randomFilename = fileNameWithoutExtension + "/" + UUID.randomUUID() + "." + fileExtension;
 		return randomFilename;
 	}
 
@@ -160,4 +166,42 @@ public class S3Service {
 		}
 		return fileExtension;
 	}
+
+	private String getFileExtension(String originalFilename) {
+		return originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+		// 용량 제한 필요
+	}
+
+	public InputStreamResource downloadFile(String fileName) {
+		try {
+			S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, fileName));
+			return new InputStreamResource(s3Object.getObjectContent());
+		} catch (AmazonS3Exception e) {
+			throw new CustomException("파일 다운로드 실패", ErrorCode.FILE_EXCEPTION);
+		}
+	}
+
+	// 파일명 인코딩
+	public String encodeFileName(String fileName) {
+		try {
+			return URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("파일명 인코딩 실패", e);
+		}
+	}
+
+	// 원본 파일명 추출 메서드
+	public String extractOriginalFileName(String fileName) {
+		int firstSlashIndex = fileName.indexOf('/');
+		int extensionIndex = fileName.lastIndexOf('.');
+		if (firstSlashIndex == -1 || extensionIndex == -1) {
+			throw new IllegalArgumentException("잘못된 파일 형식입니다.");
+		}
+
+		String fileNameWithoutExtension = fileName.substring(0, firstSlashIndex);
+		String fileExtension = fileName.substring(extensionIndex);
+
+		return fileNameWithoutExtension + fileExtension;
+	}
+
 }

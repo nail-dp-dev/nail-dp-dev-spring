@@ -3,6 +3,8 @@ package com.backend.naildp.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
+
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostRequestDto;
@@ -38,6 +40,7 @@ public class Post extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@BatchSize(size = 50)
 	@OneToMany(mappedBy = "post")
 	private List<Photo> photos = new ArrayList<>();
 
@@ -115,6 +118,10 @@ public class Post extends BaseEntity {
 
 	public boolean notWrittenBy(String username) {
 		return !user.equalsNickname(username);
+	}
+
+	public boolean notWrittenBy(User user) {
+		return !this.user.equals(user);
 	}
 
 	public void changeBoundary(PostBoundaryRequest postBoundaryRequest) {

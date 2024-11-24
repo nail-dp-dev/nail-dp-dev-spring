@@ -25,7 +25,7 @@ public class Profile extends BaseEntity {
 	private Long id;
 
 	@Column(nullable = false)
-	private String profileUrl;
+	private String profileUrl = "default";
 
 	@Column(nullable = false)
 	private String name;

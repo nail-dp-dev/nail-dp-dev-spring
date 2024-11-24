@@ -1,9 +1,11 @@
 package com.backend.naildp.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
+import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
@@ -25,19 +27,34 @@ public class PostLikeService {
 	private final PostRepository postRepository;
 	private final PostLikeRepository postLikeRepository;
 	private final FollowRepository followRepository;
+	private final NotificationService notificationService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
+
 		User user = userRepository.findUserByNickname(username)
 			.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
-
-		Post post = postRepository.findById(postId)
+		Post post = postRepository.findPostAndUser(postId)
 			.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
 
-		PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
-		post.addPostLike(savedPostLike);
+		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(username, postId)
+			.orElseGet(() -> {
+				PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
+				post.addPostLike(savedPostLike);
+				return savedPostLike;
+			});
 
-		return savedPostLike.getId();
+		if (post.notWrittenBy(user)) {
+			Notification savedNotification = notificationService.save(Notification.fromPostLike(postLike));
+			User receiver = savedNotification.getReceiver();
+
+			if (receiver.allowsNotificationType(savedNotification.getNotificationType())) {
+				applicationEventPublisher.publishEvent(savedNotification);
+			}
+		}
+
+		return postLike.getId();
 	}
 
 	@Transactional

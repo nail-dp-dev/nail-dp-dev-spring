@@ -1,13 +1,21 @@
 package com.backend.naildp.repository;
 
+import static com.backend.naildp.entity.QArchivePost.*;
 import static com.backend.naildp.entity.QFollow.*;
 import static com.backend.naildp.entity.QPost.*;
+import static com.backend.naildp.entity.QPostLike.*;
+import static com.backend.naildp.entity.QTag.*;
 import static com.backend.naildp.entity.QTagPost.*;
 import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +28,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.util.StringUtils;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
@@ -33,21 +43,31 @@ import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.QArchivePost;
+import com.backend.naildp.entity.QPhoto;
+import com.backend.naildp.entity.QTag;
+import com.backend.naildp.entity.QTagPost;
 import com.backend.naildp.entity.Tag;
 import com.backend.naildp.entity.TagPost;
 import com.backend.naildp.entity.User;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.StringExpressions;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import io.jsonwebtoken.lang.Strings;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@ActiveProfiles("test")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({JpaAuditingConfiguration.class, QueryDslTestConfig.class})
@@ -100,7 +120,6 @@ public class PostSearchRepositoryTest {
 		//given
 		String username = "writer";
 		int pageSize = 20;
-		PageRequest pageRequest = PageRequest.of(0, pageSize);
 		Post firstPost = em.createQuery("select p from Post p order by p.createdDate desc", Post.class)
 			.setMaxResults(1)
 			.getSingleResult();
@@ -130,7 +149,8 @@ public class PostSearchRepositoryTest {
 
 		//when & then
 		assertThatThrownBy(() ->
-			postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username, firstPost.getId() + 1))
+			postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username,
+				firstPost.getId() + 1))
 			.isInstanceOf(NullPointerException.class);
 	}
 
@@ -180,10 +200,10 @@ public class PostSearchRepositoryTest {
 		String username = "writer";
 		String keyword = "xxxx";
 		int pageSize = 20;
-		PageRequest pageRequest = PageRequest.of(0, pageSize);
 
 		//when
-		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username, null);
+		Slice<Post> posts = postRepository.searchPostByKeyword(PageRequest.of(0, pageSize), List.of(keyword), username,
+			null);
 
 		//then
 		assertThat(posts).hasSize(0);
@@ -274,11 +294,452 @@ public class PostSearchRepositoryTest {
 		assertThat(likedPosts).extracting(Post::getUser).extracting(User::getNickname).containsOnly(writerNickname);
 	}
 
-	private BooleanExpression usernamePermitted(String usernameCond) {
+	@DisplayName("회원이 NEW 게시물을 처음으로 조회")
+	@Test
+	void userFindNewestPostSlice() {
+		//given
+		String username = "nickname";
+		Long cursorPostId = null;
+		int pageSize = 40;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		Slice<Post> newestPostSlice = postRepository.findNewestPostSlice(username, cursorPostId, pageRequest);
+
+		//then
+		assertThat(newestPostSlice).extracting(Post::getBoundary).contains(Boundary.ALL, Boundary.FOLLOW);
+		assertThat(newestPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
+		assertThat(newestPostSlice.hasNext()).isFalse();
+		assertThat(newestPostSlice).hasSize(pageSize);
+	}
+
+	@DisplayName("회원이 NEW 게시물 조회 - 커서 기반 페이지네이션")
+	@Test
+	void userFindNewestPostSliceWithCursorPost() {
+		//given
+		String username = "nickname";
+		int pageSize = 40;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+		Post newestPost = queryFactory
+			.selectFrom(post)
+			.where(post.tempSave.isFalse().and(post.boundary.eq(Boundary.ALL)))
+			.orderBy(post.createdDate.desc())
+			.limit(1)
+			.fetchOne();
+		em.clear();
+
+		//when
+		Slice<Post> newestPostSliceByCursor = postRepository.findNewestPostSlice(username, newestPost.getId(),
+			pageRequest);
+
+		//then
+		assertThat(newestPostSliceByCursor).hasSize(pageSize - 1);
+		assertThat(newestPostSliceByCursor.hasNext()).isFalse();
+
+		assertThat(newestPostSliceByCursor).extracting(Post::getBoundary).contains(Boundary.ALL, Boundary.FOLLOW);
+		assertThat(newestPostSliceByCursor).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSliceByCursor).extracting(Post::getTempSave).containsOnly(false);
+	}
+
+	@DisplayName("회원이 아닌 사용자가 최신 게시물 조회시 전체 공개인 게시물만 조회할 수 있다.")
+	@Test
+	void anonymousFindNewestPost() {
+		//given
+		String username = null;
+		Long cursorPostId = null;
+		int pageSize = 30;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		Slice<Post> newestPostSlice = postRepository.findNewestPostSlice(username, cursorPostId, pageRequest);
+
+		//then
+		assertThat(newestPostSlice).extracting(Post::getBoundary).contains(Boundary.ALL);
+		assertThat(newestPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
+		assertThat(newestPostSlice.hasNext()).isFalse();
+		assertThat(newestPostSlice).hasSize(pageSize);
+	}
+
+	@DisplayName("회원이 아닌 사용자가 최신 게시물 조회시 전체 공개인 게시물만 조회할 수 있다. - 커서 기반 페이징")
+	@Test
+	void anonymousFindNewestPostWithCursorPost() {
+		//given
+		String username = null;
+		Post newestPost = queryFactory
+			.selectFrom(post)
+			.where(post.tempSave.isFalse().and(post.boundary.eq(Boundary.ALL)))
+			.orderBy(post.createdDate.desc())
+			.limit(1)
+			.fetchOne();
+		Long cursorPostId = newestPost.getId();
+		int pageSize = 30;
+		PageRequest pageRequest = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdDate"));
+
+		em.clear();
+
+		//when
+		Slice<Post> newestPostSlice = postRepository.findNewestPostSlice(username, cursorPostId, pageRequest);
+
+		//then
+		assertThat(newestPostSlice).hasSize(pageSize - 1);
+		assertThat(newestPostSlice.hasNext()).isFalse();
+
+		assertThat(newestPostSlice).extracting(Post::getBoundary).contains(Boundary.ALL);
+		assertThat(newestPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.contains("writer", "writerNotFollowed", "writerUsingTags");
+		assertThat(newestPostSlice).extracting(Post::getTempSave).containsOnly(false);
+	}
+
+	@DisplayName("자정부터 현시각까지 좋아요수 많은 순서대로 게시물 조회")
+	@Test
+	void trendPost() {
+		//given
+		User liker = getUserByNickname("nickname");
+		List<Post> publicPostFromWriter = findPostByNicknameAndBoundary("writer", Boundary.ALL);
+		addPostLike(liker, publicPostFromWriter, 3);
+		List<Post> followPostFromWriter = findPostByNicknameAndBoundary("writer", Boundary.FOLLOW);
+		addPostLike(liker, followPostFromWriter, 2);
+		List<Post> publicPostFromWriterNotFollowed = findPostByNicknameAndBoundary("writerNotFollowed", Boundary.ALL);
+		addPostLike(liker, publicPostFromWriterNotFollowed, 1);
+
+		em.flush();
+		em.clear();
+
+		String username = "nickname";
+		int pageSize = 40;
+		Long cursorPostId = null;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		// Slice<Post> postSlice = findTrendPostSliceV2(username, cursorPostId, pageRequest);
+		Slice<Post> postSlice = postRepository.findTrendPostSlice(username, cursorPostId, pageRequest);
+
+		//then
+		assertThat(postSlice).hasSize(pageSize);
+		assertThat(postSlice.hasNext()).isFalse();
+		assertThat(postSlice).extracting(Post::getTempSave).containsOnly(false);
+		assertThat(postSlice.getContent()).isSortedAccordingTo(
+			Comparator.comparingInt((Post post) -> (int)post.getPostLikes()
+					.stream()
+					.filter(postLike1 -> postLike1.getCreatedDate().isBefore(LocalDateTime.now()) &&
+						postLike1.getCreatedDate().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT)))
+					.count()).reversed()
+				.thenComparing(Post::getCreatedDate, Comparator.reverseOrder())
+		);
+	}
+
+	@DisplayName("자정부터 현시각까지 좋아요수 많은 순서대로 게시물 조회 - 커서 페이징")
+	@Test
+	void trendPostWithCursor() {
+		//given
+		User liker = getUserByNickname("nickname");
+		List<Post> publicPostFromWriter = findPostByNicknameAndBoundary("writer", Boundary.ALL);
+		addPostLike(liker, publicPostFromWriter, 3);
+		List<Post> followPostFromWriter = findPostByNicknameAndBoundary("writer", Boundary.FOLLOW);
+		addPostLike(liker, followPostFromWriter, 2);
+		List<Post> publicPostFromWriterNotFollowed = findPostByNicknameAndBoundary("writerNotFollowed", Boundary.ALL);
+		addPostLike(liker, publicPostFromWriterNotFollowed, 1);
+
+		em.flush();
+		em.clear();
+
+		String username = "nickname";
+		int pageSize = 20;
+		PageRequest pageRequest = PageRequest.of(0, pageSize);
+
+		//when
+		// Slice<Post> trendPostSliceWithoutCursor = findTrendPostSliceV2(username, null, pageRequest);
+		Slice<Post> trendPostSliceWithoutCursor = postRepository.findTrendPostSlice(username, null, pageRequest);
+		Post cursorPost = trendPostSliceWithoutCursor.getContent()
+			.get(trendPostSliceWithoutCursor.getNumberOfElements() - 1);
+		// Slice<Post> trendPostSliceWithCursor = findTrendPostSliceV2(username, cursorPost.getId(), pageRequest);
+		Slice<Post> trendPostSliceWithCursor = postRepository.findTrendPostSlice(username, cursorPost.getId(), pageRequest);
+
+		//then
+		assertThat(trendPostSliceWithCursor).hasSize(pageSize);
+		assertThat(trendPostSliceWithCursor.hasNext()).isFalse();
+		assertThat(trendPostSliceWithCursor).extracting(Post::getTempSave).containsOnly(false);
+		assertThat(trendPostSliceWithCursor.getContent()).isSortedAccordingTo(
+			Comparator.comparingInt((Post post) -> (int)post.getPostLikes()
+					.stream()
+					.filter(postLike1 -> postLike1.getCreatedDate().isBefore(LocalDateTime.now()) &&
+						postLike1.getCreatedDate().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT)))
+					.count()).reversed()
+				.thenComparing(Post::getCreatedDate, Comparator.reverseOrder())
+		);
+	}
+
+	@DisplayName("사용자 맞춤형 게시물 조회 테스트")
+	@Test
+	void findForYouPost() {
+		//given
+		User likeUser = createUserByNickname("likeUser");
+		User postWriter = createUserByNickname("postWriter");
+		User anotherWriter = createUserByNickname("anotherWriter");
+		Tag likeTag1 = createTag("likeTag1");
+		Tag likeTag2 = createTag("likeTag2");
+		Tag likeTag3 = createTag("likeTag3");
+
+		Archive archive = createArchive(likeUser);
+
+		List<Post> posts1 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag1, likeTag2));
+		List<Post> posts2 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag2, likeTag3));
+
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag1));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag2));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag3));
+
+		posts1.forEach(post1 -> em.persist(new PostLike(likeUser, post1)));
+		posts2.forEach(post2 -> em.persist(new ArchivePost(archive, post2)));
+
+		em.flush();
+		em.clear();
+
+		String nickname = likeUser.getNickname();
+
+		//when
+		List<Post> likedPosts = queryFactory
+			.select(post)
+			.from(post).join(post.postLikes, postLike).fetchJoin()
+			.where(postLike.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		List<Post> savedPosts = queryFactory
+			.select(archivePost.post)
+			.from(archivePost)
+			.where(archivePost.archive.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		likedPosts.addAll(savedPosts);
+
+		List<Long> tagsInLikedPost = queryFactory
+			.select(tagPost.tag.id)
+			.from(tagPost)
+			.where(tagPost.post.in(likedPosts))
+			.fetch();
+
+		List<Post> forYouPosts = queryFactory
+			.select(post)
+			.from(post).join(post.tagPosts, tagPost)
+			.where(tagPost.tag.id.in(tagsInLikedPost)
+				.and(post.notIn(likedPosts))
+				.and(post.tempSave.isFalse())
+				.and(isAllowedToViewPosts(nickname)))
+			.orderBy(post.createdDate.desc())
+			.limit(51)
+			.fetch();
+
+		//then
+		assertThat(forYouPosts).hasSize(3);
+		assertThat(forYouPosts).doesNotContainSequence(likedPosts);
+		assertThat(forYouPosts).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.containsOnly(anotherWriter.getNickname());
+	}
+
+	@DisplayName("PostRepositoryImpl - 사용자 맞춤형 게시물 조회 테스트")
+	@Test
+	void PostRepositoryFindForYouPostsTest() {
+		//given
+		User likeUser = createUserByNickname("likeUser");
+		User postWriter = createUserByNickname("postWriter");
+		User anotherWriter = createUserByNickname("anotherWriter");
+		Tag likeTag1 = createTag("likeTag1");
+		Tag likeTag2 = createTag("likeTag2");
+		Tag likeTag3 = createTag("likeTag3");
+
+		Archive archive = createArchive(likeUser);
+
+		List<Post> posts1 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag1, likeTag2));
+		List<Post> posts2 = savePostByCnt(postWriter, 1, Boundary.ALL, List.of(likeTag2, likeTag3));
+
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag1));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag2));
+		savePostByCnt(anotherWriter, 1, Boundary.ALL, List.of(likeTag3));
+
+		posts1.forEach(post1 -> em.persist(new PostLike(likeUser, post1)));
+		posts2.forEach(post2 -> em.persist(new ArchivePost(archive, post2)));
+
+		em.flush();
+		em.clear();
+
+		String nickname = likeUser.getNickname();
+
+		//when
+		List<Post> likedPosts = queryFactory
+			.select(post)
+			.from(post).join(post.postLikes, postLike).fetchJoin()
+			.where(postLike.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		List<Post> savedPosts = queryFactory
+			.select(archivePost.post)
+			.from(archivePost)
+			.where(archivePost.archive.user.nickname.eq(nickname))
+			.distinct()
+			.fetch();
+
+		likedPosts.addAll(savedPosts);
+
+		List<Long> tagIdsInLikedPosts = queryFactory
+			.select(tagPost.tag.id)
+			.from(tagPost)
+			.where(tagPost.post.in(likedPosts))
+			.distinct()
+			.fetch();
+
+		Slice<Post> forYouPostSlice = postRepository.findForYouPostSlice(nickname, null, tagIdsInLikedPosts,
+			PageRequest.of(0, 10));
+
+		//then
+		assertThat(forYouPostSlice).hasSize(5);
+		assertThat(forYouPostSlice).containsAll(likedPosts);
+		assertThat(forYouPostSlice).extracting(Post::getUser)
+			.extracting(User::getNickname)
+			.containsOnly(postWriter.getNickname(), anotherWriter.getNickname());
+	}
+
+	private Archive createArchive(User likeUser) {
+		Archive archive = Archive.builder()
+			.user(likeUser)
+			.archiveImgUrl("")
+			.boundary(Boundary.ALL)
+			.name("archive")
+			.build();
+		em.persist(archive);
+		return archive;
+	}
+
+	/**
+	 * 자정부터 현시각까지 좋아요가 많은 게시물 조회
+	 */
+	private Slice<Post> findTrendPostSlice(String username, Long cursorPostId, PageRequest pageRequest) {
+		NumberPath<Long> likeCount = Expressions.numberPath(Long.class, "likeCount");
+
+		List<Tuple> tuples = queryFactory
+			.select(post,
+				ExpressionUtils.as(JPAExpressions
+						.select(postLike.count())
+						.from(postLike)
+						.where(postLike.post.eq(post),
+							postLike.createdDate
+								.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now())),
+					likeCount)
+			)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(
+					hasLessLikeThanCursorPost(cursorPostId)
+				)
+			)
+			.orderBy(likeCount.desc(), post.createdDate.desc())
+			.limit(pageRequest.getPageSize() + 1)
+			.fetch();
+
+		List<Post> posts = tuples.stream().map(tuple -> tuple.get(post)).collect(Collectors.toList());
+
+		return new SliceImpl<>(posts, pageRequest, hasNext(posts, pageRequest.getPageSize()));
+	}
+
+	private Slice<Post> findTrendPostSliceV2(String username, Long cursorPostId, PageRequest pageRequest) {
+		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate
+					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
+
+		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
+
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(hasLessLikeThanCursorPost(cursorPostId))
+			)
+			.orderBy(orderSpecifier, post.createdDate.desc())
+			.limit(pageRequest.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageRequest, hasNext(posts, pageRequest.getPageSize()));
+	}
+
+	private BooleanExpression hasLessLikeThanCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		JPQLQuery<Long> postTodayLikeQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT),
+					LocalDateTime.now()));
+
+		JPQLQuery<Long> cursorPostTodayLikeQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.id.eq(cursorPostId)
+				, postLike.createdDate.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT),
+					LocalDateTime.now()));
+
+		return postTodayLikeQuery.lt(cursorPostTodayLikeQuery)
+			.or(postTodayLikeQuery.eq(cursorPostId).and(isRegisteredBeforeCursorPost(cursorPostId)));
+	}
+
+	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
+		if (cursorPostId == null) {
+			return null;
+		}
+
+		return post.createdDate.before(
+			JPAExpressions.select(post.createdDate).from(post).where(post.id.eq(cursorPostId)));
+	}
+
+	private boolean hasNext(List<Post> posts, int size) {
+		if (posts.size() > size) {
+			posts.remove(size);
+			return true;
+		}
+		return false;
+	}
+
+	private void addPostLike(User liker, List<Post> publicPostFromWriter, double likeCount) {
+		publicPostFromWriter.forEach(post -> {
+			for (int i = 0; i < likeCount; i++) {
+				em.persist(new PostLike(liker, post));
+			}
+		});
+	}
+
+	private List<Post> findPostByNicknameAndBoundary(String writerNickname, Boundary boundary) {
+		return queryFactory.selectFrom(post)
+			.where(post.user.nickname.eq(writerNickname).and(post.boundary.eq(boundary)))
+			.fetch();
+	}
+
+	private BooleanExpression isAllowedToViewPosts(String usernameCond) {
+		if (!Strings.hasText(usernameCond)) {
+			return post.boundary.eq(Boundary.ALL);
+		}
 
 		return post.boundary.eq(Boundary.ALL)
 			.or(post.boundary.eq(Boundary.FOLLOW).and(
-				user.nickname.eq(usernameCond).or(
+				post.user.nickname.eq(usernameCond).or(
 					JPAExpressions
 						.select(follow)
 						.from(follow)
@@ -287,48 +748,12 @@ public class PostSearchRepositoryTest {
 			);
 	}
 
-	private BooleanExpression containsInPost(String keyword) {
-		if (!StringUtils.hasText(keyword)) {
-			return null;
-		}
-
-		return post.postContent.contains(keyword).or(
-			JPAExpressions
-				.select(tagPost.tag.name)
-				.from(tagPost)
-				.where(tagPost.post.eq(post))
-				.contains(keyword)
-		);
-	}
-
-	private BooleanExpression lessThanCursor(String cursor) {
-		if (!StringUtils.hasText(cursor)) {
-			return null;
-		}
-
-		DateTimeTemplate<String> stringDateTimeTemplate = Expressions.dateTimeTemplate(String.class,
-			"DATE_FORMAT({0}, '%y%m%d%H%i%s')", post.createdDate);
-
-		return StringExpressions.lpad(post.postLikes.size().stringValue(), 6, '0')
-			.concat(StringExpressions.lpad(stringDateTimeTemplate.stringValue(), 12, '0')
-				.concat(StringExpressions.lpad(post.id.stringValue(), 8, '0')))
-			.lt(cursor);
-	}
-
-	private String generatedCursor(LocalDateTime createdDate, int postLikeCount, Long postId) {
-		return String.format("%06d", postLikeCount) + createdDate.toString()
-			.substring(2, 19)
-			.replace("T", "")
-			.replace("-", "")
-			.replace(":", "")
-			+ String.format("%08d", postId);
-	}
-
 	private User createUserByNickname(String nickname) {
 		User user = User.builder()
 			.nickname(nickname)
 			.phoneNumber("pn")
 			.agreement(true)
+			.thumbnailUrl("default")
 			.role(UserRole.USER)
 			.build();
 		em.persist(user);
@@ -355,14 +780,16 @@ public class PostSearchRepositoryTest {
 		em.persist(post);
 		em.persist(photo);
 
-
 		return post;
 	}
 
-	private void savePostByCnt(User writer, int postCnt, Boundary boundary, List<Tag> tags) {
+	private List<Post> savePostByCnt(User writer, int postCnt, Boundary boundary, List<Tag> tags) {
+		List<Post> savedPosts = new ArrayList<>();
 		for (int i = 0; i < postCnt; i++) {
-			createPostByUserAndBoundaryAndTag(writer, boundary, tags);
+			Post postByUserAndBoundaryAndTag = createPostByUserAndBoundaryAndTag(writer, boundary, tags);
+			savedPosts.add(postByUserAndBoundaryAndTag);
 		}
+		return savedPosts;
 	}
 
 	private void createFollow(User follower, User following) {

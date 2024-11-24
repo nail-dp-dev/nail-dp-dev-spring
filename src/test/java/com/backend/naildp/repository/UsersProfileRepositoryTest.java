@@ -81,6 +81,7 @@ class UsersProfileRepositoryTest {
 			.nickname(nickname)
 			.role(UserRole.USER)
 			.phoneNumber(phoneNumber)
+			.thumbnailUrl("")
 			.agreement(true)
 			.build();
 
