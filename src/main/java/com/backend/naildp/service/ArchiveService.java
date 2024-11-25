@@ -13,6 +13,7 @@ import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.UnsaveRequestDto;
+import com.backend.naildp.dto.archive.UserArchiveResponseDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
@@ -65,21 +66,29 @@ public class ArchiveService {
 
 	@Transactional(readOnly = true)
 	public PostSummaryResponse getMyArchives(String nickname, int size, Long cursorId) {
-		PageRequest pageRequest = PageRequest.of(0, size);
-		Slice<ArchiveMapping> archiveList;
-
-		if (cursorId == -1) {
-			archiveList = archiveRepository.findArchiveInfosByUserNickname(nickname, pageRequest);
-		} else {
-			archiveList = archiveRepository.findArchiveInfosByIdAndUserNickname(nickname, cursorId, pageRequest);
-
-		}
-		if (archiveList.isEmpty()) {
+		Slice<UserArchiveResponseDto> archives = archiveRepository.findUserArchives(nickname, cursorId, size);
+		if (archives.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
-
-		return PostSummaryResponse.createUserArchiveSummary(archiveList);
+		return PostSummaryResponse.createUserArchiveSummary(archives);
 	}
+	// @Transactional(readOnly = true)
+	// public PostSummaryResponse getMyArchives(String nickname, int size, Long cursorId) {
+	// 	PageRequest pageRequest = PageRequest.of(0, size);
+	// 	Slice<ArchiveMapping> archiveList;
+	//
+	// 	if (cursorId == -1) {
+	// 		archiveList = archiveRepository.findArchiveInfosByUserNickname(nickname, pageRequest);
+	// 	} else {
+	// 		archiveList = archiveRepository.findArchiveInfosByIdAndUserNickname(nickname, cursorId, pageRequest);
+	//
+	// 	}
+	// 	if (archiveList.isEmpty()) {
+	// 		return PostSummaryResponse.createEmptyResponse();
+	// 	}
+	//
+	// 	return PostSummaryResponse.createUserArchiveSummary(archiveList);
+	// }
 
 	@Transactional(readOnly = true)
 	public PostSummaryResponse getOtherArchives(String myNickname, String otherNickname, int size, Long cursorId) {

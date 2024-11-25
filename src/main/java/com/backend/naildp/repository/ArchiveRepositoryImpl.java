@@ -28,9 +28,3 @@ public class ArchiveRepositoryImpl implements ArchiveSearchRepository {
 	}
 
 }
-"select a.id as id, a.name as name, a.boundary as boundary, a.archiveImgUrl as archiveImgUrl, COUNT(ap) as postCount "
-	+ "from Archive a left join a.archivePosts ap "
-	+ "where a.user.nickname = :nickname "
-	+ "and a.id < :id "
-	+ "group by a.id "
-	+ "order by a.createdDate DESC")
