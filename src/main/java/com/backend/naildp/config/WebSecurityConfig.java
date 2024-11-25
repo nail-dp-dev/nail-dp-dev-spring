@@ -1,6 +1,7 @@
 package com.backend.naildp.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -137,6 +138,9 @@ public class WebSecurityConfig {
 			.requestMatchers("/ws-stomp/**").permitAll()  // WebSocket 엔드포인트 예외 처리
 			.requestMatchers("/api/auth/**")
 			.permitAll() // '/api/auth/'로 시작하는 요청 모두 접근 허가
+			.requestMatchers("/api/portone/**").permitAll()
+			.requestMatchers("/api/portone").permitAll()
+			.requestMatchers("/certificate.html").permitAll()
 			.requestMatchers("/api/home").permitAll()
 			.requestMatchers("/api/notifications/subscribe").permitAll()
 			.anyRequest()
