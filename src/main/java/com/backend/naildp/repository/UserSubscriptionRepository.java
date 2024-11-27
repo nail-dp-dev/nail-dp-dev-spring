@@ -12,7 +12,7 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
 	Optional<UserSubscription> findByUserNickname(String nickname);
 
-	@Query("select us from UserNotification us where us.user.nickname = :nickname")
+	@Query("select us from UserSubscription us where us.user.nickname = :nickname")
 	Optional<UserSubscription> findSubscriptionAndUserByNickname(@Param("nickname") String nickname);
 
 }
