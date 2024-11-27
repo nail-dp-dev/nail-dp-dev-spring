@@ -45,7 +45,8 @@ public class CommentLikeService {
 
 				CommentLike commentLike = commentLikeRepository.saveAndFlush(new CommentLike(user, findComment));
 
-				notificationManager.handleNotificationFromCommentLike(findComment, user, commentLike);
+				// notificationManager.handleNotificationFromCommentLike(findComment, user, commentLike);
+				notificationManager.handleNotificationFromCommentLikeV2(findComment, user, commentLike);
 
 				return commentLike;
 			});
