@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.backend.naildp.dto.notification.SubscriptionUpdateDto;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.service.NotifyService;
@@ -32,9 +33,9 @@ public class SubscriptionController {
 	}
 
 	@PostMapping("/subscribe")
-	public ResponseEntity<?> subscribeWeb(@RequestBody Subscription subscription,
+	public ResponseEntity<?> subscribeWeb(@RequestBody SubscriptionUpdateDto subscriptionUpdateDto,
 		@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		subscriptionService.updateSubscription(subscription, userDetails.getUser().getNickname());
+		subscriptionService.updateSubscription(subscriptionUpdateDto, userDetails.getUser().getNickname());
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "구독 정보 저장", 2001));
 	}
 }

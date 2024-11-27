@@ -40,22 +40,22 @@ public class UserSubscription {
 		this.auth = auth;
 	}
 
-	public static UserSubscription of(User user, Subscription subscription) {
+	public static UserSubscription from(User user, String endpoint, String p256dh, String auth) {
 		return UserSubscription.builder()
 			.user(user)
-			.endpoint(subscription.endpoint)
-			.p256dh(subscription.keys.p256dh)
-			.auth(subscription.keys.auth)
+			.endpoint(endpoint)
+			.p256dh(p256dh)
+			.auth(auth)
 			.build();
 	}
 
-	public boolean hasDifferentSubscriptionInfo(Subscription subscription) {
-		return !this.endpoint.equals(subscription.endpoint);
+	public boolean hasDifferentSubscriptionInfo(String endpoint) {
+		return !this.endpoint.equals(endpoint);
 	}
 
-	public void updateInfo(Subscription subscription) {
-		this.endpoint = subscription.endpoint;
-		this.p256dh = subscription.keys.p256dh;
-		this.auth = subscription.keys.auth;
+	public void updateInfo(String endpoint, String p256dh, String auth) {
+		this.endpoint = endpoint;
+		this.p256dh = p256dh;
+		this.auth = auth;
 	}
 }
