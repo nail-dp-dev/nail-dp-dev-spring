@@ -48,6 +48,12 @@ public class NotificationManager {
 		}
 	}
 
+	public void handleFollowNotification(Follow savedFollow) {
+		Notification savedNotification = notificationService.save(Notification.followOf(savedFollow));
+
+		sendNotificationEvent(savedNotification);
+	}
+
 	private void sendNotificationEvent(Notification notification) {
 		User receiver = notification.getReceiver();
 		if (receiver.allowsNotificationType(notification.getNotificationType())) {
