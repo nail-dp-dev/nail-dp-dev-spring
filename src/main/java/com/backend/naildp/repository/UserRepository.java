@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, UserRepositor
 
 	Optional<User> findByPhoneNumber(String phoneNumber);
 
+	boolean existsUserByPhoneNumber(String phoneNumber);
+
 	@Query("SELECT u FROM ChatRoomUser cu JOIN cu.user u WHERE cu.chatRoom.id = :chatRoomId AND u.nickname != :nickname AND (cu.isExited = false OR cu.chatRoom.roomType = 'PERSONAL')")
 	List<User> findAllByChatRoomIdNotInMyNickname(@Param("chatRoomId") UUID chatRoomId,
 		@Param("nickname") String nickname);

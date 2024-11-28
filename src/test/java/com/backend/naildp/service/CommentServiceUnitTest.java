@@ -47,7 +47,10 @@ class CommentServiceUnitTest {
 	CommentRepository commentRepository;
 
 	@Mock
-	FollowRepository followRepository;
+	PostAccessValidator postAccessValidator;
+
+	@Mock
+	NotificationManager notificationManager;
 
 	@Mock
 	UserRepository userRepository;
@@ -59,6 +62,8 @@ class CommentServiceUnitTest {
 		Post tempSavedPost = createPost(user, true, Boundary.ALL);
 
 		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(tempSavedPost));
+		doThrow(new CustomException("임시저장한 게시물에는 댓글을 등록할 수 없습니다.", ErrorCode.NOT_FOUND))
+			.when(postAccessValidator).isAvailablePost(eq(tempSavedPost), eq(user.getNickname()));
 
 		//when
 		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("임시저장인 게시물에 댓글 등록시 예외 발생");
@@ -74,9 +79,11 @@ class CommentServiceUnitTest {
 		//given
 		String userNickname = "nickname";
 		User writer = createUserByNickname("writer");
-		Post privatePost = createPost(writer, false, Boundary.NONE);
+		Post postVisibleToWriter = createPost(writer, false, Boundary.NONE);
 
-		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(privatePost));
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(postVisibleToWriter));
+		doThrow(new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY))
+			.when(postAccessValidator).isAvailablePost(eq(postVisibleToWriter), eq(userNickname));
 
 		//when
 		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("비공개 게시물에 댓글 등록시 예외 발생");
@@ -96,6 +103,7 @@ class CommentServiceUnitTest {
 		Comment comment = new Comment(writer, privatePost, "댓글 등록");
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.ofNullable(privatePost));
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(userRepository.findByNickname(eq(writerNickname))).thenReturn(Optional.ofNullable(writer));
 		when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
@@ -107,8 +115,6 @@ class CommentServiceUnitTest {
 		verify(postRepository).findPostAndUser(anyLong());
 		verify(userRepository).findByNickname(eq(writerNickname));
 		verify(commentRepository).save(any(Comment.class));
-
-		verify(followRepository, never()).existsByFollowerNicknameAndFollowing(anyString(), any(User.class));
 	}
 
 	@DisplayName("팔로우 공개 게시물에 팔로워가 아닌 사용자가 댓글 등록시 예외 발생")
@@ -120,8 +126,8 @@ class CommentServiceUnitTest {
 		Post postOpenedForFollower = createPost(writer, false, Boundary.FOLLOW);
 
 		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(postOpenedForFollower));
-		given(followRepository.existsByFollowerNicknameAndFollowing(eq(notFollowedUser.getNickname()), eq(writer)))
-			.willReturn(false);
+		doThrow(new CustomException("비공개 게시물은 작성자만 접근할 수 있습니다.", ErrorCode.INVALID_BOUNDARY))
+			.when(postAccessValidator).isAvailablePost(eq(postOpenedForFollower), eq(notFollowedUser.getNickname()));
 
 		//when
 		CommentRegisterDto commentRegisterDto = new CommentRegisterDto("팔로우 공개 게시물에 댓글 등록시 예외 발생");
@@ -141,9 +147,9 @@ class CommentServiceUnitTest {
 		Comment comment = new Comment(followerUser, postOpenedForFollower, "댓글 등록 성공");
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.ofNullable(postOpenedForFollower));
-		when(followRepository.existsByFollowerNicknameAndFollowing(eq(followerUser.getNickname()), eq(writer)))
-			.thenReturn(true);
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(userRepository.findByNickname(anyString())).thenReturn(Optional.ofNullable(followerUser));
+		doNothing().when(notificationManager).handleCommentNotification(any(Comment.class), any(User.class));
 		when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
 		//when
@@ -151,7 +157,6 @@ class CommentServiceUnitTest {
 
 		//then
 		verify(postRepository).findPostAndUser(1L);
-		verify(followRepository).existsByFollowerNicknameAndFollowing(followerUser.getNickname(), writer);
 		verify(userRepository).findByNickname(followerUser.getNickname());
 		verify(commentRepository).save(any(Comment.class));
 	}
@@ -165,8 +170,7 @@ class CommentServiceUnitTest {
 		Comment comment = new Comment(writer, postOpenedForFollower, "댓글 등록 성공");
 
 		when(postRepository.findPostAndUser(anyLong())).thenReturn(Optional.ofNullable(postOpenedForFollower));
-		when(followRepository.existsByFollowerNicknameAndFollowing(eq(writer.getNickname()), eq(writer)))
-			.thenReturn(false);
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(userRepository.findByNickname(anyString())).thenReturn(Optional.ofNullable(writer));
 		when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
@@ -175,7 +179,6 @@ class CommentServiceUnitTest {
 
 		//then
 		verify(postRepository).findPostAndUser(1L);
-		verify(followRepository).existsByFollowerNicknameAndFollowing(writer.getNickname(), writer);
 		verify(userRepository).findByNickname(writer.getNickname());
 		verify(commentRepository).save(any(Comment.class));
 	}
@@ -190,7 +193,9 @@ class CommentServiceUnitTest {
 		Comment comment = new Comment(commenter, postOpenedForAllUser, "댓글 등록 성공");
 
 		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(postOpenedForAllUser));
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		given(userRepository.findByNickname(eq(commenter.getNickname()))).willReturn(Optional.of(commenter));
+		doNothing().when(notificationManager).handleCommentNotification(any(Comment.class), any(User.class));
 		given(commentRepository.save(any())).willReturn(comment);
 
 		//when
@@ -201,8 +206,6 @@ class CommentServiceUnitTest {
 		verify(postRepository).findPostAndUser(1L);
 		verify(userRepository).findByNickname(commenter.getNickname());
 		verify(commentRepository).save(any(Comment.class));
-
-		verify(followRepository, never()).existsByFollowerNicknameAndFollowing(anyString(), any(User.class));
 	}
 
 	@Test
@@ -214,6 +217,8 @@ class CommentServiceUnitTest {
 		Comment comment = new Comment(user, post, "comment");
 		CommentRegisterDto commentModifyDto = new CommentRegisterDto("modify comment");
 
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
 
 		//when
@@ -234,6 +239,8 @@ class CommentServiceUnitTest {
 		Comment comment = new Comment(user, post, "comment");
 		CommentRegisterDto commentModifyDto = new CommentRegisterDto("modify comment");
 
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
 
 		//when
@@ -251,6 +258,8 @@ class CommentServiceUnitTest {
 		Post post = createPost(writer, false, Boundary.FOLLOW);
 		Comment comment = new Comment(user, post, "comment");
 
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
 
 		//when
@@ -270,6 +279,8 @@ class CommentServiceUnitTest {
 		Post post = createPost(writer, false, Boundary.FOLLOW);
 		Comment comment = new Comment(user, post, "comment");
 
+		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
+		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
 		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
 		doNothing().when(commentRepository).delete(any(Comment.class));
 
