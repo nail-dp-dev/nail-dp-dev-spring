@@ -9,9 +9,11 @@ import org.hibernate.annotations.Formula;
 
 import com.backend.naildp.common.NotificationType;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.common.converter.StringCryptoConverter;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -38,6 +40,7 @@ public class User extends BaseEntity {
 	private String nickname;
 
 	@Column(nullable = false)
+	@Convert(converter = StringCryptoConverter.class)
 	private String phoneNumber;
 
 	private Long point = 0L;
