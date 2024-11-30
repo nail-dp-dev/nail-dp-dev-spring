@@ -38,6 +38,7 @@ public class NotifyEventHandler {
 
 	@Async
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void sendWebPushNotification(NotificationEventDto notificationEventDto) {
 		userSubscriptionRepository.findByUserNickname(notificationEventDto.getReceiverNickname())
 			.ifPresent(userSubscription -> webPushService.sendPush(notificationEventDto, userSubscription)

@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class NotificationManager {
 
 	private final NotificationService notificationService;
-	private final NotifyEventHandler notifyEventHandler;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	public void handleNotificationFromCommentLike(Comment comment, User user, CommentLike commentLike) {
 		if (comment.notRegisteredBy(user)) {
@@ -57,7 +57,7 @@ public class NotificationManager {
 	private void sendNotificationEvent(Notification notification) {
 		User receiver = notification.getReceiver();
 		if (receiver.allowsNotificationType(notification.getNotificationType())) {
-			notifyEventHandler.sendWebPushNotification(new NotificationEventDto(notification));
+			applicationEventPublisher.publishEvent(new NotificationEventDto(notification));
 		}
 	}
 
