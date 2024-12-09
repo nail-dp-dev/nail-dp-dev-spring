@@ -12,6 +12,7 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.ArchivePostSummaryResponse;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
+import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.dto.archive.UnsaveRequestDto;
 import com.backend.naildp.dto.archive.UserArchiveResponseDto;
 import com.backend.naildp.dto.home.PostSummaryResponse;
@@ -21,7 +22,6 @@ import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.ArchiveMapping;
 import com.backend.naildp.repository.ArchivePostRepository;
 import com.backend.naildp.repository.ArchiveRepository;
 import com.backend.naildp.repository.FollowRepository;
@@ -72,42 +72,18 @@ public class ArchiveService {
 		}
 		return PostSummaryResponse.createUserArchiveSummary(archives);
 	}
-	// @Transactional(readOnly = true)
-	// public PostSummaryResponse getMyArchives(String nickname, int size, Long cursorId) {
-	// 	PageRequest pageRequest = PageRequest.of(0, size);
-	// 	Slice<ArchiveMapping> archiveList;
-	//
-	// 	if (cursorId == -1) {
-	// 		archiveList = archiveRepository.findArchiveInfosByUserNickname(nickname, pageRequest);
-	// 	} else {
-	// 		archiveList = archiveRepository.findArchiveInfosByIdAndUserNickname(nickname, cursorId, pageRequest);
-	//
-	// 	}
-	// 	if (archiveList.isEmpty()) {
-	// 		return PostSummaryResponse.createEmptyResponse();
-	// 	}
-	//
-	// 	return PostSummaryResponse.createUserArchiveSummary(archiveList);
-	// }
 
 	@Transactional(readOnly = true)
 	public PostSummaryResponse getOtherArchives(String myNickname, String otherNickname, int size, Long cursorId) {
-
 		User otherUser = userRepository.findByNickname(otherNickname)
 			.orElseThrow(() -> new CustomException("해당 유저가 존재하지 않습니다.", ErrorCode.NOT_FOUND));
 
 		//사용자가 아카이브 생성자의 팔로워인지 확인필요. -> isLock(잠금 썸네일)
 		boolean isFollower = followRepository.existsByFollowerNicknameAndFollowing(myNickname, otherUser);
 
-		PageRequest pageRequest = PageRequest.of(0, size);
-		Slice<ArchiveMapping> archiveList;
+		Slice<UserArchiveResponseDto> archiveList = archiveRepository.findOtherUserArchives(otherNickname, cursorId,
+			size);
 
-		if (cursorId == -1) {
-			archiveList = archiveRepository.findArchiveInfosWithoutNone(otherNickname, pageRequest);
-		} else {
-			archiveList = archiveRepository.findArchiveInfosByIdWithoutNone(otherNickname, cursorId, pageRequest);
-
-		}
 		if (archiveList.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
@@ -186,21 +162,16 @@ public class ArchiveService {
 
 	@Transactional(readOnly = true)
 	public PostSummaryResponse getFollowingArchives(String nickname, int size, Long cursorId) {
-		PageRequest pageRequest = PageRequest.of(0, size);
-		Slice<ArchiveMapping> archiveList;
-		// 팔로잉 nickname 썸네일사진, 아카이브 썸네일, archive count 아카이브 ID
-		List<String> followingNickname = followRepository.findFollowingNicknamesByUserNickname(nickname);
+		// 팔로잉 유저 목록 가져오기
+		List<String> followingNicknames = followRepository.findFollowingNicknamesByUserNickname(nickname);
 
-		// followingNickname.add(nickname);
-		if (cursorId == -1) {
-			archiveList = archiveRepository.findArchivesByFollowing(followingNickname, pageRequest);
-		} else {
-			archiveList = archiveRepository.findArchivesByIdAndFollowing(followingNickname, cursorId, pageRequest);
+		Slice<FollowArchiveResponseDto> archiveList = archiveRepository.findFollowingArchives(followingNicknames,
+			cursorId, size);
 
-		}
 		if (archiveList.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
+
 		return PostSummaryResponse.createFollowArchiveSummary(archiveList);
 	}
 
@@ -335,22 +306,16 @@ public class ArchiveService {
 		});
 	}
 
-	@Transactional
-	public PostSummaryResponse getSavedArchives(String nickname, Long postId, int size, long cursorId) {
+	@Transactional(readOnly = true)
+	public PostSummaryResponse getSavedArchives(String nickname, Long postId, int size, Long cursorId) {
+		Slice<UserArchiveResponseDto> archiveList = archiveRepository.findSavedArchives(nickname, postId, cursorId,
+			size);
 
-		PageRequest pageRequest = PageRequest.of(0, size);
-		Slice<ArchiveMapping> archiveList;
-
-		if (cursorId == -1) {
-			archiveList = archiveRepository.findSavedArchiveByPage(nickname, postId, pageRequest);
-		} else {
-			archiveList = archiveRepository.findSavedArchiveByIdAndPage(nickname, postId, cursorId, pageRequest);
-
-		}
 		if (archiveList.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
 		}
 
 		return PostSummaryResponse.createUserArchiveSummary(archiveList);
 	}
+
 }

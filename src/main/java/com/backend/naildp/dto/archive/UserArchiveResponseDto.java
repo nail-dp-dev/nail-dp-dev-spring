@@ -2,7 +2,6 @@ package com.backend.naildp.dto.archive;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.repository.ArchiveMapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,54 +22,33 @@ public class UserArchiveResponseDto {
 	private Boolean isVideo;
 	private Boolean isLock;
 
-	// @QueryProjection
-	// public UserArchiveResponseDto userArchiveResponseDto(Long id, String archiveName, Boundary boundary,
-	// 	String archiveImgUrl, Long postCount) {
-	// 	this.archiveId = id;
-	// 	this.archiveName = archiveName;
-	// 	this.boundary = boundary;
-	// 	this.archiveImgUrl = archiveImgUrl;
-	// 	this.postCount = postCount;
-	// }
-
-	public static UserArchiveResponseDto userArchiveResponseDto(ArchiveMapping archive) {
-		UserArchiveResponseDtoBuilder builder = UserArchiveResponseDto.builder()
-			.archiveId(archive.getId())
-			.boundary(archive.getBoundary())
-			.postCount(archive.getPostCount())
-			.archiveName(archive.getName());
-
-		setArchiveImage(builder, archive);
-
-		return builder.build();
+	public UserArchiveResponseDto(Long archiveId, String archiveName, Boundary boundary, String archiveImgUrl,
+		Long postCount, Boolean isFollower) {
+		this.archiveId = archiveId;
+		this.archiveName = archiveName;
+		this.boundary = boundary;
+		this.archiveImgUrl = archiveImgUrl;
+		this.postCount = postCount;
+		this.isPhoto = FileExtensionChecker.isPhotoExtension(archiveImgUrl);
+		this.isVideo = FileExtensionChecker.isVideoExtension(archiveImgUrl);
+		this.isLock = calculateIsLock(boundary, isFollower);
 	}
 
-	public static UserArchiveResponseDto otherArchiveResponseDto(ArchiveMapping archive, Boolean isFollower) {
-		UserArchiveResponseDtoBuilder builder = UserArchiveResponseDto.builder()
-			.archiveId(archive.getId())
-			.boundary(archive.getBoundary())
-			.postCount(archive.getPostCount())
-			.archiveName(archive.getName());
-
-		setArchiveImage(builder, archive);
-		setLockStatus(builder, archive, isFollower);
-
-		return builder.build();
+	private Boolean calculateIsLock(Boundary boundary, Boolean isFollower) {
+		return (boundary != Boundary.FOLLOW || !isFollower) && boundary != Boundary.ALL;
 	}
 
-	private static void setArchiveImage(UserArchiveResponseDtoBuilder builder,
-		ArchiveMapping archive) {
-		if (archive.getArchiveImgUrl() != null) {
-			builder.archiveImgUrl(archive.getArchiveImgUrl())
-				.isPhoto(FileExtensionChecker.isPhotoExtension(archive.getArchiveImgUrl()))
-				.isVideo(FileExtensionChecker.isVideoExtension(archive.getArchiveImgUrl()));
-		}
+	public static UserArchiveResponseDto otherArchiveResponseDto(UserArchiveResponseDto dto, Boolean isFollower) {
+		return UserArchiveResponseDto.builder()
+			.archiveId(dto.getArchiveId())
+			.archiveName(dto.getArchiveName())
+			.boundary(dto.getBoundary())
+			.archiveImgUrl(dto.getArchiveImgUrl())
+			.postCount(dto.getPostCount())
+			.isPhoto(dto.getIsPhoto())
+			.isVideo(dto.getIsVideo())
+			.isLock((dto.getBoundary() != Boundary.FOLLOW || !isFollower) && dto.getBoundary() != Boundary.ALL)
+			.build();
 	}
 
-	private static void setLockStatus(UserArchiveResponseDtoBuilder builder,
-		ArchiveMapping archive, Boolean isFollower) {
-		boolean isLocked;
-		isLocked = (archive.getBoundary() != Boundary.FOLLOW || !isFollower) && archive.getBoundary() != Boundary.ALL;
-		builder.isLock(isLocked);
-	}
 }

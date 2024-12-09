@@ -9,7 +9,6 @@ import org.springframework.data.domain.SliceImpl;
 import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.dto.archive.UserArchiveResponseDto;
 import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.ArchiveMapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,22 +49,22 @@ public class PostSummaryResponse {
 			likedPostSlice.map(post -> HomePostResponse.likedPostResponse(post, savedPosts)));
 	}
 
-	public static PostSummaryResponse createFollowArchiveSummary(Slice<ArchiveMapping> followingArchives) {
-		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
-		return new PostSummaryResponse(cursorId,
-			followingArchives.map(FollowArchiveResponseDto::followArchiveResponseDto));
+	public static PostSummaryResponse createFollowArchiveSummary(Slice<FollowArchiveResponseDto> followingArchives) {
+		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getArchiveId();
+		return new PostSummaryResponse(cursorId, followingArchives);
+
 	}
 
-	public static PostSummaryResponse createUserArchiveSummary(Slice<ArchiveMapping> followingArchives) {
-		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
-		return new PostSummaryResponse(cursorId,
-			followingArchives.map(UserArchiveResponseDto::userArchiveResponseDto));
+	public static PostSummaryResponse createUserArchiveSummary(Slice<UserArchiveResponseDto> archives) {
+		Long cursorId = archives.getContent().get(archives.getNumberOfElements() - 1).getArchiveId();
+
+		return new PostSummaryResponse(cursorId, archives);
 	}
 
-	public static PostSummaryResponse createOtherArchiveSummary(Slice<ArchiveMapping> followingArchives,
+	public static PostSummaryResponse createOtherArchiveSummary(Slice<UserArchiveResponseDto> archives,
 		Boolean isFollower) {
-		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
+		Long cursorId = archives.getContent().get(archives.getNumberOfElements() - 1).getArchiveId();
 		return new PostSummaryResponse(cursorId,
-			followingArchives.map(archive -> UserArchiveResponseDto.otherArchiveResponseDto(archive, isFollower)));
+			archives.map(archive -> UserArchiveResponseDto.otherArchiveResponseDto(archive, isFollower)));
 	}
 }

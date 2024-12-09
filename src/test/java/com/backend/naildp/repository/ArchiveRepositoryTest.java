@@ -2,6 +2,8 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,9 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
+import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
+import com.backend.naildp.dto.archive.UserArchiveResponseDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
+import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Photo;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
@@ -44,7 +49,11 @@ public class ArchiveRepositoryTest {
 	@Autowired
 	private ArchivePostRepository archivePostRepository;
 
+	@Autowired
+	private FollowRepository followRepository;
+
 	private User testUser;
+	private User testUser2;
 
 	private Archive archive1;
 	private Archive archive2;
@@ -56,6 +65,10 @@ public class ArchiveRepositoryTest {
 	public void setUp() {
 		// given
 		testUser = createUser("testUser");
+		testUser2 = createUser("testUser2");
+
+		createFollow(testUser2, testUser);
+		Archive archive4 = createArchive(testUser2, Boundary.ALL, 1);
 
 		archive1 = createArchive(testUser, Boundary.ALL, 1);
 		archive2 = createArchive(testUser, Boundary.FOLLOW, 2);
@@ -64,88 +77,61 @@ public class ArchiveRepositoryTest {
 		post = createPostByUser(testUser, Boundary.ALL, 1);
 		ArchivePost archivePost1 = createArchivePost(archive1, post);
 		ArchivePost archivePost2 = createArchivePost(archive2, post);
+		Archive archivePost3 = createArchive(testUser2, Boundary.ALL, 1);
 
 	}
 
 	@Test
-	@DisplayName("사용자 닉네임으로 아카이브 리스트 조회 - 기본 조회")
-	void findArchiveInfosByUserNickname1() {
+	@DisplayName("사용자 닉네임으로 아카이브 리스트 조회")
+	void findUserArchives() {
 		// when
-		Slice<ArchiveMapping> archives = archiveRepository.findArchiveInfosByUserNickname("testUser",
-			PageRequest.of(0, 10));
+		Slice<UserArchiveResponseDto> archives = archiveRepository.findUserArchives("testUser", -1L, 10);
 
 		// then
 		assertThat(archives).isNotNull();
 		assertThat(archives.getContent()).hasSize(3);
-		assertThat(archives.getContent().get(0).getName()).isEqualTo("archive3");
+		assertThat(archives.getContent().get(0).getArchiveName()).isEqualTo("archive3");
 	}
 
 	@Test
-	@DisplayName("사용자 닉네임과 아카이브 ID로 아카이브 리스트 조회 - ID 기준 조회")
-	void findArchiveInfosByIdAndUserNickname2() {
+	@DisplayName("다른 사용자 아카이브 조회")
+	void findOtherArchives() {
 		// when
-		Slice<ArchiveMapping> archives = archiveRepository.findArchiveInfosByIdAndUserNickname("testUser",
-			archive2.getId(), PageRequest.of(0, 10));
+		Slice<UserArchiveResponseDto> archives = archiveRepository.findOtherUserArchives("testUser", -1L, 10);
+
+		// then
+		assertThat(archives).isNotNull();
+		assertThat(archives.getContent()).hasSize(2); // NONE 제외
+		assertThat(archives.getContent().get(0).getArchiveName()).isEqualTo("archive2");
+	}
+
+	@Test
+	@DisplayName("팔로잉한 사용자 아카이브 조회")
+	void findFollowingArchives() {
+		// given
+		List<String> followingNicknames = List.of("testUser2");
+
+		// when
+		Slice<FollowArchiveResponseDto> archives = archiveRepository.findFollowingArchives(followingNicknames, -1L, 10);
 
 		// then
 		assertThat(archives).isNotNull();
 		assertThat(archives.getContent()).hasSize(1);
-		assertThat(archives.getContent().get(0).getName()).isEqualTo("archive1");
-	}
-
-	@Test
-	@DisplayName("(다른 유저 아카이브 조회)사용자 닉네임으로 NONE이 아닌 아카이브 리스트 조회")
-	void findArchiveInfosWithoutNone1() {
-		// when
-		Slice<ArchiveMapping> archives = archiveRepository.findArchiveInfosWithoutNone("testUser",
-			PageRequest.of(0, 10));
-
-		// then
-		assertThat(archives).isNotNull();
-		assertThat(archives.getContent()).hasSize(2);
-		assertThat(archives.getContent().get(0).getName()).isEqualTo("archive2");
-		assertThat(archives.getContent().get(1).getName()).isEqualTo("archive1");
-	}
-
-	@Test
-	@DisplayName("(다른 유저 아카이브 조회)사용자 닉네임과 아카이브 ID로 NONE이 아닌 아카이브 정보 조회")
-	void findArchiveInfosByIdWithoutNone2() {
-		// when
-		Slice<ArchiveMapping> archives = archiveRepository.findArchiveInfosByIdWithoutNone("testUser", archive2.getId(),
-			PageRequest.of(0, 10));
-
-		// then
-		assertThat(archives).isNotNull();
-		assertThat(archives.getContent()).hasSize(1);
-		assertThat(archives.getContent().get(0).getName()).isEqualTo("archive1");
+		assertThat(archives.getContent().get(0).getNickname()).isEqualTo("testUser2");
 	}
 
 	@Test
 	@DisplayName("저장된 게시물이 포함된 아카이브 조회")
 	void findSavedArchiveByPage() {
 		// when
-		Slice<ArchiveMapping> archives = archiveRepository.findSavedArchiveByPage("testUser", post.getId(),
-			PageRequest.of(0, 10));
+		Slice<UserArchiveResponseDto> archives = archiveRepository.findSavedArchives("testUser", post.getId(), -1L, 10);
+		PageRequest.of(0, 10);
 
 		// then
 		assertThat(archives).isNotNull();
 		assertThat(archives.getContent()).hasSize(2);
-		assertThat(archives.getContent().get(0).getName()).isEqualTo("archive2");
-		assertThat(archives.getContent().get(1).getName()).isEqualTo("archive1");
-
-	}
-
-	@Test
-	@DisplayName("저장된 게시물이 포함된 아카이브 조회")
-	void findSavedArchiveByIdAndPage() {
-		// when
-		Slice<ArchiveMapping> archives = archiveRepository.findSavedArchiveByIdAndPage("testUser", post.getId(),
-			archive1.getId(),
-			PageRequest.of(0, 10));
-
-		// then
-		assertThat(archives).isNotNull();
-		assertThat(archives.getContent()).hasSize(0);
+		assertThat(archives.getContent().get(0).getArchiveName()).isEqualTo("archive2");
+		assertThat(archives.getContent().get(1).getArchiveName()).isEqualTo("archive1");
 
 	}
 
@@ -179,7 +165,7 @@ public class ArchiveRepositoryTest {
 	}
 
 	private Archive createArchive(User user, Boundary boundary, int i) {
-		Archive archive = new Archive(user, "archive" + i, boundary);
+		Archive archive = new Archive(user, "archive" + i, boundary, "archive" + i + "jpg");
 		archiveRepository.saveAndFlush(archive);
 		return archive;
 	}
@@ -190,4 +176,10 @@ public class ArchiveRepositoryTest {
 		return archivePost;
 	}
 
+	private Follow createFollow(User follower, User following) {
+		Follow follow = new Follow(follower, following);
+		followRepository.saveAndFlush(follow);
+
+		return follow;
+	}
 }
