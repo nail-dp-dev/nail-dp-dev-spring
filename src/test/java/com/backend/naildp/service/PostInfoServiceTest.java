@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Slice;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -38,6 +39,7 @@ import com.backend.naildp.service.post.PostInfoService;
 
 import jakarta.persistence.EntityManager;
 
+@ActiveProfiles(profiles = {"test", "secret"})
 @SpringBootTest
 @Transactional
 public class PostInfoServiceTest {
