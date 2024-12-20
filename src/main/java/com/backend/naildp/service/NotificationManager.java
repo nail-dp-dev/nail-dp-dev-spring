@@ -3,8 +3,10 @@ package com.backend.naildp.service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import com.backend.naildp.dto.notification.NotificationEventDto;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
+import com.backend.naildp.entity.Follow;
 import com.backend.naildp.entity.Notification;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
@@ -46,10 +48,18 @@ public class NotificationManager {
 		}
 	}
 
+	public void handleFollowNotification(Follow savedFollow) {
+		Notification savedNotification = notificationService.save(Notification.followOf(savedFollow));
+
+		sendNotificationEvent(savedNotification);
+	}
+
 	private void sendNotificationEvent(Notification notification) {
 		User receiver = notification.getReceiver();
 		if (receiver.allowsNotificationType(notification.getNotificationType())) {
-			applicationEventPublisher.publishEvent(notification);
+			applicationEventPublisher.publishEvent(new NotificationEventDto(notification));
 		}
 	}
+
+
 }
