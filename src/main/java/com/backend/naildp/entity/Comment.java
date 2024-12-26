@@ -53,6 +53,10 @@ public class Comment extends BaseEntity {
 		this.commentContent = commentContent;
 	}
 
+	public static Comment of(User user, Post post, String commentContent) {
+		return new Comment(user, post, commentContent);
+	}
+
 	public void modifyContent(String commentContent) {
 		this.commentContent = commentContent;
 	}
