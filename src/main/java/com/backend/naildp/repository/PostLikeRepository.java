@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,5 +53,9 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("delete from PostLike pl where pl.post.id = :postId")
 	void deleteAllByPostId(@Param("postId") Long postId);
+
+	Optional<PostLike> findPostLikeByPostIdAndUserId(Long postId, UUID userId);
+
+	boolean existsPostLikeByPostIdAndUserId(Long postId, UUID userId);
 
 }

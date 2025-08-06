@@ -118,6 +118,31 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	}
 
 	@Override
+	public Slice<Post> findTrendPostSliceUsingLeftJoin(String username, Long cursorPostId, Pageable pageable) {
+		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
+			.select(postLike.count())
+			.from(postLike)
+			.where(postLike.post.eq(post),
+				postLike.createdDate
+					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
+
+		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
+
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(hasLessLikeThanCursorPost(cursorPostId))
+			)
+			.orderBy(orderSpecifier, post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
+	@Override
 	public Slice<Post> findForYouPostSlice(String username, Long cursorPostId, List<Long> tagIdsInPosts, Pageable pageable) {
 		// 자정부터 현재 시간까지 게시물의 좋아요 개수 추출 서브쿼리
 		JPQLQuery<Long> postLikeCountQuery = JPAExpressions

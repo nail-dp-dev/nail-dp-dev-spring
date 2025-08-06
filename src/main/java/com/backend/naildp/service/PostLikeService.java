@@ -1,5 +1,6 @@
 package com.backend.naildp.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,8 @@ import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.PostLikeRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.service.dto.PostLikeEvent;
+import com.backend.naildp.service.dto.PostUnlikeEvent;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +27,7 @@ public class PostLikeService {
 	private final PostLikeRepository postLikeRepository;
 	private final PostAccessValidator postAccessValidator;
 	private final NotificationManager notificationManager;
+	private final ApplicationEventPublisher postLikeEventPublisher;
 
 	@Transactional
 	public Long likeByPostId(Long postId, String username) {
@@ -37,6 +41,8 @@ public class PostLikeService {
 					.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 				PostLike savedPostLike = postLikeRepository.save(new PostLike(user, post));
 				post.addPostLike(savedPostLike);
+
+				postLikeEventPublisher.publishEvent(new PostLikeEvent(post, user));
 
 				notificationManager.handlePostLikeNotification(user, post, savedPostLike);
 
@@ -54,6 +60,8 @@ public class PostLikeService {
 
 		PostLike postLike = postLikeRepository.findPostLikeByUserNicknameAndPostId(username, postId)
 			.orElseThrow(() -> new CustomException("해당 게시물은 존재하지 않습니다.", ErrorCode.NOT_FOUND));
+
+		postLikeEventPublisher.publishEvent(new PostUnlikeEvent(post, postLike.getUser()));
 
 		postLikeRepository.deletePostLikeById(postLike.getId());
 	}

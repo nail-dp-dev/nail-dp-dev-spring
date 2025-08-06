@@ -57,6 +57,8 @@ public class Post extends BaseEntity {
 
 	private Long sharing = 0L;
 
+	private Long todayLikeCount = 0L;
+
 	@Enumerated(value = EnumType.STRING)
 	@Column(nullable = false)
 	private Boundary boundary; // FOLLOW, ALL, NONE
@@ -130,5 +132,13 @@ public class Post extends BaseEntity {
 
 	public void share() {
 		this.sharing++;
+	}
+
+	public void increaseLike() {
+		this.todayLikeCount++;
+	}
+
+	public void decreaseLike() {
+		this.todayLikeCount++;
 	}
 }
