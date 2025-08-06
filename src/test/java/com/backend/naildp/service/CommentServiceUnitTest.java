@@ -219,7 +219,7 @@ class CommentServiceUnitTest {
 
 		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
 		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
-		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
+		when(commentRepository.findCommentAndUser(anyLong())).thenReturn(Optional.of(comment));
 
 		//when
 		CustomException exception = assertThrows(CustomException.class,
@@ -241,13 +241,13 @@ class CommentServiceUnitTest {
 
 		given(postRepository.findPostAndUser(anyLong())).willReturn(Optional.of(post));
 		doNothing().when(postAccessValidator).isAvailablePost(any(Post.class), anyString());
-		when(commentRepository.findCommentAndPostAndUser(anyLong())).thenReturn(Optional.of(comment));
+		when(commentRepository.findCommentAndUser(anyLong())).thenReturn(Optional.of(comment));
 
 		//when
 		commentService.modifyComment(1L, 1L, commentModifyDto, user.getNickname());
 
 		//then
-		verify(commentRepository).findCommentAndPostAndUser(anyLong());
+		verify(commentRepository).findCommentAndUser(anyLong());
 	}
 
 	@Test
