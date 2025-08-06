@@ -36,13 +36,12 @@ public class CommentService {
 	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
 		Post post = postRepository.findPostAndUser(postId)
-			.orElseThrow(() -> new CustomException("해당 포스트에 댓글을 등록할 수 없습니다. 다시 시도해주세요", ErrorCode.NOT_FOUND));
+			.orElseThrow(() -> new CustomException("게시물을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 		postAccessValidator.isAvailablePost(post, username);
 
-		//comment 생성 및 저장
 		User commenter = userRepository.findByNickname(username)
-			.orElseThrow(() -> new CustomException("다시 시도해주세요.", ErrorCode.NOT_FOUND));
-		Comment comment = new Comment(commenter, post, commentRegisterDto.getCommentContent());
+			.orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		Comment comment = Comment.of(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
 
 		User postWriter = post.getUser();
@@ -58,7 +57,7 @@ public class CommentService {
 
 		postAccessValidator.isAvailablePost(post, username);
 
-		Comment comment = commentRepository.findCommentAndPostAndUser(commentId)
+		Comment comment = commentRepository.findCommentAndUser(commentId)
 			.orElseThrow(() -> new CustomException("댓글을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
 
 		if (comment.notRegisteredBy(username)) {
@@ -84,8 +83,8 @@ public class CommentService {
 			throw new CustomException("댓글은 작성자만 삭제할 수 있습니다.", ErrorCode.COMMENT_AUTHORITY);
 		}
 
-		Post postOfComment = comment.getPost();
-		postOfComment.deleteComment(comment);
+		Post commentedPost = comment.getPost();
+		commentedPost.deleteComment(comment);
 
 		commentRepository.delete(comment);
 	}
