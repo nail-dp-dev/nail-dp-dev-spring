@@ -2,6 +2,7 @@ package com.backend.naildp.service.post;
 
 import java.util.List;
 
+import org.jetbrains.annotations.Nullable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,11 @@ public class TrendPostStrategy implements PostStrategy {
 	@Override
 	public PostSummaryResponse homePosts(int size, Long cursorPostId, String username) {
 		PageRequest pageRequest = PageRequest.of(0, size);
-		Slice<Post> trendPostSlice = postRepository.findTrendPostSlice(username, cursorPostId, pageRequest);
+
+		Post cursorPost = findCursorPost(cursorPostId);
+		Slice<Post> trendPostSlice = postRepository.findTrendPostSliceWithoutSubquery(username, cursorPost, pageRequest);
+
+		// Slice<Post> trendPostSlice = postRepository.findTrendPostSlice(username, cursorPostId, pageRequest);
 
 		if (trendPostSlice.isEmpty()) {
 			return PostSummaryResponse.createEmptyResponse();
@@ -38,4 +43,10 @@ public class TrendPostStrategy implements PostStrategy {
 		List<Post> savedPosts = postRepository.findPostsInArchive(username);
 		return new PostSummaryResponse(trendPostSlice, savedPosts, likedPosts);
 	}
+
+	@Nullable
+	private Post findCursorPost(Long cursorPostId) {
+		return cursorPostId == null ? null : postRepository.findById(cursorPostId).orElse(null);
+	}
+
 }

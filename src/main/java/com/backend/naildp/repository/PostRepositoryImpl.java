@@ -118,27 +118,17 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	}
 
 	@Override
-	public Slice<Post> findTrendPostSliceUsingLeftJoin(String username, Long cursorPostId, Pageable pageable) {
-		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
-			.select(postLike.count())
-			.from(postLike)
-			.where(postLike.post.eq(post),
-				postLike.createdDate
-					.between(LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT), LocalDateTime.now()));
-
-		OrderSpecifier<Long> orderSpecifier = new OrderSpecifier<>(Order.DESC, postLikeCountQuery);
-
+	public Slice<Post> findTrendPostSliceWithoutSubquery(String username, Post cursorPost, Pageable pageable) {
 		List<Post> posts = queryFactory
 			.select(post)
 			.from(post)
 			.where(post.tempSave.isFalse()
 				.and(isAllowedToViewPosts(username))
-				.and(hasLessLikeThanCursorPost(cursorPostId))
+				.and(isLessLikeThanCursorPost(cursorPost))
 			)
-			.orderBy(orderSpecifier, post.createdDate.desc())
+			.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
 			.limit(pageable.getPageSize() + 1)
 			.fetch();
-
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
@@ -289,6 +279,16 @@ public class PostRepositoryImpl implements PostSearchRepository {
 
 		return postTodayLikeQuery.lt(cursorPostTodayLikeQuery)
 			.or(postTodayLikeQuery.eq(cursorPostTodayLikeQuery).and(isRegisteredBeforeCursorPost(cursorPostId)));
+	}
+
+	private BooleanExpression isLessLikeThanCursorPost(Post cursorPost) {
+		if(cursorPost == null) {
+			return null;
+		}
+
+		return post.todayLikeCount.lt(cursorPost.getTodayLikeCount())
+			.or(post.todayLikeCount.eq(cursorPost.getTodayLikeCount())
+				.and(post.createdDate.before(cursorPost.getCreatedDate())));
 	}
 
 }
