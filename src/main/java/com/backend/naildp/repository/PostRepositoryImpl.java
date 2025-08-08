@@ -118,6 +118,21 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	}
 
 	@Override
+	public Slice<Post> findTrendPostSliceWithoutSubquery(String username, Post cursorPost, Pageable pageable) {
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(isLessLikeThanCursorPost(cursorPost))
+			)
+			.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
+	@Override
 	public Slice<Post> findForYouPostSlice(String username, Long cursorPostId, List<Long> tagIdsInPosts, Pageable pageable) {
 		// 자정부터 현재 시간까지 게시물의 좋아요 개수 추출 서브쿼리
 		JPQLQuery<Long> postLikeCountQuery = JPAExpressions
@@ -264,6 +279,16 @@ public class PostRepositoryImpl implements PostSearchRepository {
 
 		return postTodayLikeQuery.lt(cursorPostTodayLikeQuery)
 			.or(postTodayLikeQuery.eq(cursorPostTodayLikeQuery).and(isRegisteredBeforeCursorPost(cursorPostId)));
+	}
+
+	private BooleanExpression isLessLikeThanCursorPost(Post cursorPost) {
+		if(cursorPost == null) {
+			return null;
+		}
+
+		return post.todayLikeCount.lt(cursorPost.getTodayLikeCount())
+			.or(post.todayLikeCount.eq(cursorPost.getTodayLikeCount())
+				.and(post.createdDate.before(cursorPost.getCreatedDate())));
 	}
 
 }

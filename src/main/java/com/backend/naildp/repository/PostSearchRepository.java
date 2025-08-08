@@ -19,4 +19,6 @@ public interface PostSearchRepository {
 	Slice<Post> findTrendPostSlice(String username, Long cursorPostId, Pageable pageable);
 
 	Slice<Post> findForYouPostSlice(String username, Long cursorPostId, List<Long> tagIdsInPosts, Pageable pageable);
+
+	Slice<Post> findTrendPostSliceWithoutSubquery(String username, Post cursorPost, Pageable pageable);
 }

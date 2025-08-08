@@ -143,6 +143,7 @@ public class WebSecurityConfig {
 			.requestMatchers("/certificate.html").permitAll()
 			.requestMatchers("/api/home").permitAll()
 			.requestMatchers("/api/notifications/subscribe").permitAll()
+			.requestMatchers("/actuator/**").permitAll()
 			.anyRequest()
 			.authenticated() // 그 외 모든 요청 인증처리
 

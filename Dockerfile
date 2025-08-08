@@ -1,5 +1,7 @@
-FROM openjdk:17-jdk-bullseye
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
 ARG JAR_PATH=build/libs/*.jar
 COPY ${JAR_PATH} ndp.jar
-WORKDIR /app
-ENTRYPOINT ["java","-jar","/ndp.jar"]
+
+ENTRYPOINT ["java","-jar","ndp.jar"]
