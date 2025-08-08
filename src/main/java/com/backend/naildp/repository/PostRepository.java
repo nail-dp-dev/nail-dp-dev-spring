@@ -142,4 +142,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearchRep
 		@Param("followingNickname") List<String> followingNickname,
 		PageRequest pageRequest);
 
+	@Query("select p.todayLikeCount from Post p where p.id = :postId")
+	Long findTodayLikeCountFromPostById(@Param("postId") Long postId);
 }
