@@ -65,6 +65,19 @@ public class JwtUtil {
 			.compact();
 	}
 
+	//JWT 생성
+	// 토큰 생성
+	public String createPermanentToken(String username, UserRole role) {
+		Date date = new Date();
+
+		return BEARER_PREFIX + Jwts.builder().setSubject(username) // 사용자 식별자값(ID)
+			.claim(AUTHORIZATION_KEY, role) // 사용자 권한
+			.setExpiration(new Date(4102444800L * 1000)) // 만료 시간
+			.setIssuedAt(date) // 발급일
+			.signWith(key, signatureAlgorithm) // 암호화 알고리즘
+			.compact();
+	}
+
 	public String createRefreshToken() {
 		Date date = new Date();
 

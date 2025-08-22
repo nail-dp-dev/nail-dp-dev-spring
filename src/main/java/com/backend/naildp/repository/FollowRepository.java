@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -18,6 +17,9 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
 	@Query("select f.following from Follow f where f.follower.nickname = :followerNickname")
 	List<User> findFollowingUserByFollowerNickname(@Param("followerNickname") String nickname);
+
+	@Query("select f from Follow f join fetch f.following where f.follower = :follower")
+	List<Follow> findFollowsByFollower(@Param("follower") User follower);
 
 	@Query("select count(f) from Follow f where f.following.nickname=:nickname")
 	int countFollowersByUserNickname(@Param("nickname") String nickname);

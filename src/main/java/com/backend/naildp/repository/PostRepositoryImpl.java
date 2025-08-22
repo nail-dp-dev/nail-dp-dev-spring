@@ -19,6 +19,8 @@ import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.QTagPost;
+import com.backend.naildp.entity.User;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -161,11 +163,81 @@ public class PostRepositoryImpl implements PostSearchRepository {
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
+	@Override
+	public Slice<Post> findForYouPostSliceV2(String username, Post cursorPost, List<Long> tagIdsInPosts, Pageable pageable) {
+		// 특정 tag를 가지면서 당일 좋아요 개수가 cursorPost보다 작은 게시물 조회
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.join(post.tagPosts, tagPost)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(isContainedInPost(tagIdsInPosts))
+				.and(isLessLikeThanCursorPost(cursorPost))
+			)
+			.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.distinct()
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
+	@Override
+	public Slice<Post> findForYouPostSliceV2WithoutTagPostJoin(String username, Post cursorPost, List<Long> tagIdsInPosts, Pageable pageable) {
+		// 특정 tag를 가지면서 당일 좋아요 개수가 cursorPost보다 작은 게시물 조회
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(username))
+				.and(isContainedInPostV2(tagIdsInPosts))
+				.and(isLessLikeThanCursorPost(cursorPost))
+			)
+			.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
+
+	@Override
+	public Slice<Post> findForYouPostSliceV2WithoutTagPostJoinAndFollowJoin(String username, Post cursorPost,
+		List<Long> tagIdsInPosts, List<User> readableUsers, Pageable pageable) {
+
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPosts(readableUsers))
+				.and(isContainedInPostV2(tagIdsInPosts))
+				.and(isLessLikeThanCursorPost(cursorPost))
+			)
+			.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+
+	}
+
 	private BooleanExpression isContainedInPost(List<Long> tagIdsInPosts) {
 		if (tagIdsInPosts.isEmpty()) {
 			return null;
 		}
 		return tagPost.tag.id.in(tagIdsInPosts);
+	}
+
+	private BooleanExpression isContainedInPostV2(List<Long> tagIdsInPosts) {
+		if (tagIdsInPosts.isEmpty()) {
+			return null;
+		}
+		QTagPost subTagPost = QTagPost.tagPost;
+		return JPAExpressions.selectOne()
+			.from(subTagPost)
+			.where(subTagPost.post.eq(post)
+				.and(subTagPost.tag.id.in(tagIdsInPosts)))
+			.exists();
 	}
 
 	private BooleanExpression isRegisteredBeforeCursorPost(Long cursorPostId) {
@@ -183,6 +255,17 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			return true;
 		}
 		return false;
+	}
+
+	private BooleanExpression isAllowedToViewPosts(List<User> readableUsers) {
+		if(readableUsers.isEmpty()) {
+			return post.boundary.eq(Boundary.ALL);
+		}
+
+		return post.boundary.eq(Boundary.ALL)
+			.or(post.boundary.eq(Boundary.FOLLOW)
+				.and(post.user.in(readableUsers))
+			);
 	}
 
 	private BooleanExpression isAllowedToViewPosts(String usernameCond) {
