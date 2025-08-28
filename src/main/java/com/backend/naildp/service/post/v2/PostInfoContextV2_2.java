@@ -20,7 +20,7 @@ public class PostInfoContextV2_2 {
 
 	public PostSummaryResponse posts(String choice, int size, Long cursorPostId) {
 		PostStrategy postStrategy = postStrategyMap.get(choice);
-		return postStrategy.homePostsWithoutTagPostJoinAndFollow(size, cursorPostId, getUsernameFromAuthentication());
+		return postStrategy.homePostsFilteredByTagsAndFollowees(size, cursorPostId, getUsernameFromAuthentication());
 	}
 
 	private String getUsernameFromAuthentication() {

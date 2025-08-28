@@ -11,7 +11,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
+import org.jetbrains.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -24,6 +26,7 @@ import com.backend.naildp.entity.User;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTimeTemplate;
 import com.querydsl.core.types.dsl.Expressions;
@@ -74,6 +77,24 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	public List<Post> findLikedPosts(String username) {
 		return queryFactory
 			.select(postLike.post)
+			.from(postLike)
+			.where(postLike.user.nickname.eq(username))
+			.fetch();
+	}
+
+	@Override
+	public List<Long> findPostIdsInArchive(String username) {
+		return queryFactory
+			.select(archivePost.post.id)
+			.from(archivePost)
+			.where(archivePost.archive.user.nickname.eq(username))
+			.fetch();
+	}
+
+	@Override
+	public List<Long> findLikedPostIds(String username) {
+		return queryFactory
+			.select(postLike.post.id)
 			.from(postLike)
 			.where(postLike.user.nickname.eq(username))
 			.fetch();
@@ -218,7 +239,24 @@ public class PostRepositoryImpl implements PostSearchRepository {
 			.fetch();
 
 		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+	}
 
+	@Override
+	public Slice<Post> findForYouPostSliceV3(String username, Post cursorPost, List<Long> tagIdsInPosts,
+		List<UUID> readableUserIds, Pageable pageable) {
+			List<Post> posts = queryFactory
+				.select(post)
+				.from(post)
+				.where(post.tempSave.isFalse()
+					.and(isAllowedToViewPostsV2(readableUserIds))
+					.and(isContainedInPostV2(tagIdsInPosts))
+					.and(isLessLikeThanCursorPost(cursorPost))
+				)
+				.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
+				.limit(pageable.getPageSize() + 1)
+				.fetch();
+
+			return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
 	private BooleanExpression isContainedInPost(List<Long> tagIdsInPosts) {
@@ -265,6 +303,17 @@ public class PostRepositoryImpl implements PostSearchRepository {
 		return post.boundary.eq(Boundary.ALL)
 			.or(post.boundary.eq(Boundary.FOLLOW)
 				.and(post.user.in(readableUsers))
+			);
+	}
+
+	private BooleanExpression isAllowedToViewPostsV2(List<UUID> readableUserIds) {
+		if(readableUserIds.isEmpty()) {
+			return post.boundary.eq(Boundary.ALL);
+		}
+
+		return post.boundary.eq(Boundary.ALL)
+			.or(post.boundary.eq(Boundary.FOLLOW)
+				.and(post.user.id.in(readableUserIds))
 			);
 	}
 

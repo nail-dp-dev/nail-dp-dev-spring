@@ -1,6 +1,10 @@
 package com.backend.naildp.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -14,6 +18,7 @@ import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -55,6 +60,33 @@ public class FollowService {
 
 	public int countFollower(String username) {
 		return followRepository.countFollowersByUserNickname(username);
+	}
+
+	public List<User> findReadableUsers(String username) {
+		User reader = userRepository.findByNickname(username)
+			.orElseThrow(() -> new EntityNotFoundException("User Entity not found By nickname : " + username));
+
+		List<Follow> followsByReader = followRepository.findFollowsByFollower(reader);
+
+		List<User> followees = followsByReader.stream()
+			.map(Follow::getFollowing)
+			.collect(Collectors.toList());
+
+		List<User> readableUsers = new ArrayList<>(followees);
+		readableUsers.add(reader);
+		return readableUsers;
+	}
+
+	public List<UUID> findReadableUserIds(String username) {
+		User reader = userRepository.findByNickname(username)
+			.orElseThrow(() -> new EntityNotFoundException("User Entity not found By nickname : " + username));
+
+		List<UUID> followeeIds = followRepository.findFolloweeIdsByUserNickname(username);
+
+		List<UUID> readableUserIds = new ArrayList<>(followeeIds);
+		readableUserIds.add(reader.getId());
+
+		return readableUserIds;
 	}
 
 	private boolean isSameUserNickname(String followTargetNickname, String username) {

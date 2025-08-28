@@ -1,6 +1,7 @@
 package com.backend.naildp.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,6 +18,9 @@ public interface TagPostRepository extends JpaRepository<TagPost, Long>, TagPost
 
 	@Query("select distinct tp.tag.id from TagPost tp where tp.post in :posts")
 	List<Long> findTagIdsInPosts(@Param("posts") List<Post> posts);
+
+	@Query("select distinct tp.tag.id from TagPost tp where tp.post.id in :postIds")
+	List<Long> findTagIdsInPostIds(@Param("postIds") Set<Long> postIds);
 
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("delete from TagPost tp where tp.post.id = :postId")

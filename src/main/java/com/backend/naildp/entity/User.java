@@ -34,7 +34,7 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private UUID id;
 
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String nickname;
 
 	@Column(nullable = false)

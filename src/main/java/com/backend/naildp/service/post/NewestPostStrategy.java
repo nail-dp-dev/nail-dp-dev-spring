@@ -63,7 +63,7 @@ public class NewestPostStrategy implements PostStrategy {
 	}
 
 	@Override
-	public PostSummaryResponse homePostsWithoutTagPostJoinAndFollow(int size, Long cursorPostId, String username) {
+	public PostSummaryResponse homePostsFilteredByTagsAndFollowees(int size, Long cursorPostId, String username) {
 		return homePostsV2(size, cursorPostId, username);
 	}
 

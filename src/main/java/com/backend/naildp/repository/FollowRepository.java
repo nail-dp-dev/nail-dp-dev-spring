@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,6 +27,9 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
 	@Query("select count(f) from Follow f where f.follower.nickname=:nickname")
 	int countFollowingsByUserNickname(@Param("nickname") String nickname);
+
+	@Query("SELECT f.following.id FROM Follow f where f.follower.nickname = :nickname")
+	List<UUID> findFolloweeIdsByUserNickname(@Param("nickname") String nickname);
 
 	boolean existsByFollowerNicknameAndFollowing(String nickname, User writer);
 

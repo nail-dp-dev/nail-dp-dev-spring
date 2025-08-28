@@ -1,6 +1,7 @@
 package com.backend.naildp.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -14,6 +15,10 @@ public interface PostSearchRepository {
 	List<Post> findPostsInArchive(String username);
 
 	List<Post> findLikedPosts(String username);
+
+	List<Long> findLikedPostIds(String username);
+
+	List<Long> findPostIdsInArchive(String username);
 
 	Slice<Post> findNewestPostSlice(String username, Long cursorPostId, Pageable pageable);
 
@@ -29,4 +34,6 @@ public interface PostSearchRepository {
 
 	Slice<Post> findForYouPostSliceV2WithoutTagPostJoinAndFollowJoin(String username, Post cursorPost, List<Long> tagIdsInPosts,
 		List<User> readableUsers, Pageable pageable);
+
+	Slice<Post> findForYouPostSliceV3(String username, Post cursorPost, List<Long> tagIdsInPosts, List<UUID> readableUserIds, Pageable pageable);
 }
