@@ -23,6 +23,7 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.QTagPost;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.service.post.dto.ForyouPostQuerySpec;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -242,21 +243,24 @@ public class PostRepositoryImpl implements PostSearchRepository {
 	}
 
 	@Override
-	public Slice<Post> findForYouPostSliceV3(String username, Post cursorPost, List<Long> tagIdsInPosts,
-		List<UUID> readableUserIds, Pageable pageable) {
-			List<Post> posts = queryFactory
-				.select(post)
-				.from(post)
-				.where(post.tempSave.isFalse()
-					.and(isAllowedToViewPostsV2(readableUserIds))
-					.and(isContainedInPostV2(tagIdsInPosts))
-					.and(isLessLikeThanCursorPost(cursorPost))
-				)
-				.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
-				.limit(pageable.getPageSize() + 1)
-				.fetch();
+	public Slice<Post> findForYouPostSliceV3(String username, ForyouPostQuerySpec querySpec, Pageable pageable) {
+		List<UUID> readableUserIds = querySpec.getReadableUserIds();
+		List<Long> tagIdsInPosts = querySpec.getTagIdsInPosts();
+		Post cursorPost = querySpec.getCursorPost();
 
-			return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
+		List<Post> posts = queryFactory
+			.select(post)
+			.from(post)
+			.where(post.tempSave.isFalse()
+				.and(isAllowedToViewPostsV2(readableUserIds))
+				.and(isContainedInPostV2(tagIdsInPosts))
+				.and(isLessLikeThanCursorPost(cursorPost))
+			)
+			.orderBy(post.todayLikeCount.desc(), post.createdDate.desc())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		return new SliceImpl<>(posts, pageable, hasNext(posts, pageable.getPageSize()));
 	}
 
 	private BooleanExpression isContainedInPost(List<Long> tagIdsInPosts) {

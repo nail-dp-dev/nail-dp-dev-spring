@@ -15,6 +15,7 @@ import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.service.FollowService;
+import com.backend.naildp.service.post.dto.ForyouPostQuerySpec;
 import com.backend.naildp.service.post.dto.PreferredPostDto;
 import com.backend.naildp.service.tag.TagReader;
 
@@ -115,8 +116,10 @@ public class ForyouPostStrategy implements PostStrategy {
 
 		Post cursorPost = postReader.findCursorPost(cursorPostId);
 
-		Slice<Post> forYouPostSlice = postRepository.findForYouPostSliceV3
-			(username, cursorPost, tagIdsInPosts, readableUserIds, PageRequest.of(0, size));
+		ForyouPostQuerySpec querySpec = ForyouPostQuerySpec.of(cursorPost, tagIdsInPosts, readableUserIds);
+
+		Slice<Post> forYouPostSlice = postRepository.findForYouPostSliceV3(username, querySpec,
+			PageRequest.of(0, size));
 
 		return PostSummaryResponse.of(forYouPostSlice, preferredPostDto);
 	}

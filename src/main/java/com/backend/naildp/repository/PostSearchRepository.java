@@ -8,6 +8,7 @@ import org.springframework.data.domain.Slice;
 
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.User;
+import com.backend.naildp.service.post.dto.ForyouPostQuerySpec;
 
 public interface PostSearchRepository {
 	Slice<Post> searchPostByKeyword(Pageable pageable, List<String> keywords, String username, Long cursorId);
@@ -35,5 +36,5 @@ public interface PostSearchRepository {
 	Slice<Post> findForYouPostSliceV2WithoutTagPostJoinAndFollowJoin(String username, Post cursorPost, List<Long> tagIdsInPosts,
 		List<User> readableUsers, Pageable pageable);
 
-	Slice<Post> findForYouPostSliceV3(String username, Post cursorPost, List<Long> tagIdsInPosts, List<UUID> readableUserIds, Pageable pageable);
+	Slice<Post> findForYouPostSliceV3(String username, ForyouPostQuerySpec querySpec, Pageable pageable);
 }

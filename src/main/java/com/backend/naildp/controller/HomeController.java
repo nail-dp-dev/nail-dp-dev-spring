@@ -15,6 +15,7 @@ import com.backend.naildp.service.post.PostInfoService;
 import com.backend.naildp.service.post.v2.PostInfoContextV2;
 import com.backend.naildp.service.post.v2.PostInfoContextV2_1;
 import com.backend.naildp.service.post.v2.PostInfoContextV2_2;
+import com.backend.naildp.service.post.v2.PostInfoContextV3;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +29,7 @@ public class HomeController {
 	private final PostInfoContextV2 postInfoContextV2;
 	private final PostInfoContextV2_1 postInfoContextV2_1;
 	private final PostInfoContextV2_2 postInfoContextV2_2;
+	private final PostInfoContextV3 postInfoContextV3;
 
 	@GetMapping("/home")
 	public ResponseEntity<?> homePosts(
@@ -69,5 +71,13 @@ public class HomeController {
 		@RequestParam(required = false, value = "oldestPostId") Long cursorPostId) {
 		PostSummaryResponse postSummaryResponse = postInfoContextV2_2.posts(choice, size, cursorPostId);
 		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "최신 게시물 조회", 2000));
+	}
+
+	@GetMapping("/home/v3")
+	public ResponseEntity<?> homePostsV3(@RequestParam(name = "choice", defaultValue = "foryou") String choice,
+		@RequestParam(required = false, defaultValue = "20", value = "size") int size,
+		@RequestParam(required = false, value = "oldestPostId") Long cursorPostId) {
+		PostSummaryResponse postSummaryResponse = postInfoContextV3.posts(choice, size, cursorPostId);
+		return ResponseEntity.ok(ApiResponse.successResponse(postSummaryResponse, "게시물 조회 V3", 2000));
 	}
 }
