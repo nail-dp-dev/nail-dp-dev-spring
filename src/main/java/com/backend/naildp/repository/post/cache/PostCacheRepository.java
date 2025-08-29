@@ -2,7 +2,6 @@ package com.backend.naildp.repository.post.cache;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,7 +22,7 @@ public class PostCacheRepository {
 		return redisTemplate.opsForSet().members(key);
 	}
 
-	public void save(String key, HashSet<Long> likedPostIdSet) {
+	public void save(String key, Set<Long> likedPostIdSet) {
 		SetOperations<String, Long> setOperations = redisTemplate.opsForSet();
 		Long[] idSetArray = likedPostIdSet.toArray(new Long[0]);
 
