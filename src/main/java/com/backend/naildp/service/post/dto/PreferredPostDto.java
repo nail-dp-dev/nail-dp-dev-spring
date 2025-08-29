@@ -27,6 +27,10 @@ public class PreferredPostDto {
 		return new PreferredPostDto(likedPostIdSet, savedPostIdSet);
 	}
 
+	public static PreferredPostDto of(Set<Long> likedPostIdSet, Set<Long> savedPostIdSet) {
+		return new PreferredPostDto(likedPostIdSet, savedPostIdSet);
+	}
+
 	public Set<Long> all() {
 		HashSet<Long> postIds = new HashSet<>(likedPostIds);
 		postIds.addAll(savedPostIds);
