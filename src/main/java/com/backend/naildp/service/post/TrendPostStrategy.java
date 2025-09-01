@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.service.post.dto.UserContext;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,16 @@ import lombok.RequiredArgsConstructor;
 public class TrendPostStrategy implements PostStrategy {
 
 	private final PostRepository postRepository;
+
+	@Override
+	public boolean isExecutable(UserContext userContext) {
+		return true;
+	}
+
+	@Override
+	public boolean requiresAuthentication() {
+		return false;
+	}
 
 	@Override
 	public PostSummaryResponse homePosts(int size, Long cursorPostId, String username) {
@@ -77,8 +88,8 @@ public class TrendPostStrategy implements PostStrategy {
 	}
 
 	@Override
-	public PostSummaryResponse homePostsV3(int size, Long cursorPostId, String username) {
-		return homePostsV2(size, cursorPostId, username);
+	public PostSummaryResponse homePostsV3(int size, Long cursorPostId, UserContext userContext) {
+		return homePostsV2(size, cursorPostId, userContext.getUsername());
 	}
 
 	@Nullable

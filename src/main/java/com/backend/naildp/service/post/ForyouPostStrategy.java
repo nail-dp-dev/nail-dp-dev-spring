@@ -17,6 +17,7 @@ import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.service.FollowService;
 import com.backend.naildp.service.post.dto.ForyouPostQuerySpec;
 import com.backend.naildp.service.post.dto.PreferredPostDto;
+import com.backend.naildp.service.post.dto.UserContext;
 import com.backend.naildp.service.tag.TagReader;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,16 @@ public class ForyouPostStrategy implements PostStrategy {
 	private final TagReader tagReader;
 	private final FollowService followService;
 	private final PostRepository postRepository;
+
+	@Override
+	public boolean isExecutable(UserContext userContext) {
+		return requiresAuthentication() && userContext.isAuthenticated();
+	}
+
+	@Override
+	public boolean requiresAuthentication() {
+		return true;
+	}
 
 	@Override
 	public PostSummaryResponse homePosts(int size, Long cursorPostId, String username) {
@@ -105,7 +116,8 @@ public class ForyouPostStrategy implements PostStrategy {
 	}
 
 	@Override
-	public PostSummaryResponse homePostsV3(int size, Long cursorPostId, String username) {
+	public PostSummaryResponse homePostsV3(int size, Long cursorPostId, UserContext userContext) {
+		String username = userContext.getUsername();
 		PreferredPostDto preferredPostDto = postReader.getPreferredPostIds(username);
 
 		Set<Long> preferredPostIds = preferredPostDto.all();

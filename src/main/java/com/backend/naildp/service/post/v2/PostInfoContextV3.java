@@ -1,14 +1,13 @@
 package com.backend.naildp.service.post.v2;
 
-import java.util.Map;
-import java.util.Objects;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.service.post.PostStrategy;
+import com.backend.naildp.service.post.dto.UserContext;
+import com.backend.naildp.service.post.v3.PostStrategyRouter;
+import com.backend.naildp.service.post.v3.UserContextProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,15 +15,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PostInfoContextV3 {
 
-	private final Map<String, PostStrategy> postStrategyMap;
+	private final PostStrategyRouter postStrategyRouter;
+	private final UserContextProvider userContextProvider;
 
 	public PostSummaryResponse posts(String choice, int size, Long cursorPostId) {
-		PostStrategy postStrategy = postStrategyMap.get(choice);
-		return postStrategy.homePostsV3(size, cursorPostId, getUsernameFromAuthentication());
+		PostStrategy postStrategy = postStrategyRouter.route(choice);
+		UserContext userContext = userContextProvider.getUsernameFromAuthentication();
+
+		if (!postStrategy.isExecutable(userContext)) {
+			throw new AccessDeniedException("You are not authenticated");
+		}
+
+		return postStrategy.homePostsV3(size, cursorPostId, userContext);
 	}
 
-	private String getUsernameFromAuthentication() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		return Objects.isNull(authentication) ? null : authentication.getName();
-	}
 }
