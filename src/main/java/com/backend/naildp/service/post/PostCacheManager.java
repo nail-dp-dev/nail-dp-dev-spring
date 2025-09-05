@@ -36,7 +36,7 @@ public class PostCacheManager {
 		Set<Long> postIdSet = postCacheRepository.findPostIdSet(cacheKey);
 
 		// 캐시 없을 때 db에서 로드 후 반환
-		if(Objects.isNull(postIdSet)) {
+		if(Objects.isNull(postIdSet)|| postIdSet.isEmpty()) {
 			log.debug("postIdSet cache miss for key:{}, username:{}", cacheKey, username);
 
 			List<Long> postIds = dataLoaderFromDatabase.get();
@@ -50,39 +50,4 @@ public class PostCacheManager {
 		return postIdSet;
 	}
 
-	// public Set<Long> getOrLoadSavedPostIdsV2(String username) {
-	// 	String savedPostsKey = CacheKeyGenerator.getSavedPostsKey(username);
-	// 	Set<Long> savedPostIdSet = postCacheRepository.findPostIdSet(savedPostsKey);
-	//
-	// 	if(Objects.isNull(savedPostIdSet)) {
-	// 		log.debug("SavedPost cache Miss for user:{}", username);
-	//
-	// 		// 캐시 갱신
-	// 		List<Long> savedPostIds = postRepository.findPostIdsInArchive(username);
-	// 		HashSet<Long> savedPostIdSetFromDatabase = new HashSet<>(savedPostIds);
-	// 		postCacheRepository.save(savedPostsKey, savedPostIdSetFromDatabase);
-	//
-	// 		return savedPostIdSetFromDatabase;
-	// 	}
-	//
-	// 	return savedPostIdSet;
-	// }
-	//
-	// public Set<Long> getOrLoadLikedPostIdsV2(String username) {
-	// 	String likedPostsKey = CacheKeyGenerator.getLikedPostsKey(username);
-	// 	Set<Long> likedPostIdSet = postCacheRepository.findPostIdSet(likedPostsKey);
-	//
-	// 	if(Objects.isNull(likedPostIdSet)) {
-	// 		log.debug("LikedPost cache Miss for user:{}", username);
-	//
-	// 		// 캐시 갱신
-	// 		List<Long> likedPostIds = postRepository.findLikedPostIds(username);
-	// 		HashSet<Long> likedPostIdSetFromDatabase = new HashSet<>(likedPostIds);
-	// 		postCacheRepository.save(likedPostsKey, likedPostIdSetFromDatabase);
-	//
-	// 		return likedPostIdSetFromDatabase;
-	// 	}
-	//
-	// 	return likedPostIdSet;
-	// }
 }

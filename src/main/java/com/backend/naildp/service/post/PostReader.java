@@ -1,5 +1,6 @@
 package com.backend.naildp.service.post;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,8 +38,10 @@ public class PostReader {
 	}
 
 	public PreferredPostDto getPreferredPostIds(String username) {
-		Set<Long> likedPostIds = findLikedPostIdSet(username);
-		Set<Long> savedPostIds = findSavedPostIdSet(username);
+		// Set<Long> likedPostIds = findLikedPostIdSet(username);
+		// Set<Long> savedPostIds = findSavedPostIdSet(username);
+		Set<Long> likedPostIds = new HashSet<>(postRepository.findLikedPostIds(username));
+		Set<Long> savedPostIds = new HashSet<>(postRepository.findPostIdsInArchive(username));
 
 		return PreferredPostDto.of(likedPostIds, savedPostIds);
 	}
