@@ -10,7 +10,9 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Repository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class PostCacheRepository {
@@ -23,11 +25,20 @@ public class PostCacheRepository {
 	}
 
 	public void save(String key, Set<Long> likedPostIdSet) {
+		if(likedPostIdSet == null || likedPostIdSet.isEmpty()) {
+			log.info("빈 Set은 저장하지 않음");
+			return;
+		}
+
 		SetOperations<String, Long> setOperations = redisTemplate.opsForSet();
 		Long[] idSetArray = likedPostIdSet.toArray(new Long[0]);
 
 		setOperations.add(key, idSetArray);
 
 		redisTemplate.expire(key, Duration.of(30, ChronoUnit.MINUTES));
+	}
+
+	public boolean hasKey(String cacheKey) {
+		return redisTemplate.hasKey(cacheKey);
 	}
 }

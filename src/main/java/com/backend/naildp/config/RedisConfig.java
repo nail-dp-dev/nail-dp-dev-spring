@@ -69,6 +69,22 @@ public class RedisConfig {
 		return template;
 	}
 
+	@Bean
+	public RedisTemplate<String, Boolean> emptyFlagRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+		RedisTemplate<String, Boolean> template = new RedisTemplate<>();
+
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setValueSerializer(new GenericToStringSerializer<>(Boolean.class));
+
+		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setHashValueSerializer(new GenericToStringSerializer<>(Boolean.class));
+
+		template.setConnectionFactory(redisConnectionFactory);
+		template.afterPropertiesSet();
+
+		return template;
+	}
+
 	/**
 	 * 리펙토링
 	 */

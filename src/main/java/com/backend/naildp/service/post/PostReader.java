@@ -38,10 +38,10 @@ public class PostReader {
 	}
 
 	public PreferredPostDto getPreferredPostIds(String username) {
-		// Set<Long> likedPostIds = findLikedPostIdSet(username);
-		// Set<Long> savedPostIds = findSavedPostIdSet(username);
-		Set<Long> likedPostIds = new HashSet<>(postRepository.findLikedPostIds(username));
-		Set<Long> savedPostIds = new HashSet<>(postRepository.findPostIdsInArchive(username));
+		Set<Long> likedPostIds = findLikedPostIdSet(username);
+		Set<Long> savedPostIds = findSavedPostIdSet(username);
+		// Set<Long> likedPostIds = new HashSet<>(postRepository.findLikedPostIds(username));
+		// Set<Long> savedPostIds = new HashSet<>(postRepository.findPostIdsInArchive(username));
 
 		return PreferredPostDto.of(likedPostIds, savedPostIds);
 	}
