@@ -100,39 +100,38 @@ public class PostCacheManager {
 	// 해당 emptyFlag 가 있다면 값에 따라 진행
 	// false 라면 실제 데이터 캐시를 찾아서 반환, true 라면 그냥 빈 리스트를 반환
 	public Set<Long> getOrLoadPostsV3(String username, String cacheKey, Supplier<List<Long>> dataLoaderFromDatabase) {
-		String emptyFlagKey = cacheKey + ":empty";
+		String emptyFlagKey = CacheKeyGenerator.generateEmptyFlagKey(cacheKey);
 
 		Boolean emptyFlag = emptyFlagCacheRepository.getFlag(emptyFlagKey)
 			.orElseGet(() -> {
+				log.info("emptyFlag is null for key:{}, username:{}", emptyFlagKey, username);
+
 				List<Long> postIds = dataLoaderFromDatabase.get();
 
 				if (postIds.isEmpty()) {
+					log.info("db returns empty postId list for username:{}", username);
 					emptyFlagCacheRepository.saveTrue(emptyFlagKey);
 					return true;
 				}
 
 				emptyFlagCacheRepository.saveFalse(emptyFlagKey);
-
 				updatePostIdCache(cacheKey, postIds);
+				log.info("caching postIds for cacheKey:{}, username:{}", cacheKey, username);
 
 				return false;
 			});
 
-		if(emptyFlag) {
-			return new HashSet<>();
-		}
-
-		return postCacheRepository.findPostIdSet(cacheKey);
-	}
-
-	private void updatePostIdCache(String cacheKey, List<Long> postIds) {
-		Set<Long> postIdSetFromDatabase = new HashSet<>(postIds);
-		postCacheRepository.save(cacheKey, postIdSetFromDatabase);
+		return emptyFlag ? new HashSet<>() : postCacheRepository.findPostIdSet(cacheKey);
 	}
 
 	@Nullable
 	private Set<Long> getPostIdSetFromCache(String cacheKey) {
 		return postCacheRepository.hasKey(cacheKey) ? postCacheRepository.findPostIdSet(cacheKey) : null;
+	}
+
+	private void updatePostIdCache(String cacheKey, List<Long> postIds) {
+		Set<Long> postIdSetFromDatabase = new HashSet<>(postIds);
+		postCacheRepository.save(cacheKey, postIdSetFromDatabase);
 	}
 
 }
