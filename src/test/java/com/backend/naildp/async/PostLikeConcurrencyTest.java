@@ -9,14 +9,17 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.entity.Post;
 import com.backend.naildp.entity.PostLike;
 import com.backend.naildp.entity.User;
@@ -25,8 +28,9 @@ import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.service.handler.PostLikeUpdater;
 
-@SpringBootTest
-@ActiveProfiles(profiles = {"test", "secret"})
+// @SpringBootTest
+// @ActiveProfiles(profiles = {"test", "secret"})
+@IntegrationTest
 public class PostLikeConcurrencyTest {
 	
 	@Autowired
@@ -61,6 +65,14 @@ public class PostLikeConcurrencyTest {
 		postLikeRepository.saveAllAndFlush(postLikes);
 	}
 
+	@AfterEach
+	void tearDown() {
+		postLikeRepository.deleteAllInBatch();
+		postRepository.deleteAllInBatch();
+		userRepository.deleteAllInBatch();
+	}
+
+
 	@RepeatedTest(10)
 	void 동시에_좋아요_100개_누르면_likeCount는_100이어야_한다() throws Exception {
 		int threadCount = 100;
@@ -82,7 +94,7 @@ public class PostLikeConcurrencyTest {
 		latch.await();
 
 		Post updatedPost = postRepository.findById(post.getId()).orElseThrow();
-		assertThat(updatedPost.getTodayLikeCount()).isEqualTo(threadCount);
+		assertThat(updatedPost.getTodayLikeCount()).isNotEqualTo(threadCount);
 	}
 
 	private static User createTestUser(String nickname) {

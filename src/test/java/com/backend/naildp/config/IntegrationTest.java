@@ -11,6 +11,6 @@ import org.springframework.context.annotation.Import;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @SpringBootTest
-@Import({TestDatabaseConfig.class, TestRedisConfig.class})
+@Import({TestDatabaseConfig.class, TestRedisConfig.class, TestEnvConfig.class})
 public @interface IntegrationTest {
 }

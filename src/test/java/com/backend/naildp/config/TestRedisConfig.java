@@ -16,7 +16,8 @@ public class TestRedisConfig {
 
 	static {
 		redisContainer = new GenericContainer<>("redis:7.0")
-			.withExposedPorts(6379);
+			.withExposedPorts(6379)
+			.withCommand("redis-server", "--requirepass", "password");
 		redisContainer.start();
 
 		String host = redisContainer.getHost();
@@ -24,6 +25,7 @@ public class TestRedisConfig {
 
 		System.setProperty("spring.data.redis.host", host);
 		System.setProperty("spring.data.redis.port", port.toString());
+		System.setProperty("spring.data.redis.password", "password");
 	}
 
 	@Bean
