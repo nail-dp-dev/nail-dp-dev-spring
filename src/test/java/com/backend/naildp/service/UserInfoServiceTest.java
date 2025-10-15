@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
 import com.backend.naildp.entity.Archive;
 import com.backend.naildp.entity.ArchivePost;
@@ -26,7 +27,8 @@ import com.backend.naildp.repository.FollowRepository;
 import com.backend.naildp.repository.PostRepository;
 import com.backend.naildp.repository.UserRepository;
 
-@SpringBootTest
+// @SpringBootTest
+@IntegrationTest
 @Transactional
 class UserInfoServiceTest {
 

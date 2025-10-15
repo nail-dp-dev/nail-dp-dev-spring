@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.post.PostBoundaryRequest;
@@ -38,8 +39,7 @@ import com.backend.naildp.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 public class PostServiceTest {
 

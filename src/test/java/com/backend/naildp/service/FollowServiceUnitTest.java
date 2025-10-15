@@ -30,6 +30,8 @@ class FollowServiceUnitTest {
 	FollowRepository followRepository;
 	@Mock
 	UserRepository userRepository;
+	@Mock
+	NotificationManager notificationManager;
 
 	@DisplayName("사용자 자신을 팔로우하는 경우 예외 발생")
 	@Test

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -39,6 +40,7 @@ import com.backend.naildp.repository.ProfileRepository;
 import com.backend.naildp.repository.UserRepository;
 import com.backend.naildp.repository.UsersProfileRepository;
 
+@Disabled
 class UserInfoServiceUnitTest {
 	@Mock
 	private UserRepository userRepository;

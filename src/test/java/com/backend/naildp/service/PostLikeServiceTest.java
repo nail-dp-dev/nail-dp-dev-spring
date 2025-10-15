@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Photo;
@@ -28,8 +29,7 @@ import com.backend.naildp.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 class PostLikeServiceTest {
 

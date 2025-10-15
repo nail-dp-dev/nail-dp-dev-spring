@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.entity.Comment;
@@ -25,8 +26,7 @@ import com.backend.naildp.entity.User;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 class CommentServiceTest {
 
@@ -121,7 +121,7 @@ class CommentServiceTest {
 	void readCommentsWithLike() {
 		//given
 		User commentLiker = createUser("commentLiker");
-		User commentLiker2 = createUser("commentLiker");
+		User commentLiker2 = createUser("commentLiker2");
 		List<Comment> comments = em.createQuery(
 				"select c from Comment c join fetch c.post p where c.user.nickname = :nickname", Comment.class)
 			.setParameter("nickname", COMMENTER_NICKNAME)
@@ -155,7 +155,7 @@ class CommentServiceTest {
 	void readCommentsWithLikeFromSecondPage() {
 		//given
 		User commentLiker = createUser("commentLiker");
-		User commentLiker2 = createUser("commentLiker");
+		User commentLiker2 = createUser("commentLiker2");
 		List<Comment> comments = em.createQuery(
 				"select c from Comment c join fetch c.post p where c.user.nickname = :nickname", Comment.class)
 			.setParameter("nickname", COMMENTER_NICKNAME)

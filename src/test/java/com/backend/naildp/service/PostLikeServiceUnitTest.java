@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
@@ -44,6 +45,9 @@ class PostLikeServiceUnitTest {
 
 	@Mock
 	NotificationManager notificationManager;
+
+	@Mock
+	ApplicationEventPublisher postLikeEventPublisher;
 
 	@Test
 	@DisplayName("게시물 Id 로 좋아요 저장 테스트")

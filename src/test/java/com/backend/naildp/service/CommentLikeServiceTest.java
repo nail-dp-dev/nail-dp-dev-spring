@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.entity.Comment;
 import com.backend.naildp.entity.CommentLike;
@@ -30,8 +31,7 @@ import com.backend.naildp.repository.PostRepository;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 public class CommentLikeServiceTest {
 

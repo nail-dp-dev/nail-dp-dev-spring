@@ -15,12 +15,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.service.CommentLikeService;
 
-@SpringBootTest
+@IntegrationTest
 @AutoConfigureMockMvc
 class CommentLikeControllerUnitTest {
 
