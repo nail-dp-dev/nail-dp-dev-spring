@@ -3,6 +3,7 @@ package com.backend.naildp.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import com.backend.naildp.service.user.AuthService;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -24,20 +25,20 @@ import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.auth.NicknameRequestDto;
 import com.backend.naildp.dto.auth.PhoneNumberRequestDto;
 import com.backend.naildp.dto.auth.SocialUserInfoDto;
-import com.backend.naildp.entity.Profile;
-import com.backend.naildp.entity.SocialLogin;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.entity.UsersProfile;
+import com.backend.naildp.entity.userEntity.Profile;
+import com.backend.naildp.entity.userEntity.SocialLogin;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.entity.userEntity.UsersProfile;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.oauth2.jwt.RedisUtil;
-import com.backend.naildp.repository.ProfileRepository;
-import com.backend.naildp.repository.SocialLoginRepository;
-import com.backend.naildp.repository.UserRepository;
-import com.backend.naildp.repository.UsersProfileRepository;
+import com.backend.naildp.repository.user.ProfileRepository;
+import com.backend.naildp.repository.user.SocialLoginRepository;
+import com.backend.naildp.repository.user.UserRepository;
+import com.backend.naildp.repository.user.UsersProfileRepository;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;

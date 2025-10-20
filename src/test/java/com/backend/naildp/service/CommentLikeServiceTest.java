@@ -3,6 +3,7 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.backend.naildp.service.comment.CommentLikeService;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,27 +12,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
-import com.backend.naildp.entity.Comment;
-import com.backend.naildp.entity.CommentLike;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.commentEntity.Comment;
+import com.backend.naildp.entity.commentEntity.CommentLike;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.post.PostRepository;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 public class CommentLikeServiceTest {
 

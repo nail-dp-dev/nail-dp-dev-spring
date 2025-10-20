@@ -2,6 +2,8 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.user.ProfileRepository;
+import com.backend.naildp.repository.user.UsersProfileRepository;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +15,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.backend.naildp.common.ProfileType;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.entity.Profile;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.entity.UsersProfile;
+import com.backend.naildp.entity.userEntity.Profile;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.entity.userEntity.UsersProfile;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;

@@ -3,6 +3,7 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.BDDMockito.*;
 
+import com.backend.naildp.service.archive.ArchiveService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -20,19 +21,19 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveIdRequestDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
 import com.backend.naildp.dto.archive.UnsaveRequestDto;
-import com.backend.naildp.entity.Archive;
-import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.archiveEntity.Archive;
+import com.backend.naildp.entity.archiveEntity.ArchivePost;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
-import com.backend.naildp.repository.ArchivePostRepository;
-import com.backend.naildp.repository.ArchiveRepository;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostMapping;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.archive.ArchivePostRepository;
+import com.backend.naildp.repository.archive.ArchiveRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostMapping;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ArchiveServiceTest {

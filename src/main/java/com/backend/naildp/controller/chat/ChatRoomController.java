@@ -25,7 +25,7 @@ import com.backend.naildp.dto.chat.RenameChatRoomRequestDto;
 import com.backend.naildp.dto.search.SearchUserResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
-import com.backend.naildp.service.S3Service;
+import com.backend.naildp.service.post.S3Service;
 import com.backend.naildp.service.chat.ChatRoomService;
 
 import lombok.RequiredArgsConstructor;

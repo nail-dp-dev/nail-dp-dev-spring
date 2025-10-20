@@ -3,9 +3,9 @@ package com.backend.naildp.dto.comment;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.backend.naildp.entity.Comment;
-import com.backend.naildp.entity.CommentLike;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.commentEntity.Comment;
+import com.backend.naildp.entity.commentEntity.CommentLike;
+import com.backend.naildp.entity.userEntity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -3,6 +3,8 @@ package com.backend.naildp.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.user.FollowService;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -13,12 +15,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class FollowServiceUnitTest {
@@ -30,6 +32,8 @@ class FollowServiceUnitTest {
 	FollowRepository followRepository;
 	@Mock
 	UserRepository userRepository;
+	@Mock
+	NotificationManager notificationManager;
 
 	@DisplayName("사용자 자신을 팔로우하는 경우 예외 발생")
 	@Test

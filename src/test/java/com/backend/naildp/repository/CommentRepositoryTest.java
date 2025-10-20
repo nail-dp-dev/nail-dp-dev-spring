@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.backend.naildp.repository.comment.CommentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -11,10 +12,10 @@ import org.springframework.context.annotation.Import;
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
-import com.backend.naildp.entity.Comment;
-import com.backend.naildp.entity.CommentLike;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.commentEntity.Comment;
+import com.backend.naildp.entity.commentEntity.CommentLike;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;

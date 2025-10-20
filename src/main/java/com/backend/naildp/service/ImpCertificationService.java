@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.UserRepository;
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
 import com.siot.IamportRestClient.response.AccessToken;

@@ -3,6 +3,7 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.backend.naildp.service.post.PostAccessValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,9 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.FollowRepository;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.repository.user.FollowRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PostAccessValidatorTest {

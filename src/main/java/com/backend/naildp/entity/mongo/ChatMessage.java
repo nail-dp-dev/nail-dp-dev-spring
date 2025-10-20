@@ -10,7 +10,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.backend.naildp.dto.chat.ChatMessageDto;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

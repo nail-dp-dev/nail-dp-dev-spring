@@ -1,7 +1,6 @@
 package com.backend.naildp.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,7 +30,7 @@ import com.backend.naildp.oauth2.jwt.JwtAuthenticationFilter;
 import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.oauth2.jwt.RedisUtil;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -141,7 +140,7 @@ public class WebSecurityConfig {
 			.requestMatchers("/api/portone/**").permitAll()
 			.requestMatchers("/api/portone").permitAll()
 			.requestMatchers("/certificate.html").permitAll()
-			.requestMatchers("/api/home").permitAll()
+			.requestMatchers("/api/home/**").permitAll()
 			.requestMatchers("/api/notifications/subscribe").permitAll()
 			.requestMatchers("/actuator/**").permitAll()
 			.anyRequest()

@@ -2,6 +2,8 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,13 +22,12 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.userEntity.User;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;

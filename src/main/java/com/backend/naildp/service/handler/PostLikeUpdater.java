@@ -5,9 +5,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

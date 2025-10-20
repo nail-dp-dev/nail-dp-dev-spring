@@ -2,8 +2,8 @@ package com.backend.naildp.service.dto;
 
 import java.util.UUID;
 
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

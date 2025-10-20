@@ -5,8 +5,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.repository.user.UserRepository;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {

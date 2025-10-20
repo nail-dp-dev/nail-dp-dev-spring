@@ -9,18 +9,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.service.CommentLikeService;
+import com.backend.naildp.service.comment.CommentLikeService;
 
-@SpringBootTest
+@IntegrationTest
 @AutoConfigureMockMvc
 class CommentLikeControllerUnitTest {
 

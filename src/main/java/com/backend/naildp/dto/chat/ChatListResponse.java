@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.backend.naildp.repository.ChatRoomMapping;
+import com.backend.naildp.repository.chat.ChatRoomMapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
