@@ -3,15 +3,14 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.backend.naildp.service.comment.CommentService;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Slice;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -19,10 +18,10 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
-import com.backend.naildp.entity.Comment;
-import com.backend.naildp.entity.CommentLike;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.commentEntity.Comment;
+import com.backend.naildp.entity.commentEntity.CommentLike;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 
 import jakarta.persistence.EntityManager;
 

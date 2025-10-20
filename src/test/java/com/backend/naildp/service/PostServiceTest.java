@@ -2,6 +2,7 @@ package com.backend.naildp.service;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.service.post.PostService;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
@@ -23,19 +22,19 @@ import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostInfoResponse;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.Profile;
-import com.backend.naildp.entity.Tag;
-import com.backend.naildp.entity.TagPost;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.entity.UsersProfile;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.userEntity.Profile;
+import com.backend.naildp.entity.postEntity.Tag;
+import com.backend.naildp.entity.postEntity.TagPost;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.entity.userEntity.UsersProfile;
 import com.backend.naildp.exception.CustomException;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 import jakarta.persistence.EntityManager;
 

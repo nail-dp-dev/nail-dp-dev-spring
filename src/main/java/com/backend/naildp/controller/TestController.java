@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

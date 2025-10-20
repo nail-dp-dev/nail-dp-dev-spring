@@ -7,7 +7,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
 import com.backend.naildp.dto.home.HomePostResponse;
-import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.postEntity.Post;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

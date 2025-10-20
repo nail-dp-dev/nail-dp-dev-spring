@@ -18,7 +18,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.backend.naildp.config.IntegrationTest;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.post.PostRepository;
 import com.backend.naildp.repository.post.cache.EmptyFlagCacheRepository;
 import com.backend.naildp.repository.post.cache.PostCacheRepository;
 

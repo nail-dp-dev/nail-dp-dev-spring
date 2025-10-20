@@ -3,29 +3,29 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.backend.naildp.service.user.UserInfoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
-import com.backend.naildp.entity.Archive;
-import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.archiveEntity.Archive;
+import com.backend.naildp.entity.archiveEntity.ArchivePost;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.ArchivePostRepository;
-import com.backend.naildp.repository.ArchiveRepository;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.archive.ArchivePostRepository;
+import com.backend.naildp.repository.archive.ArchiveRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 // @SpringBootTest
 @IntegrationTest

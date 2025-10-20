@@ -13,14 +13,14 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import com.backend.naildp.common.CookieUtil;
 import com.backend.naildp.dto.auth.SocialUserInfoDto;
-import com.backend.naildp.entity.SocialLogin;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.SocialLogin;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.SignUpRequiredException;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
-import com.backend.naildp.repository.SocialLoginRepository;
-import com.backend.naildp.repository.UserMapping;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.SocialLoginRepository;
+import com.backend.naildp.repository.user.UserMapping;
+import com.backend.naildp.repository.user.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

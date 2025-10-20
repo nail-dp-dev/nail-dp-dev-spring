@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.post.PostRepository;
 import com.backend.naildp.service.post.dto.UserContext;
 
 import lombok.RequiredArgsConstructor;

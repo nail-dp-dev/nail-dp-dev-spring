@@ -21,13 +21,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.config.TestDatabaseConfig;
 import com.backend.naildp.config.TestEnvConfig;
 import com.backend.naildp.config.TestRedisConfig;
 import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
-import com.backend.naildp.service.AuthService;
+import com.backend.naildp.service.user.AuthService;
 
 @SpringBootTest
 @Import({TestDatabaseConfig.class, TestRedisConfig.class, TestEnvConfig.class})

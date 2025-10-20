@@ -9,7 +9,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import com.backend.naildp.oauth2.jwt.JwtUtil;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.UserRepository;
 import com.backend.naildp.service.chat.ChatRoomStatusService;
 import com.backend.naildp.service.chat.MessageStatusService;
 import com.backend.naildp.service.chat.SessionService;

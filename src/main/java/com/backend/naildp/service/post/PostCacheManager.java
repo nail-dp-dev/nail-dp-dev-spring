@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.repository.post.PostRepository;
 import com.backend.naildp.repository.post.cache.EmptyFlagCacheRepository;
 import com.backend.naildp.repository.post.cache.PostCacheRepository;
 

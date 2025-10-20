@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.user.FollowRepository;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +16,8 @@ import org.springframework.context.annotation.Import;
 
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.userEntity.User;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;

@@ -11,10 +11,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.TokenNotValidateException;
 import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

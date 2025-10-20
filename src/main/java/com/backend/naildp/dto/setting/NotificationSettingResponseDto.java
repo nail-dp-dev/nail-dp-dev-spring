@@ -1,7 +1,7 @@
 package com.backend.naildp.dto.setting;
 
 import com.backend.naildp.common.NotificationType;
-import com.backend.naildp.entity.UserNotification;
+import com.backend.naildp.entity.userEntity.UserNotification;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

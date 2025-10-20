@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.backend.naildp.controller.archive.ArchiveController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,9 +21,9 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.archive.ArchiveBoundaryRequestDto;
 import com.backend.naildp.dto.archive.ArchiveNameRequestDto;
 import com.backend.naildp.dto.archive.CreateArchiveRequestDto;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
-import com.backend.naildp.service.ArchiveService;
+import com.backend.naildp.service.archive.ArchiveService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(ArchiveController.class)

@@ -1,0 +1,15 @@
+package com.backend.naildp.repository.user;
+
+import java.util.List;
+
+import com.backend.naildp.dto.search.SearchUserResponse;
+import com.backend.naildp.entity.userEntity.User;
+
+public interface UserRepositoryCustom {
+
+	List<SearchUserResponse> searchByKeyword(String keyword, String nickname);
+
+	List<SearchUserResponse> findRecommendedUser(User currentUser);
+
+	List<SearchUserResponse> findUserInfoByRecentUsers(String nickname, List<String> recentUsers);
+}

@@ -5,9 +5,9 @@ import java.util.List;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
 import com.backend.naildp.service.post.dto.PreferredPostDto;
 
 import lombok.AllArgsConstructor;

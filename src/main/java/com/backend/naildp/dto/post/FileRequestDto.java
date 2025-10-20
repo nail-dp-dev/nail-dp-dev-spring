@@ -1,6 +1,6 @@
 package com.backend.naildp.dto.post;
 
-import com.backend.naildp.entity.Photo;
+import com.backend.naildp.entity.postEntity.Photo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

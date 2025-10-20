@@ -2,6 +2,12 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.archive.ArchiveMapping;
+import com.backend.naildp.repository.archive.ArchivePostRepository;
+import com.backend.naildp.repository.archive.ArchiveRepository;
+import com.backend.naildp.repository.post.PhotoRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,11 +23,11 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Archive;
-import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.archiveEntity.Archive;
+import com.backend.naildp.entity.archiveEntity.ArchivePost;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 
 @DataJpaTest
 @Transactional

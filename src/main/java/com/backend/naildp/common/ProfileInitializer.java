@@ -2,8 +2,8 @@ package com.backend.naildp.common;
 
 import org.springframework.context.annotation.Configuration;
 
-import com.backend.naildp.entity.Profile;
-import com.backend.naildp.repository.ProfileRepository;
+import com.backend.naildp.entity.userEntity.Profile;
+import com.backend.naildp.repository.user.ProfileRepository;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

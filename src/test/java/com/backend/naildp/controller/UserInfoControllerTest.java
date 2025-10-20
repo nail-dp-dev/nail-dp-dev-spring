@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.backend.naildp.controller.user.UserInfoController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,11 +20,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.userInfo.UserInfoResponseDto;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
-import com.backend.naildp.service.UserInfoService;
+import com.backend.naildp.service.user.UserInfoService;
 
 @WebMvcTest(UserInfoController.class)
 public class UserInfoControllerTest {

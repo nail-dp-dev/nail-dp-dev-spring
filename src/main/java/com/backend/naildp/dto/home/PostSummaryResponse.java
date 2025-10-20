@@ -8,8 +8,8 @@ import org.springframework.data.domain.SliceImpl;
 
 import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.dto.archive.UserArchiveResponseDto;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.ArchiveMapping;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.archive.ArchiveMapping;
 import com.backend.naildp.service.post.dto.PreferredPostDto;
 
 import lombok.AllArgsConstructor;

@@ -10,10 +10,10 @@
 //
 // import com.backend.naildp.common.Boundary;
 // import com.backend.naildp.common.UserRole;
-// import com.backend.naildp.entity.Comment;
-// import com.backend.naildp.entity.Post;
-// import com.backend.naildp.entity.SocialLogin;
-// import com.backend.naildp.entity.User;
+// import com.backend.naildp.entity.commentEntity.Comment;
+// import com.backend.naildp.entity.postEntity.Post;
+// import com.backend.naildp.entity.userEntity.SocialLogin;
+// import com.backend.naildp.entity.userEntity.User;
 //
 // import jakarta.persistence.EntityManager;
 //

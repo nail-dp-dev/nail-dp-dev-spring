@@ -1,14 +1,13 @@
 package com.backend.naildp.service.post;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.post.PostRepository;
 import com.backend.naildp.service.post.dto.PreferredPostDto;
 import com.mongodb.lang.Nullable;
 

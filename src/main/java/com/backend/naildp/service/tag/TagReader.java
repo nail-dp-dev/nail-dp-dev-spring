@@ -7,8 +7,8 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.TagPostRepository;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.tag.TagPostRepository;
 
 import lombok.RequiredArgsConstructor;
 

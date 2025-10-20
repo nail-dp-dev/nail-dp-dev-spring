@@ -2,6 +2,7 @@ package com.backend.naildp.entity;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.entity.userEntity.User;
 import org.junit.jupiter.api.Test;
 
 import com.backend.naildp.common.UserRole;

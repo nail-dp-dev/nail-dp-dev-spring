@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.dto.home.PostSummaryResponse;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.service.FollowService;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.service.user.FollowService;
 import com.backend.naildp.service.post.dto.ForyouPostQuerySpec;
 import com.backend.naildp.service.post.dto.PreferredPostDto;
 import com.backend.naildp.service.post.dto.UserContext;

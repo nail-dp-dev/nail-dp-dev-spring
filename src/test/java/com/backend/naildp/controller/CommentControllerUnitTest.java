@@ -15,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -34,7 +33,7 @@ import com.backend.naildp.dto.comment.CommentInfoResponse;
 import com.backend.naildp.dto.comment.CommentRegisterDto;
 import com.backend.naildp.dto.comment.CommentSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
-import com.backend.naildp.service.CommentService;
+import com.backend.naildp.service.comment.CommentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @IntegrationTest

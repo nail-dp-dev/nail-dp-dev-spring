@@ -30,7 +30,7 @@ import com.backend.naildp.oauth2.jwt.JwtAuthenticationFilter;
 import com.backend.naildp.oauth2.jwt.JwtAuthorizationFilter;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
 import com.backend.naildp.oauth2.jwt.RedisUtil;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
 

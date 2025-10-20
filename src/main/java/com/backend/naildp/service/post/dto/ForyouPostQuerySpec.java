@@ -3,7 +3,7 @@ package com.backend.naildp.service.post.dto;
 import java.util.List;
 import java.util.UUID;
 
-import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.postEntity.Post;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

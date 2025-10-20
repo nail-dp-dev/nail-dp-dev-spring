@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.backend.naildp.service.comment.CommentLikeService;
+import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.post.PostAccessValidator;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,17 +20,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.entity.Comment;
-import com.backend.naildp.entity.CommentLike;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.commentEntity.Comment;
+import com.backend.naildp.entity.commentEntity.CommentLike;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.CommentLikeRepository;
-import com.backend.naildp.repository.CommentRepository;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.comment.CommentLikeRepository;
+import com.backend.naildp.repository.comment.CommentRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CommentLikeServiceUnitTest {
