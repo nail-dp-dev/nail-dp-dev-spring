@@ -1,12 +1,14 @@
 package com.backend.naildp.repository.post;
 
-import static com.backend.naildp.entity.QArchivePost.*;
-import static com.backend.naildp.entity.QFollow.*;
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QPostLike.*;
-import static com.backend.naildp.entity.QTagPost.*;
-import static com.backend.naildp.entity.QUser.*;
 
+import static com.backend.naildp.entity.archiveEntity.QArchivePost.archivePost;
+import static com.backend.naildp.entity.postEntity.QPost.post;
+import static com.backend.naildp.entity.postEntity.QPostLike.postLike;
+import static com.backend.naildp.entity.postEntity.QTagPost.tagPost;
+import static com.backend.naildp.entity.userEntity.QFollow.follow;
+import static com.backend.naildp.entity.userEntity.QUser.user;
+
+import com.backend.naildp.entity.postEntity.QTagPost;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -20,7 +22,6 @@ import org.springframework.util.StringUtils;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.entity.postEntity.Post;
-import com.backend.naildp.entity.QTagPost;
 import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.service.post.dto.ForyouPostQuerySpec;
 import com.querydsl.core.BooleanBuilder;

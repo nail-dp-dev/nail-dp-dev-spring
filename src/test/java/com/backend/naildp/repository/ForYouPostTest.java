@@ -1,8 +1,8 @@
 package com.backend.naildp.repository;
 
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QPostLike.*;
-import static com.backend.naildp.entity.QTagPost.*;
+import static com.backend.naildp.entity.postEntity.QPost.*;
+import static com.backend.naildp.entity.postEntity.QPostLike.*;
+import static com.backend.naildp.entity.postEntity.QTagPost.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
