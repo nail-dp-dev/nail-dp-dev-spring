@@ -1,5 +1,6 @@
 package com.backend.naildp.service.post;
 
+import com.backend.naildp.service.dto.PostLikeEventDto;
 import com.backend.naildp.service.notification.NotificationManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,45 @@ public class PostLikeService {
 			});
 
 		return postLike.getId();
+	}
+
+	@Transactional
+	public void likePostInOrder(Long postId, String username) {
+		Post post = postRepository.findPostAndUser(postId)
+				.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
+		postAccessValidator.isAvailablePost(post, username);
+
+		if (postLikeRepository.existsPostLikeByPostIdAndUserNickname(postId, username))  {
+			return;
+		}
+
+		User user = userRepository.findUserByNickname(username)
+				.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		PostLike savedPostLike = postLikeRepository.saveAndFlush(new PostLike(user, post));
+		post.addPostLike(savedPostLike);
+
+		post.increaseLike();
+
+		notificationManager.handlePostLikeNotification(user, post, savedPostLike);
+	}
+
+	@Transactional
+	public void likePostConcurrently(Long postId, String username) {
+		Post post = postRepository.findPostAndUser(postId)
+				.orElseThrow(() -> new CustomException("해당 포스트를 조회할 수 없습니다.", ErrorCode.NOT_FOUND));
+		postAccessValidator.isAvailablePost(post, username);
+
+		if (postLikeRepository.existsPostLikeByPostIdAndUserNickname(postId, username))  {
+			return;
+		}
+
+		User user = userRepository.findUserByNickname(username)
+				.orElseThrow(() -> new CustomException("nickname 으로 회원을 찾을 수 없습니다.", ErrorCode.NOT_FOUND));
+		PostLike savedPostLike = postLikeRepository.saveAndFlush(new PostLike(user, post));
+		post.addPostLike(savedPostLike);
+
+		postLikeEventPublisher.publishEvent(PostLikeEventDto.of(post, user));
+		notificationManager.handlePostLikeNotification(user, post, savedPostLike);
 	}
 
 	@Transactional

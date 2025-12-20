@@ -1,7 +1,9 @@
 package com.backend.naildp.service.handler;
 
+import com.backend.naildp.service.dto.PostLikeEventDto;
 import java.util.UUID;
 
+import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -40,5 +42,17 @@ public class PostLikeEventHandler {
 		UUID userId = postUnlikeEvent.getMemberId();
 
 		postLikeUpdater.decreaseLikeCount(likedPostId, userId);
+	}
+
+	@Async
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public CompletableFuture<Void> increaseLikeCountAfterSaveLike(PostLikeEventDto postLikeEventDto) {
+		return CompletableFuture.runAsync(() -> {
+			Long likedPostId = postLikeEventDto.getPostId();
+			UUID likeUserId = postLikeEventDto.getWriterId();
+
+			postLikeUpdater.increaseLikeCountConcurrently(likedPostId, likeUserId);
+		});
 	}
 }

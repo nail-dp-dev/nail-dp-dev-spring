@@ -1,5 +1,6 @@
 package com.backend.naildp.repository.post;
 
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -58,5 +60,11 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 	Optional<PostLike> findPostLikeByPostIdAndUserId(@Param("postId") Long postId, @Param("userId") UUID userId);
 
 	boolean existsPostLikeByPostIdAndUserId(Long postId, UUID userId);
+
+	boolean existsPostLikeByPostIdAndUserNickname(Long postId, String userNickname);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select pl from PostLike pl join fetch pl.post p where pl.post.id = :postId and pl.user.id = :userId")
+	Optional<PostLike> findPessimisticPostLikeByPostIdAndUserId(@Param("postId") Long postId, @Param("userId") UUID userId);
 
 }
