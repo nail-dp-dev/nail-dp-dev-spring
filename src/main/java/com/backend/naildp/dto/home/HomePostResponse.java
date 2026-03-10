@@ -5,9 +5,10 @@ import java.util.List;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.service.post.dto.PreferredPostDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +42,20 @@ public class HomePostResponse {
 		postId = post.getId();
 		like = likedPosts.contains(post);
 		saved = savedPosts.contains(post);
+		createdDate = post.getCreatedDate();
+		boundary = post.getBoundary();
+	}
+
+	public HomePostResponse(Post post, PreferredPostDto preferredPostDto) {
+		Photo photo = post.getPhotos().get(0);
+
+		photoId = photo.getId();
+		photoUrl = photo.getPhotoUrl();
+		isPhoto = FileExtensionChecker.isPhotoExtension(photo.getPhotoUrl());
+		isVideo = FileExtensionChecker.isVideoExtension(photo.getPhotoUrl());
+		postId = post.getId();
+		like = preferredPostDto.isLiked(post);
+		saved = preferredPostDto.isSaved(post);
 		createdDate = post.getCreatedDate();
 		boundary = post.getBoundary();
 	}

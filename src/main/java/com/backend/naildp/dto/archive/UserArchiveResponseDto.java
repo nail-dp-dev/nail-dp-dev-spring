@@ -2,7 +2,7 @@ package com.backend.naildp.dto.archive;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.repository.ArchiveMapping;
+import com.backend.naildp.repository.archive.ArchiveMapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

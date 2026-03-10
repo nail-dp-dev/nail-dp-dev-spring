@@ -1,11 +1,8 @@
 package com.backend.naildp.repository;
 
-import static com.backend.naildp.entity.QArchivePost.*;
-import static com.backend.naildp.entity.QFollow.*;
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.user.UserRepository;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,18 +18,9 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.config.QueryDslTestConfig;
 import com.backend.naildp.dto.search.SearchUserResponse;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
-import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.BooleanPath;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;

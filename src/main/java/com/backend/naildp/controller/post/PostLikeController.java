@@ -1,0 +1,59 @@
+package com.backend.naildp.controller.post;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.backend.naildp.dto.postLike.PostLikeCountResponse;
+import com.backend.naildp.exception.ApiResponse;
+import com.backend.naildp.service.post.PostLikeService;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/posts")
+@RequiredArgsConstructor
+public class PostLikeController {
+
+	private final PostLikeService postLikeService;
+
+	@PostMapping("/{postId}/likes")
+	public ResponseEntity<?> likePost(@PathVariable("postId") Long postId,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		Long likePostId = postLikeService.likeByPostId(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
+	}
+
+	@PostMapping("/{postId}/likes/v2")
+	public ResponseEntity<?> likePostV2(@PathVariable("postId") Long postId,
+										@AuthenticationPrincipal UserDetails userDetails) {
+		postLikeService.likePostInOrder(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
+	}
+
+	@PostMapping("/{postId}/likes/v3")
+	public ResponseEntity<?> likePostV3(@PathVariable("postId") Long postId,
+										@AuthenticationPrincipal UserDetails userDetails) {
+		postLikeService.likePostConcurrently(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
+	}
+
+	@DeleteMapping("/{postId}/likes")
+	public ResponseEntity<?> unlikePost(@PathVariable("postId") Long postId,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		postLikeService.unlikeByPostId(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 취소", 2001));
+	}
+
+	@GetMapping("/{postId}/likes")
+	ResponseEntity<?> likeCount(@PathVariable("postId") Long postId, @AuthenticationPrincipal UserDetails userDetails) {
+		PostLikeCountResponse postLikeCountResponse = postLikeService.countPostLike(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(postLikeCountResponse, "게시글 좋아요 숫자 조회 완료", 2000));
+	}
+}

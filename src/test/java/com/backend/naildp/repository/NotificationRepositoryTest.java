@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.notification.NotificationRepository;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +15,8 @@ import org.springframework.context.annotation.Import;
 import com.backend.naildp.common.NotificationType;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
-import com.backend.naildp.entity.Notification;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.notificationEntity.Notification;
+import com.backend.naildp.entity.userEntity.User;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;

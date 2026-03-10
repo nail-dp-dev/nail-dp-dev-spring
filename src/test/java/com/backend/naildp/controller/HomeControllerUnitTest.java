@@ -12,7 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -25,14 +25,23 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import com.backend.naildp.config.IntegrationTest;
+import com.backend.naildp.config.WebSecurityConfig;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.service.post.PostInfoContext;
 import com.backend.naildp.service.post.PostInfoService;
+import com.backend.naildp.service.post.v2.PostInfoContextV2;
+import com.backend.naildp.service.post.v2.PostInfoContextV2_1;
+import com.backend.naildp.service.post.v2.PostInfoContextV2_2;
+import com.backend.naildp.service.post.v2.PostInfoContextV3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = HomeController.class)
+// @WebMvcTest(controllers = HomeController.class)
+// @Import(WebSecurityConfig.class)
+@IntegrationTest
+@AutoConfigureMockMvc
 class HomeControllerUnitTest {
 
 	@Autowired
@@ -41,8 +50,11 @@ class HomeControllerUnitTest {
 	@MockBean
 	PostInfoService postInfoService;
 
-	@MockBean
-	PostInfoContext postInfoContext;
+	@MockBean PostInfoContext postInfoContext;
+	@MockBean PostInfoContextV2 postInfoContextV2;
+	@MockBean PostInfoContextV2_1 postInfoContextV2_1;
+	@MockBean PostInfoContextV2_2 postInfoContextV2_2;
+	@MockBean PostInfoContextV3 postInfoContextV3;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -116,7 +128,10 @@ class HomeControllerUnitTest {
 		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
 
 		// when & then
-		mvc.perform((get("/api/home").param("choice", "NEW")))
+		ResultActions resultActions = mvc.perform((get("/api/home")
+			.queryParam("choice", "new")
+			.queryParam("size", "10")));
+		resultActions
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))
@@ -138,7 +153,11 @@ class HomeControllerUnitTest {
 		when(postInfoContext.posts(anyString(), anyInt(), any())).thenReturn(postSummaryResponse);
 
 		// when & then
-		mvc.perform((get("/api/home").param("choice", "NEW")))
+		ResultActions resultActions = mvc.perform(get("/api/home")
+				.queryParam("choice", "NEW")
+		);
+
+		resultActions
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(content().json(jsonResponse))

@@ -1,8 +1,8 @@
 package com.backend.naildp.dto.userInfo;
 
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

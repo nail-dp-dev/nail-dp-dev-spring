@@ -7,40 +7,37 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Slice;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Archive;
-import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.ArchivePostRepository;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.SocialLoginRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.entity.archiveEntity.Archive;
+import com.backend.naildp.entity.archiveEntity.ArchivePost;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.repository.archive.ArchivePostRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.SocialLoginRepository;
+import com.backend.naildp.repository.user.UserRepository;
 import com.backend.naildp.service.post.PostInfoService;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 public class PostInfoServiceTest {
 

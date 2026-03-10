@@ -1,15 +1,12 @@
 package com.backend.naildp.repository;
 
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QPostLike.*;
-import static com.backend.naildp.entity.QTagPost.*;
+import static com.backend.naildp.entity.postEntity.QPost.*;
+import static com.backend.naildp.entity.postEntity.QPostLike.*;
+import static com.backend.naildp.entity.postEntity.QTagPost.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,15 +20,12 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.config.QueryDslTestConfig;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.QPost;
-import com.backend.naildp.entity.QPostLike;
-import com.backend.naildp.entity.QTagPost;
-import com.backend.naildp.entity.Tag;
-import com.backend.naildp.entity.TagPost;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.postEntity.Tag;
+import com.backend.naildp.entity.postEntity.TagPost;
+import com.backend.naildp.entity.userEntity.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;

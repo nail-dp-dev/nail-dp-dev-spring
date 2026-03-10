@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.backend.naildp.controller.post.PostController;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,13 +30,13 @@ import com.backend.naildp.dto.post.EditPostResponseDto;
 import com.backend.naildp.dto.post.PostBoundaryRequest;
 import com.backend.naildp.dto.post.PostInfoResponse;
 import com.backend.naildp.dto.post.PostRequestDto;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.ApiResponse;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
 import com.backend.naildp.oauth2.impl.UserDetailsImpl;
-import com.backend.naildp.service.PostService;
+import com.backend.naildp.service.post.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PostController.class)

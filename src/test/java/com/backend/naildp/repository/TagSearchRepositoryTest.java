@@ -1,12 +1,13 @@
 package com.backend.naildp.repository;
 
-import static com.backend.naildp.entity.QFollow.*;
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QTag.*;
-import static com.backend.naildp.entity.QTagPost.*;
-import static com.backend.naildp.entity.QUser.*;
+import static com.backend.naildp.entity.userEntity.QFollow.*;
+import static com.backend.naildp.entity.postEntity.QPost.*;
+import static com.backend.naildp.entity.postEntity.QTag.*;
+import static com.backend.naildp.entity.postEntity.QTagPost.*;
+import static com.backend.naildp.entity.userEntity.QUser.*;
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.tag.TagPostRepository;
 import java.util.Comparator;
 import java.util.List;
 
@@ -25,13 +26,13 @@ import com.backend.naildp.common.UserRole;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.config.QueryDslTestConfig;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Follow;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.Tag;
-import com.backend.naildp.entity.TagPost;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.Follow;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.postEntity.Tag;
+import com.backend.naildp.entity.postEntity.TagPost;
+import com.backend.naildp.entity.userEntity.User;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;

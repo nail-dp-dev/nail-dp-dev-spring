@@ -3,6 +3,9 @@ package com.backend.naildp.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.post.PostAccessValidator;
+import com.backend.naildp.service.post.PostLikeService;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -11,18 +14,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.userEntity.User;
 import com.backend.naildp.exception.CustomException;
 import com.backend.naildp.exception.ErrorCode;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PostLikeServiceUnitTest {
@@ -44,6 +48,9 @@ class PostLikeServiceUnitTest {
 
 	@Mock
 	NotificationManager notificationManager;
+
+	@Mock
+	ApplicationEventPublisher postLikeEventPublisher;
 
 	@Test
 	@DisplayName("게시물 Id 로 좋아요 저장 테스트")

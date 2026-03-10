@@ -40,3 +40,6 @@ application-testdb.properties
 .DS_Store
 application-secret.properties
 application-test.properties
+/src/main/resources/application-local.properties
+/src/main/resources/application-prod.properties
+/local.env

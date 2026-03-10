@@ -2,6 +2,7 @@ package com.backend.naildp.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.repository.archive.ArchivePostRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,11 +18,11 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
 import com.backend.naildp.dto.auth.LoginRequestDto;
 import com.backend.naildp.dto.post.FileRequestDto;
-import com.backend.naildp.entity.Archive;
-import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.archiveEntity.Archive;
+import com.backend.naildp.entity.archiveEntity.ArchivePost;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.userEntity.User;
 
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;

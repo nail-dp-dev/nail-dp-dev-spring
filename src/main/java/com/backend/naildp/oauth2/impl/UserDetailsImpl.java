@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.backend.naildp.common.UserRole;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.userEntity.User;
 
 public class UserDetailsImpl implements UserDetails, OAuth2User {
 

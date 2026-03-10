@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -20,11 +21,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.backend.naildp.config.TestDatabaseConfig;
+import com.backend.naildp.config.TestEnvConfig;
+import com.backend.naildp.config.TestRedisConfig;
 import com.backend.naildp.oauth2.impl.UserDetailsServiceImpl;
 import com.backend.naildp.oauth2.jwt.JwtUtil;
-import com.backend.naildp.service.AuthService;
+import com.backend.naildp.service.user.AuthService;
 
-@SpringBootTest(classes = NaildpApplication.class)
+@SpringBootTest
+@Import({TestDatabaseConfig.class, TestRedisConfig.class, TestEnvConfig.class})
 @AutoConfigureMockMvc
 public class SecurityFilterTest {
 

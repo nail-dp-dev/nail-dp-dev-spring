@@ -24,15 +24,15 @@ import com.backend.naildp.common.Boundary;
 import com.backend.naildp.config.JpaAuditingConfiguration;
 import com.backend.naildp.dto.home.HomePostResponse;
 import com.backend.naildp.dto.home.PostSummaryResponse;
-import com.backend.naildp.entity.ArchivePost;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.ArchivePostRepository;
-import com.backend.naildp.repository.FollowRepository;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.entity.archiveEntity.ArchivePost;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.repository.archive.ArchivePostRepository;
+import com.backend.naildp.repository.user.FollowRepository;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
 import com.backend.naildp.service.post.PostInfoService;
 
 @ExtendWith(MockitoExtension.class)

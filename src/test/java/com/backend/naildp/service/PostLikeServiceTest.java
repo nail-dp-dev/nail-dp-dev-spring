@@ -2,6 +2,7 @@ package com.backend.naildp.service;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.backend.naildp.service.post.PostLikeService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,26 +11,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.UserRole;
+import com.backend.naildp.config.IntegrationTest;
 import com.backend.naildp.dto.post.FileRequestDto;
 import com.backend.naildp.dto.postLike.PostLikeCountResponse;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.User;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostRepository;
-import com.backend.naildp.repository.UserRepository;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.userEntity.User;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
+import com.backend.naildp.repository.user.UserRepository;
 
 import jakarta.persistence.EntityManager;
 
-@ActiveProfiles(profiles = {"test", "secret"})
-@SpringBootTest
+@IntegrationTest
 @Transactional
 class PostLikeServiceTest {
 

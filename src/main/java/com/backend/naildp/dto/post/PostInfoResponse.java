@@ -3,13 +3,12 @@ package com.backend.naildp.dto.post;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.backend.naildp.common.Boundary;
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.entity.PostLike;
-import com.backend.naildp.entity.Tag;
-import com.backend.naildp.entity.User;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.entity.postEntity.PostLike;
+import com.backend.naildp.entity.postEntity.Tag;
+import com.backend.naildp.entity.userEntity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

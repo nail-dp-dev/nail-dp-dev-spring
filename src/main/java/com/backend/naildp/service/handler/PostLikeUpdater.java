@@ -5,9 +5,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.PostLikeRepository;
-import com.backend.naildp.repository.PostRepository;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.post.PostLikeRepository;
+import com.backend.naildp.repository.post.PostRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +30,18 @@ public class PostLikeUpdater {
 				},
 				() -> log.error("Like Post Event By postId:{}, userId:{}. PostLike Entity가 존재하지 않습니다.", likedPostId, userId)
 			);
+	}
+
+	@Transactional
+	public void increaseLikeCountConcurrently(Long likedPostId, UUID userId) {
+		postLikeRepository.findPessimisticPostLikeByPostIdAndUserId(likedPostId, userId)
+				.ifPresentOrElse(postLike -> {
+							Post post = postLike.getPost();
+							post.increaseLike();
+							log.info("likeCount {} increase by user {}", post.getTodayLikeCount(), postLike.getUser().getNickname());
+						},
+						() -> log.error("Like Post Event By postId:{}, userId:{}. PostLike Entity가 존재하지 않습니다.", likedPostId, userId)
+				);
 	}
 
 	@Transactional

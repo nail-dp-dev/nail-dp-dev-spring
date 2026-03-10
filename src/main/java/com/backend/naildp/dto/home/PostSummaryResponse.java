@@ -8,8 +8,9 @@ import org.springframework.data.domain.SliceImpl;
 
 import com.backend.naildp.dto.archive.FollowArchiveResponseDto;
 import com.backend.naildp.dto.archive.UserArchiveResponseDto;
-import com.backend.naildp.entity.Post;
-import com.backend.naildp.repository.ArchiveMapping;
+import com.backend.naildp.entity.postEntity.Post;
+import com.backend.naildp.repository.archive.ArchiveMapping;
+import com.backend.naildp.service.post.dto.PreferredPostDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,9 +38,18 @@ public class PostSummaryResponse {
 		postSummaryList = latestPosts.map(HomePostResponse::recentPostForAnonymous);
 	}
 
+	public PostSummaryResponse(Slice<Post> postSlice, PreferredPostDto preferredPostDto) {
+		cursorId = postSlice.getContent().get(postSlice.getNumberOfElements() - 1).getId();
+		postSummaryList = postSlice.map(post -> new HomePostResponse(post, preferredPostDto));
+	}
+
 	public static PostSummaryResponse createEmptyResponse() {
 		log.info("게시물이 없기 때문에 빈 응답 리턴");
 		return new PostSummaryResponse(-1L, new SliceImpl<>(new ArrayList<>()));
+	}
+
+	public static PostSummaryResponse of(Slice<Post> latestPosts, List<Post> savedPosts, List<Post> likedPosts) {
+		return latestPosts.isEmpty() ? createEmptyResponse() : new PostSummaryResponse(latestPosts, savedPosts, likedPosts);
 	}
 
 	public static PostSummaryResponse createLikedPostSummary(Slice<Post> likedPostSlice, List<Post> savedPosts) {
@@ -67,5 +77,9 @@ public class PostSummaryResponse {
 		Long cursorId = followingArchives.getContent().get(followingArchives.getNumberOfElements() - 1).getId();
 		return new PostSummaryResponse(cursorId,
 			followingArchives.map(archive -> UserArchiveResponseDto.otherArchiveResponseDto(archive, isFollower)));
+	}
+
+	public static PostSummaryResponse of(Slice<Post> forYouPostSlice, PreferredPostDto preferredPostDto) {
+		return forYouPostSlice.isEmpty() ? createEmptyResponse() : new PostSummaryResponse(forYouPostSlice, preferredPostDto);
 	}
 }

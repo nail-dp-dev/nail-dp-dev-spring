@@ -2,11 +2,9 @@ package com.backend.naildp.dto.search;
 
 import java.util.List;
 
-import org.springframework.util.StringUtils;
-
 import com.backend.naildp.common.FileExtensionChecker;
-import com.backend.naildp.entity.Photo;
-import com.backend.naildp.entity.Tag;
+import com.backend.naildp.entity.postEntity.Photo;
+import com.backend.naildp.entity.postEntity.Tag;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
