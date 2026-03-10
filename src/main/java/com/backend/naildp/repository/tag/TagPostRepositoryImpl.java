@@ -1,10 +1,10 @@
 package com.backend.naildp.repository.tag;
 
-import static com.backend.naildp.entity.QFollow.*;
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QTag.*;
-import static com.backend.naildp.entity.QTagPost.*;
-import static com.backend.naildp.entity.QUser.*;
+import static com.backend.naildp.entity.postEntity.QPost.post;
+import static com.backend.naildp.entity.postEntity.QTag.tag;
+import static com.backend.naildp.entity.postEntity.QTagPost.tagPost;
+import static com.backend.naildp.entity.userEntity.QFollow.follow;
+import static com.backend.naildp.entity.userEntity.QUser.user;
 
 import java.util.List;
 

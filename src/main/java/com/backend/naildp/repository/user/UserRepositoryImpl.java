@@ -1,14 +1,15 @@
 package com.backend.naildp.repository.user;
 
-import static com.backend.naildp.entity.QArchivePost.*;
 
+import static com.backend.naildp.entity.archiveEntity.QArchivePost.archivePost;
+
+import com.backend.naildp.entity.archiveEntity.QArchive;
+import com.backend.naildp.entity.postEntity.QPost;
+import com.backend.naildp.entity.userEntity.QFollow;
+import com.backend.naildp.entity.userEntity.QUser;
 import java.util.List;
 
 import com.backend.naildp.dto.search.SearchUserResponse;
-import com.backend.naildp.entity.QArchive;
-import com.backend.naildp.entity.QFollow;
-import com.backend.naildp.entity.QPost;
-import com.backend.naildp.entity.QUser;
 import com.backend.naildp.entity.userEntity.User;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;

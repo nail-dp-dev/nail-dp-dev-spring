@@ -1,5 +1,8 @@
 package com.backend.naildp.repository.chat;
 
+import com.backend.naildp.entity.chatEntity.QChatRoom;
+import com.backend.naildp.entity.chatEntity.QChatRoomUser;
+import com.backend.naildp.entity.userEntity.QUser;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,9 +16,6 @@ import org.springframework.data.domain.SliceImpl;
 
 import com.backend.naildp.dto.chat.ChatListResponse;
 import com.backend.naildp.entity.chatEntity.ChatRoom;
-import com.backend.naildp.entity.QChatRoom;
-import com.backend.naildp.entity.QChatRoomUser;
-import com.backend.naildp.entity.QUser;
 import com.backend.naildp.service.chat.ChatRoomStatusService;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;

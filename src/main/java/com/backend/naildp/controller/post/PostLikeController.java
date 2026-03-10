@@ -30,6 +30,20 @@ public class PostLikeController {
 		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
 	}
 
+	@PostMapping("/{postId}/likes/v2")
+	public ResponseEntity<?> likePostV2(@PathVariable("postId") Long postId,
+										@AuthenticationPrincipal UserDetails userDetails) {
+		postLikeService.likePostInOrder(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
+	}
+
+	@PostMapping("/{postId}/likes/v3")
+	public ResponseEntity<?> likePostV3(@PathVariable("postId") Long postId,
+										@AuthenticationPrincipal UserDetails userDetails) {
+		postLikeService.likePostConcurrently(postId, userDetails.getUsername());
+		return ResponseEntity.ok(ApiResponse.successResponse(null, "좋아요 목록에 추가", 2001));
+	}
+
 	@DeleteMapping("/{postId}/likes")
 	public ResponseEntity<?> unlikePost(@PathVariable("postId") Long postId,
 		@AuthenticationPrincipal UserDetails userDetails) {

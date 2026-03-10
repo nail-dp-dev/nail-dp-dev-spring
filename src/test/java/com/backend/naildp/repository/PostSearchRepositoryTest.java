@@ -1,10 +1,11 @@
 package com.backend.naildp.repository;
 
-import static com.backend.naildp.entity.QArchivePost.*;
-import static com.backend.naildp.entity.QFollow.*;
-import static com.backend.naildp.entity.QPost.*;
-import static com.backend.naildp.entity.QPostLike.*;
-import static com.backend.naildp.entity.QTagPost.*;
+
+import static com.backend.naildp.entity.archiveEntity.QArchivePost.archivePost;
+import static com.backend.naildp.entity.postEntity.QPost.post;
+import static com.backend.naildp.entity.postEntity.QPostLike.postLike;
+import static com.backend.naildp.entity.postEntity.QTagPost.tagPost;
+import static com.backend.naildp.entity.userEntity.QFollow.follow;
 import static org.assertj.core.api.Assertions.*;
 
 import com.backend.naildp.repository.post.PostRepository;

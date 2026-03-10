@@ -1,6 +1,6 @@
 package com.backend.naildp.repository.notification;
 
-import static com.backend.naildp.entity.QNotification.*;
+import static com.backend.naildp.entity.notificationEntity.QNotification.notification;
 
 import java.time.LocalDateTime;
 import java.util.List;
