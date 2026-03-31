@@ -1,11 +1,12 @@
 package com.backend.naildp.service.user;
 
-import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.user.dto.event.UserFollowedEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +27,7 @@ public class FollowService {
 
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
-	private final NotificationManager notificationManager;
+	private final ApplicationEventPublisher publisher;
 
 	@Transactional
 	public Long followUser(String followTargetNickname, String username) {
@@ -44,7 +45,7 @@ public class FollowService {
 
 				Follow savedFollow = followRepository.saveAndFlush(new Follow(user, followTargetUser));
 
-				notificationManager.handleFollowNotification(savedFollow);
+				publisher.publishEvent(new UserFollowedEvent(savedFollow.getId()));
 
 				return savedFollow;
 			});

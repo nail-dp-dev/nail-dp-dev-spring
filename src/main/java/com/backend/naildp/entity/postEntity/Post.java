@@ -144,4 +144,8 @@ public class Post extends BaseEntity {
 	public void decreaseLike() {
 		this.todayLikeCount++;
 	}
+
+	public boolean isWrittenBy(User user) {
+		return this.user.equals(user);
+	}
 }

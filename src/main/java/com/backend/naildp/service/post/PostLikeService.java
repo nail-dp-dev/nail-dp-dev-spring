@@ -1,7 +1,7 @@
 package com.backend.naildp.service.post;
 
 import com.backend.naildp.service.dto.PostLikeEventDto;
-import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.post.dto.event.PostLikeNotificationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +28,6 @@ public class PostLikeService {
 	private final PostRepository postRepository;
 	private final PostLikeRepository postLikeRepository;
 	private final PostAccessValidator postAccessValidator;
-	private final NotificationManager notificationManager;
 	private final ApplicationEventPublisher postLikeEventPublisher;
 
 	@Transactional
@@ -46,7 +45,7 @@ public class PostLikeService {
 
 				postLikeEventPublisher.publishEvent(new PostLikeEvent(post, user));
 
-				notificationManager.handlePostLikeNotification(user, post, savedPostLike);
+				postLikeEventPublisher.publishEvent(new PostLikeNotificationEvent(savedPostLike.getId()));
 
 				return savedPostLike;
 			});
@@ -71,7 +70,7 @@ public class PostLikeService {
 
 		post.increaseLike();
 
-		notificationManager.handlePostLikeNotification(user, post, savedPostLike);
+		postLikeEventPublisher.publishEvent(new PostLikeNotificationEvent(savedPostLike.getId()));
 	}
 
 	@Transactional
@@ -90,7 +89,7 @@ public class PostLikeService {
 		post.addPostLike(savedPostLike);
 
 		postLikeEventPublisher.publishEvent(PostLikeEventDto.of(post, user));
-		notificationManager.handlePostLikeNotification(user, post, savedPostLike);
+		postLikeEventPublisher.publishEvent(new PostLikeNotificationEvent(savedPostLike.getId()));
 	}
 
 	@Transactional

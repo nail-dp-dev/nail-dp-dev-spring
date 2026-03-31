@@ -1,7 +1,8 @@
 package com.backend.naildp.service.comment;
 
-import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.comment.dto.event.CommentLikedEvent;
 import com.backend.naildp.service.post.PostAccessValidator;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class CommentLikeService {
 	private final CommentRepository commentRepository;
 	private final CommentLikeRepository commentLikeRepository;
 	private final PostAccessValidator postAccessValidator;
-	private final NotificationManager notificationManager;
+	private final ApplicationEventPublisher publisher;
 
 	@Transactional
 	public Long likeComment(Long postId, Long commentId, String username) {
@@ -54,7 +55,7 @@ public class CommentLikeService {
 		CommentLike commentLike = new CommentLike(user, comment);
 		CommentLike savedCommentLike = commentLikeRepository.saveAndFlush(commentLike);
 
-		notificationManager.handleNotificationFromCommentLike(comment, user, savedCommentLike);
+		publisher.publishEvent(new CommentLikedEvent(savedCommentLike.getId()));
 
 		return savedCommentLike.getId();
 	}
@@ -81,7 +82,7 @@ public class CommentLikeService {
 
 		try {
 			CommentLike savedCommentLike = commentLikeRepository.saveAndFlush(commentLike);
-			notificationManager.handleNotificationFromCommentLike(comment, user, savedCommentLike);
+			publisher.publishEvent(new CommentLikedEvent(savedCommentLike.getId()));
 		} catch (DataIntegrityViolationException e) {
 			log.warn("데이터 무결성 위배 : {}", e.getMessage());
 			log.info("이미 존재하는 데이터이므로 무시하고 넘어간다.");

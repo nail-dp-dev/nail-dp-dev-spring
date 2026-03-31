@@ -1,7 +1,8 @@
 package com.backend.naildp.service.comment;
 
-import com.backend.naildp.service.notification.NotificationManager;
+import com.backend.naildp.service.comment.dto.event.CommentCreatedEvent;
 import com.backend.naildp.service.post.PostAccessValidator;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -31,7 +32,7 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final UserRepository userRepository;
 	private final PostAccessValidator postAccessValidator;
-	private final NotificationManager notificationManager;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public Long registerComment(Long postId, CommentRegisterDto commentRegisterDto, String username) {
@@ -44,10 +45,10 @@ public class CommentService {
 		Comment comment = Comment.of(commenter, post, commentRegisterDto.getCommentContent());
 		post.addComment(comment);
 
-		User postWriter = post.getUser();
-		notificationManager.handleCommentNotification(comment, postWriter);
+		Comment savedComment = commentRepository.save(comment);
+		eventPublisher.publishEvent(new CommentCreatedEvent(savedComment.getId()));
 
-		return commentRepository.save(comment).getId();
+		return savedComment.getId();
 	}
 
 	@Transactional

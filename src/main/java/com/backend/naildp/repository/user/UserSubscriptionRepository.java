@@ -2,6 +2,7 @@ package com.backend.naildp.repository.user;
 
 import java.util.Optional;
 
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,5 +15,7 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
 	@Query("select us from UserSubscription us where us.user.nickname = :nickname")
 	Optional<UserSubscription> findSubscriptionAndUserByNickname(@Param("nickname") String nickname);
+
+	Optional<UserSubscription> findByUserId(UUID userId);
 
 }
